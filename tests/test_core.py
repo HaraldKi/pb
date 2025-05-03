@@ -123,7 +123,6 @@ class TestUpdateTargets(unittest.TestCase):
 
   def setUp(self):
     self.values.clear()
-    LOG.setLevel("DEBUG")
     if os.path.isfile(STATEFILE):
       os.remove(STATEFILE)
 
@@ -202,6 +201,7 @@ class TestUpdateTargets(unittest.TestCase):
 
 
 if __name__ == '__main__':
+  LOG.setLevel("ERROR")
   #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
   unittest.main()
 

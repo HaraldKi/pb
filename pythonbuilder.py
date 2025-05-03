@@ -7,9 +7,12 @@ import itertools
 from dataclasses import dataclass
 from configparser import ConfigParser
 import logging
+import inspect
+import subprocess
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 LOG = logging.getLogger()
+LOG.setLevel("INFO")
 
 ## FIXME: get rid of global variables
 ## FIXME: remove mutable state from Target, keep it in a separate object,
@@ -72,14 +75,13 @@ class Target: #{
     self.generateState: Callable[['Target'], str] = stateGenerator
     self.cmd: Callable[['Target'], None] = options.get("cmd", None)
     self.dependencies = []
-    for d in dependencies:
-      if isinstance(d, str):
-        d = TARGETS.get(d, d)
-      if isinstance(d, Target):
+    for dep in dependencies:
+      d = findTarget(dep)
+      if d is not None:
         self.dependencies.append(d)
       else:
         raise BuildException(("dependency '%s' is neither Target nor can be" +
-                               " mapped to a target") % d)
+                               " mapped to a target") % dep)
     self.started: bool = False
     self.updated: bool = False
     self.recreated: bool = False  
@@ -137,9 +139,11 @@ def stateFileIteratorContent(it: Iterable[str]) -> str:
   digest = hashlib.sha256()
   for fname in it:
     digest.update(fname.encode())
-    with open(fname, "rb") as file:
-      digest.update(file.read())
-
+    if os.path.exists(fname):
+      with open(fname, "rb") as file:
+        digest.update(file.read())
+    else:
+      digest.update(stateNew("").encode())
   return digest.hexdigest()
 
 def resetTraversalState():
@@ -154,10 +158,29 @@ def updateTargets(*targets: str | Target):
   for t in targets:
     target = findTarget(t)
     if target is None:
-      raise BuildException("target '%s' not defined" % target)
+      raise BuildException("target '%s' not defined" % t)
     _updateTarget(states, target, [])
   states.save()
 
+def flatten(result: list[str], l: Iterable) -> None:
+  if isinstance(l, str):
+    result.append(l)
+    return
+  if not isinstance(l, Iterable):
+    raise TypeError("parameter must be Iterable but is %s" % l)
+  for elem in l:
+    flatten(result, elem)
+
+def pbexec(*args):
+  """Shallow wrapper around subprocess.run which
+    - logs the command line to info
+    - runs subprocess.run() with the flattened input list
+    - calls check_returncode() on the reslt
+  """
+  cmd = []
+  flatten(cmd, args)
+  LOG.info("* %s", " ".join(cmd))
+  subprocess.run(cmd).check_returncode()
 
 def _updateTarget(states: 'StateStore',
                   target: Target,
@@ -199,6 +222,7 @@ def _updateTarget(states: 'StateStore',
     LOG.info("+ %s (%s)" % (target.name, ", ".join(triggeringDeps)))
   
   if target.cmd is not None:
+    LOG.info("* %s", target.cmd.__name__)
     target.cmd(target)
 
   target.recreated = True
