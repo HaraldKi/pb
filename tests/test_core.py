@@ -1,0 +1,207 @@
+import unittest
+import sys, os
+import hashlib
+import shutil
+
+## The tests must be started from the project directory
+sys.path += [os.getcwd()]
+
+from pythonbuilder import (
+  BuildException,
+  STATEFILE,
+  Target,
+  findTarget,
+  stateDirContent,
+  stateFileContent,
+  stateFileIteratorContent,
+  stateFixed,
+  stateNew,
+  updateTargets,
+  resetTraversalState,
+  LOG,
+  TARGETS,
+  ALIAS,
+)
+TMPDIR=os.path.join("build", "testtmp")
+
+class TestTargetCreation(unittest.TestCase):
+  def setUp(self):
+    TARGETS.clear()
+    ALIAS.clear()
+
+  def test_basic(self):
+    t = Target("pythonbuilder.py")
+    self.assertEqual(stateFileContent, t.generateState)
+    self.assertEqual(t, findTarget("pythonbuilder.py")) 
+
+  def test_alias(self):
+    t = Target("pythonbuilder.py", alias="base")
+    self.assertEqual(t, findTarget("base"))
+
+  def test_state(self):
+    t = Target("b", state="dir")
+    self.assertEqual(stateDirContent, t.generateState)
+
+    t = Target("c", state="file")
+    self.assertEqual(stateFileContent, t.generateState)
+  
+    t = Target("d", state="fixed")
+    self.assertEqual(stateFixed, t.generateState)
+
+    t = Target("e", state="new")
+    self.assertEqual(stateNew, t.generateState)
+
+  def test_cmd(self):
+    cmd = lambda t: None
+    t = Target("b", state="file", cmd=cmd)
+    self.assertEqual(cmd, t.cmd)
+
+  def test_deps(self):
+    d0 = Target("d0", state="file")
+    d1 = Target("d1", state="file")
+    t = Target("b", d0, "d1", state="file", cmd=lambda: None)
+    self.assertEqual(d0, t.dependencies[0])
+    self.assertEqual(d1, t.dependencies[1])
+
+  def test_failNoCmd(self):
+    self.assertRaisesRegex(BuildException,
+                           "'t' has dependencies but no ",
+                           lambda: Target("t", "b"))
+
+  def test_failWrongState(self):
+    self.assertRaisesRegex(BuildException,
+                           "'foob' does not exist, cannot ",
+                           lambda: Target("foob"))
+
+  def test_buildFailsForUnknownDependency(self):
+    with self.assertRaisesRegex(BuildException, "'no-dep' is neither"):
+      Target("t", "no-dep", state="file", cmd=None)
+
+
+def writeToFile(text, fname):
+  with open(fname, "wb") as outfile:
+    outfile.write(text.encode())
+
+class TestStateComputation(unittest.TestCase):
+  def test_iterator(self):
+    file = os.path.join(TMPDIR, "thefile")
+    writeToFile("hallo", file)
+    hex = stateFileIteratorContent([file])
+    digest = hashlib.sha256()
+    digest.update(file.encode())
+    digest.update("hallo".encode())
+    self.assertEqual(digest.hexdigest(), hex)
+
+  def test_dirContent(self):
+    mydir = os.path.join(TMPDIR, "dircontenttest")
+    if os.path.isdir(mydir):
+      shutil.rmtree(mydir)
+
+    dir = os.path.join(mydir, "dir0");
+    os.makedirs(dir)
+    t = Target(mydir)
+
+    file1 = os.path.join(mydir, "file1")
+    file2 = os.path.join(mydir, "file2")
+    file3 = os.path.join(dir, "file3")
+    writeToFile("file1", file1);
+    writeToFile("file2", file2);
+    writeToFile("file3", file3);
+    hex = stateDirContent(t)
+
+    digest = hashlib.sha256()
+    for f in [file1, file2, file3]:
+      digest.update(f.encode())
+      digest.update(os.path.basename(f).encode())
+    self.assertEqual(digest.hexdigest(), hex)
+
+
+class TestUpdateTargets(unittest.TestCase):
+  values = dict()
+  def simpleState(self, target: Target) -> str:
+    return self.values.get(target.name, stateNew(target))
+
+  def setUp(self):
+    self.values.clear()
+    LOG.setLevel("DEBUG")
+    if os.path.isfile(STATEFILE):
+      os.remove(STATEFILE)
+
+  def test_singleTarget(self):
+    self.values["blabla"] = "value of blabla"
+    t = Target("blabla", state=self.simpleState)
+    updateTargets("blabla")
+    self.assertTrue(t.started);
+    self.assertTrue(t.updated);
+    self.assertTrue(t.recreated);
+
+    resetTraversalState()
+    updateTargets("blabla")
+    self.assertTrue(t.started);
+    self.assertTrue(t.updated);
+    self.assertFalse(t.recreated)
+
+  ##
+  # A Target with a fixed state or, more generally, a Target the
+  # state of which does not change on recomputation block does not
+  # trigger its dependents, even if recreated for the simple reason:
+  # If, after recreation, the state is as before, there is no point
+  # to trigger the dependents.
+  def test_fixedStateStopsUpdate(self):
+    source = Target("source", state=self.simpleState)
+    fixed = Target("fixed", source, state="fixed", cmd=None)
+    top = Target("top", fixed, state=self.simpleState, cmd=None)
+    self.values[source.name] = "value of source"
+    self.values[top.name] = "value of top"
+    updateTargets(top)
+    self.assertTrue(source.updated)
+    self.assertTrue(source.recreated)
+    self.assertTrue(fixed.updated)
+    self.assertTrue(fixed.recreated)
+    self.assertTrue(top.updated)
+    self.assertTrue(top.recreated)
+
+    resetTraversalState()
+    updateTargets(top)
+    self.assertTrue(source.updated)
+    self.assertFalse(source.recreated)
+    self.assertTrue(fixed.updated)
+    self.assertFalse(fixed.recreated)
+    self.assertTrue(top.updated)
+    self.assertFalse(top.recreated)
+
+    resetTraversalState()
+    self.values[source.name] = "value of source changed"
+
+    updateTargets(top)
+    self.assertTrue(source.updated)
+    self.assertTrue(source.recreated)
+    self.assertTrue(fixed.updated)
+    self.assertTrue(fixed.recreated)
+    self.assertTrue(top.updated)
+    self.assertFalse(top.recreated)
+    
+  def test_buildFailDoesNotUpdateStatefile(self):
+    cmd = lambda t: 1/0 # just fail somehow
+    first = Target("first", state=self.simpleState)
+    second = Target("second", first, state="fixed", cmd=cmd)
+    self.values[first.name] = "value of first"
+    self.values[second.name] = "value of second"
+    with self.assertRaises(ZeroDivisionError):
+      updateTargets(second)
+    self.assertTrue(first.updated)
+    self.assertTrue(first.recreated)
+    self.assertTrue(second.updated)
+    self.assertFalse(second.recreated)
+
+    ## Now run again and see that first is again recreated
+    resetTraversalState()
+    with self.assertRaises(ZeroDivisionError):
+      updateTargets(second)
+    self.assertTrue(first.recreated)
+
+
+if __name__ == '__main__':
+  #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
+  unittest.main()
+
