@@ -32,4 +32,11 @@ coverage = Target(os.path.join("build", "coverage"), "coverageRun",
                   alias="coverage", state="dir", cmd=coverageReport)
 
 
+def doApidoc(target: Target):
+  pb = target.dependencies[0].name
+  pbexec("pdoc3", "--html", "-f", "-o", target.name, pb)
+
+Target("./apidoc", pb,
+       state="dir", alias="apidoc", cmd=doApidoc)
+
 updateTargets(sys.argv[1])

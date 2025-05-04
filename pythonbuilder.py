@@ -1,3 +1,7 @@
+"""
+Your primary entry points are the `Target` constructor to create your
+targets and `updateTargets()` to bring some targets up to date.
+"""
 import sys
 import os
 import time
@@ -9,6 +13,8 @@ from configparser import ConfigParser
 import logging
 import inspect
 import subprocess
+
+STARTTIME = time.time_ns()
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 LOG = logging.getLogger()
@@ -32,16 +38,30 @@ class BuildException(Exception): #{
 #}
 
 
-##
-# @param options may contain
-#  - state
-#  - cmd: must be present if dependencies are provided
-#  - alias
-# @param dependencies must be a list contaning only Target objects
-# @return the {@link Target} created
 @dataclass(init=False, eq=False)
 class Target: #{
-  def __init__(self, target, *dependencies, **options): #{
+  """
+  Represents a target with its dependencies, how to compute its state
+  (hashed content, fingerprint), how to (re-)create it and an optional alias.
+  """
+
+  def __init__(self, target: str, *dependencies, **options): #{
+    """
+    Creates a new Target.
+    Args:
+      target (str): a string representing the target, like a file or dir name
+      dependencies (str|Target): the dependencies of this target
+      options (str): keyword arguments as described below
+ 
+    Returns:
+      Target: the target
+
+    The options allow the following keyword arguments
+
+    - state (str|Callable): asdfasdf
+    - alias (str): adfasdf
+    - cmd (Callable): asdfasf
+    """
     if target in TARGETS:
       raise BuildException("'%s' defined already" % target)
 
@@ -68,7 +88,12 @@ class Target: #{
           raise BuildException(("'%s' does not exist, cannot determine state" +
                                 " generator, provide one with state=") % target)
       case _:
-        stateGenerator = options.get("state")
+        sg = options.get("state")
+        if isinstance(sg, type(lambda x: Target)):
+          stateGenerator = options.get("state")
+        else:
+          raise BuildException("'%s' is not a function of Target" % sg)
+
     self.name: str = target
     self.alias: str | None = options.get("alias", None)
     # FIXME: remove single quotes in python 3.14
@@ -92,6 +117,16 @@ class Target: #{
 #}
 
 def findTarget(target: str | Target) -> Target | None: #{
+  """
+  Either returns the given target immediately or looks up the given `str` which
+  may be either a target name or target alias.
+
+  Args:
+    target (str|Target): to look up
+
+  Returns:
+    Target|None: either the target or `None`
+  """
   if isinstance(target, Target):
     return target
   target = ALIAS.get(target, target)
@@ -153,7 +188,53 @@ def resetTraversalState():
     target.updated = False
     target.recreated = False
 
+UNITS = [["ns", 10000, 1000],
+         ["µs", 10000, 1000],
+         ["ms", 10000, 1000],
+         ["s", 120, 60],
+         ]
+def _formatNanoDelta(start: int, now: int) -> str:
+  delta = now - start
+  for i in range(0, len(UNITS)):
+    if delta < UNITS[i][1]:
+      return "%s%s" %(delta, UNITS[i][0])
+    delta = delta // UNITS[i][2]
+  return "%s%s" %(delta, "min")
+
+def _flatten(result: list[str], l: Iterable) -> None:
+  if isinstance(l, str):
+    result.append(l)
+    return
+  if not isinstance(l, Iterable):
+    raise TypeError("parameter must be Iterable but is %s" % l)
+  for elem in l:
+    _flatten(result, elem)
+
+def pbexec(*args):
+  """
+  Shallow wrapper around `subprocess.run` which
+
+  - logs the command line at `INFO` level
+  - runs `subprocess.run()` with the flattened input list
+  - calls check_returncode() on the result
+
+  :param `args` a possibly multi-nested list of `str`
+  """
+  cmd = []
+  _flatten(cmd, args)
+  LOG.info("* %s", " ".join(cmd))
+  subprocess.run(cmd).check_returncode()
+
 def updateTargets(*targets: str | Target):
+  """
+  Updates all targets in turn without resetting the traversal state in between,
+  so if target T1 depends on target T0, in th call `updateTargets(T1, T0)`, the
+  T0 is redundant, because it will be updated already when doing T1.
+
+  :param targets: a `str` provided is looked up with `findTarget`
+  """
+  buildStart = time.time_ns()
+  LOG.info("  startup took %s", _formatNanoDelta(STARTTIME, buildStart))
   states = StateStore(STATEFILE)
   for t in targets:
     target = findTarget(t)
@@ -161,26 +242,10 @@ def updateTargets(*targets: str | Target):
       raise BuildException("target '%s' not defined" % t)
     _updateTarget(states, target, [])
   states.save()
-
-def flatten(result: list[str], l: Iterable) -> None:
-  if isinstance(l, str):
-    result.append(l)
-    return
-  if not isinstance(l, Iterable):
-    raise TypeError("parameter must be Iterable but is %s" % l)
-  for elem in l:
-    flatten(result, elem)
-
-def pbexec(*args):
-  """Shallow wrapper around subprocess.run which
-    - logs the command line to info
-    - runs subprocess.run() with the flattened input list
-    - calls check_returncode() on the reslt
-  """
-  cmd = []
-  flatten(cmd, args)
-  LOG.info("* %s", " ".join(cmd))
-  subprocess.run(cmd).check_returncode()
+  buildEnd = time.time_ns()
+  LOG.info("  build took %s, total %s",
+           _formatNanoDelta(buildStart, buildEnd),
+           _formatNanoDelta(STARTTIME, buildEnd))
 
 def _updateTarget(states: 'StateStore',
                   target: Target,
@@ -216,13 +281,13 @@ def _updateTarget(states: 'StateStore',
     LOG.info("- " + logTag)
     return
 
+  cmdName = target.cmd.__name__ if target.cmd is not None else ""
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s (outdated)" % target.name)
+    LOG.info("+ %s(%s): outdated",cmdName, target.name)
   else:
-    LOG.info("+ %s (%s)" % (target.name, ", ".join(triggeringDeps)))
+    LOG.info("+ %s(%s): <- %s)", cmdName, target.name, ", ".join(triggeringDeps))
   
   if target.cmd is not None:
-    LOG.info("* %s", target.cmd.__name__)
     target.cmd(target)
 
   target.recreated = True
@@ -240,7 +305,7 @@ class StateStore:
                 % self.stateFile)
       return
 
-    LOG.info("  reading %s" % self.stateFile)
+    LOG.debug("  reading %s" % self.stateFile)
 
     config = ConfigParser()
     with open(self.stateFile, "r", encoding="UTF-8") as statefile:
@@ -269,7 +334,7 @@ class StateStore:
     return self.hashes[target.name][1]
 
   def save(self):
-    LOG.info("  writing %s" % self.stateFile)
+    LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
     config = ConfigParser()
 

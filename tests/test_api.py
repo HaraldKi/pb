@@ -57,4 +57,3 @@ class TestTargetApi(unittest.TestCase):
 if __name__ == '__main__':
   #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
   unittest.main()
-    
