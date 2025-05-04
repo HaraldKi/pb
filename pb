@@ -3,7 +3,8 @@ import os
 import subprocess
 import sys
 import glob
-from pythonbuilder import Target, updateTargets, LOG, pbexec
+
+from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
 
 #LOG.setLevel("DEBUG")
 
@@ -38,5 +39,15 @@ def doApidoc(target: Target):
 
 Target("./apidoc", pb,
        state="dir", alias="apidoc", cmd=doApidoc)
+
+def graph(target: Target):
+  result = toGraphviz()
+  with open(target.name, "w", encoding="utf-8") as out:
+    subprocess.run(["dot", "-Tsvg", "-Grankdir=LR"],
+                   input=result, encoding="utf-8",
+                   stdout=out)
+
+Target("dependencies.svg", pb,
+       state="file", alias="graph", cmd=graph)
 
 updateTargets(sys.argv[1])

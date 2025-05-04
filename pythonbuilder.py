@@ -6,6 +6,7 @@ import sys
 import os
 import time
 import hashlib
+from typing import Any, TypeGuard
 from collections.abc import Iterable, Collection, Callable
 import itertools
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ from configparser import ConfigParser
 import logging
 import inspect
 import subprocess
+import json
 
 STARTTIME = time.time_ns()
 
@@ -26,7 +28,7 @@ LOG.setLevel("INFO")
 #         difficult
 
 TARGETS = dict()
-ALIAS = dict()
+ALIAS: dict[str, str] = dict()
 
 ## FIXME: only here for tests, should be properly injectable
 STATEFILE = os.path.join("build", "states")
@@ -69,7 +71,7 @@ class Target: #{
     if len(dependencies) > 0 and not "cmd" in options:
       raise BuildException(("'%s' has dependencies but no command," +
                             " use cmd= to provide one") % target)
-    stateGenerator = None
+    stateGenerator: Callable[[Target],str]
     match options.get("state", None):
       case "dir":
         stateGenerator = stateDirContent
@@ -89,8 +91,8 @@ class Target: #{
                                 " generator, provide one with state=") % target)
       case _:
         sg = options.get("state")
-        if isinstance(sg, type(lambda x: Target)):
-          stateGenerator = options.get("state")
+        if self._isStateGenerator(sg):
+          stateGenerator = sg
         else:
           raise BuildException("'%s' is not a function of Target" % sg)
 
@@ -114,6 +116,12 @@ class Target: #{
     if not self.alias is None:
       ALIAS[self.alias] = target
     TARGETS[target] = self
+
+  def _isStateGenerator(self, g: Any) -> TypeGuard[Callable[['Target'], str]]:
+    if not callable(g):
+      return False
+    ## FIXME: add better test to fail early
+    return True
 #}
 
 def findTarget(target: str | Target) -> Target | None: #{
@@ -129,14 +137,14 @@ def findTarget(target: str | Target) -> Target | None: #{
   """
   if isinstance(target, Target):
     return target
-  target = ALIAS.get(target, target)
-  return TARGETS.get(target, None)
+  mapped: str = ALIAS.get(target, target)
+  return TARGETS.get(mapped, None)
 #}
 
-def stateNew(_t) -> str:
+def stateNew(_t: Any = None) -> str:
   return str(time.time_ns());
 
-def stateFixed(_target) -> str:
+def stateFixed(_t: Target) -> str:
   return "0"
 
 ##
@@ -144,7 +152,7 @@ def stateFixed(_target) -> str:
 # text is hashed as the state
 def stateTextGen(target: Target) -> str:
   digest = hashlib.sha256()
-  digest.upate(target.name().encode())
+  digest.update(target.name.encode())
   return digest.hexdigest()
                
 def stateDirContent(target: Target) -> str:
@@ -178,7 +186,7 @@ def stateFileIteratorContent(it: Iterable[str]) -> str:
       with open(fname, "rb") as file:
         digest.update(file.read())
     else:
-      digest.update(stateNew("").encode())
+      digest.update(stateNew().encode())
   return digest.hexdigest()
 
 def resetTraversalState():
@@ -188,10 +196,10 @@ def resetTraversalState():
     target.updated = False
     target.recreated = False
 
-UNITS = [["ns", 10000, 1000],
-         ["µs", 10000, 1000],
-         ["ms", 10000, 1000],
-         ["s", 120, 60],
+UNITS = [("ns", 10000, 1000),
+         ("µs", 10000, 1000),
+         ("ms", 10000, 1000),
+         ("s", 120, 60),
          ]
 def _formatNanoDelta(start: int, now: int) -> str:
   delta = now - start
@@ -249,7 +257,7 @@ def updateTargets(*targets: str | Target):
 
 def _updateTarget(states: 'StateStore',
                   target: Target,
-                  onbehalf: Collection[Target]):
+                  onbehalf: list[Target]):
   logTag = target.name \
     if target.alias is None \
        else "%s(%s)" % (target.alias, target.name)
@@ -285,7 +293,7 @@ def _updateTarget(states: 'StateStore',
   if len(triggeringDeps) == 0:
     LOG.info("+ %s(%s): outdated",cmdName, target.name)
   else:
-    LOG.info("+ %s(%s): <- %s)", cmdName, target.name, ", ".join(triggeringDeps))
+    LOG.info("+ %s(%s): <- %s", cmdName, target.name, ", ".join(triggeringDeps))
   
   if target.cmd is not None:
     target.cmd(target)
@@ -294,26 +302,48 @@ def _updateTarget(states: 'StateStore',
   targetStateAfter = target.generateState(target)
   states.setHashes(target, targetStateAfter, depsState)
 
+def escdq(s: str) -> str:
+  return s.replace('"', '\\"')
+  
+def _targetToGraphviz(target: Target) -> str:
+  result = ""
+  for dep in target.dependencies:
+    result += f'  "{escdq(dep.name)}" -> "{escdq(target.name)}"'
+
+  if target.alias is not None:
+    result += (f'"{escdq(target.name)}"[label=<{escdq(target.alias)}' +
+               f'<BR/><FONT POINT-SIZE="10">{escdq(target.name)}</FONT>>]')
+  return result
+
+def toGraphviz() -> str:
+  result = "digraph {"
+
+  for target in TARGETS.values():
+    result += _targetToGraphviz(target)
+    
+  result += "}"
+  return result
+
 ########################################################################
 
 class StateStore:
   def __init__(self, stateFile: str):
     self.stateFile = stateFile
-    self.hashes: dict[str,any] = dict()
+    self.hashes: dict[str, tuple[str,str]]
     if not os.path.isfile(self.stateFile):
       LOG.debug("  no file '%s', starting with empty states"
                 % self.stateFile)
+      self.hashes = dict()
       return
 
     LOG.debug("  reading %s" % self.stateFile)
 
-    config = ConfigParser()
     with open(self.stateFile, "r", encoding="UTF-8") as statefile:
-      config.read_file(statefile)
+      self.hashes = json.load(statefile)
 
-      for (key, ownHash) in config.items("own"):
-        depsHash = config.get("deps", key)
-        self.hashes[key] = (ownHash, depsHash)
+    ## prefer a tuple (pair) over a list for the two hashes per target
+    for (key, value) in self.hashes.items():
+      self.hashes[key] = (value[0], value[1])
 
   def __repr__(self):
     return "StateStore[%s]" % self.hashes
@@ -336,13 +366,7 @@ class StateStore:
   def save(self):
     LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
-    config = ConfigParser()
-
-    config.add_section("own")
-    config.add_section("deps")
-    for name in self.hashes:
-      config.set("own", name, self.hashes[name][0])
-      config.set("deps", name, self.hashes[name][1])
       
     with open(self.stateFile, "w", encoding="UTF-8") as statefile:
-      config.write(statefile)
+      json.dump(self.hashes, statefile)
+
