@@ -1,6 +1,4 @@
-"""
-Provides some helper functions to deal with maven repositories and gradle
-short package descriptions
+"""Provides a class to work with maven (gradle) style artifacts.
 """
 
 from pathlib import Path
@@ -11,28 +9,38 @@ from urllib import request
 from abc import abstractmethod
 
 class MavenArtifact:
-  """
-  The triple of group, name, version and type (file extension) to manage an
-  artifact provided, for example, by a maven repository. Basically the three
-  pieces can be used to create URLs and file names to access a repository.
+  """Encapsulates group, name, version and type (file extension) of an artifact
+  as provided, for example, by a maven repository.
 
-  Args:
-    group (str): typically something like "org.json"
-    name (str): name of the artifact, e.g. "json"
-    version (str): version string, like "1.2.3"
-    type (str): ends up as the file extension, e.g. "jar"
+  Basically, the pieces are used to create URLs and file names to access a
+  repository.
   """
   def __init__(self, group: str, name: str, version: str, type: str):
+    """
+    Creates the artifact.
+
+    :param group: typically something like ``"org.json"``
+    :param name: of the artifact, like ``"json"``
+    :param version: of the artifact, like "1.2.3"
+    :param type: ends up as the file extension, like ``"jar"``
+    """
     self.group = group
+    """group of the artifact"""
+
     self.name = name
+    """name of the artifact"""
+    
     self.version = version
+    """artifact version"""
+
     self.type = type
+    """artifact type, typically a file extension like "jar" """
 
   @staticmethod
   def fromGradleShort(triple: str, type: str) -> 'MavenArtifact':
     """
     Create an `MavenArtifact` from a Gradle short form like
-    `"org.json:json:20250107"`.
+    ``"org.json:json:20250107"``.
     """
     parts = triple.split(":")
     if len(parts) != 3:
@@ -41,9 +49,19 @@ class MavenArtifact:
     return MavenArtifact(parts[0], parts[1], parts[2], type)
 
   def filename(self) -> str:
+    """Provides the filename of the artifact.
+
+    :return: file name of the form "name-version.type".
+    """
     return "%s-%s.%s" % (self.name, self.version, self.type)
 
   def repoUrl(self) -> str:
+    """Creates the relative URL part, including `filename()`, which can be used
+    to fetch the target if prefixed by a repository URL.
+
+    :return: URL of the form "g1/g2/.../name/version/filename" where g1,... are
+      the dot-separated parts of the group name
+    """
     return "%s/%s/%s/%s" \
       % (self.group.replace(".", "/"), self.name, self.version, self.filename())
 
@@ -52,8 +70,16 @@ class MavenArtifact:
                mavenRepoUrl: str | None = None,
                alias: str | None =None) -> Target:
     """
-    Args:
-      mavenRepoUrl: must end with '/' otherwise the resulting URL is likely wrong
+    Provides a `Target` which can be used to fetch the artifact and place it into
+    the file system.
+
+    :param dir: directory to copy the artifact to, also the name of the
+      `Target` returned.
+    :param  mavenRepoUrl: The URL to fetch the artifact from. If this is not
+      provided we assume we have a local repository in ``~/.m2``. The string
+      must end with '/' otherwise the resulting URL is likely wrong.
+    :param alias: optinal alias for the target being created
+    :return: the target
     """
     fetcher = _MavenArtifactLocal(self) \
       if mavenRepoUrl is None \
@@ -73,9 +99,9 @@ class _MavenArtifactLocal(_Fetcher):
     self.artifact = artifact;
 
   def fetch(self, target: Target):
-    """
-    Copy the artifact from the local maven repository at `os.environ(HOME)/.m2`
-    to the target's name assumed to be a valid path.
+    """Copy the artifact from the local maven repository at
+    ``os.environ(HOME)/.m2`` to the target's name assumed to be a valid path.
+
     """
     path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
     os.makedirs(os.path.dirname(target.name), exist_ok=True)

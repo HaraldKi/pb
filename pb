@@ -55,6 +55,7 @@ coverage = Target(os.path.join("build", "coverage"), "coverageRun",
 def doApidoc(target: Target):
   pythonbuilder = target.dependencies[0].name
   pbexec("pydoctor", "-q", "--docformat=restructuredtext",
+         "--project-name=pythonbuilder",
          "--html-output=apidoc",
            map(lambda t: t.name, target.dependencies))
   # pbexec("pdoc3", "--html", "-f", "-o", target.name,
