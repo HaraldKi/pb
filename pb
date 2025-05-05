@@ -54,22 +54,24 @@ coverage = Target(os.path.join("build", "coverage"), "coverageRun",
 ############################################################
 def doApidoc(target: Target):
   pythonbuilder = target.dependencies[0].name
-  pbexec("pdoc3", "--html", "-f", "-o", target.name,
-         map(lambda t: t.name, target.dependencies))
+  pbexec("pydoctor", "-q", "--docformat=restructuredtext",
+         "--html-output=apidoc",
+           map(lambda t: t.name, target.dependencies))
+  # pbexec("pdoc3", "--html", "-f", "-o", target.name,
+  #        map(lambda t: t.name, target.dependencies))
 
   # see https://github.com/pdoc3/pdoc/issues/101#issuecomment-1563008560
-  from pdoc import import_module, _render_template # type: ignore
-  import inspect
+  # from pdoc import import_module, _render_template # type: ignore
+  # import inspect
 
-  modules = map(lambda m: (m.__name__ + ".html", inspect.getdoc(m)),
-                [import_module(m, reload=True)
-                 for m in map(lambda t: t.name, target.dependencies)])
+  # modules = map(lambda m: (m.__name__ + ".html", inspect.getdoc(m)),
+  #               [import_module(m, reload=True)
+  #                for m in map(lambda t: t.name, target.dependencies)])
 
-  indexHtml = os.path.join(target.name, "index.html")
-  with open(indexHtml, "w", encoding="utf-8") as index:
-    index.write(_render_template("/html.mako",
-                                 modules=modules,
-                                 title="fuck"))
+  # indexHtml = os.path.join(target.name, "index.html")
+  # with open(indexHtml, "w", encoding="utf-8") as index:
+  #   index.write(_render_template("/html.mako",
+  #                               modules=modules))
 
 Target("./apidoc", pythonbuilder, mavenrepo,
        state="dir", alias="apidoc", cmd=doApidoc)

@@ -19,15 +19,15 @@ from pythonbuilder import (
   updateTargets,
   resetTraversalState,
   LOG,
-  TARGETS,
-  ALIAS,
+  _TARGETS,
+  _ALIAS,
 )
 TMPDIR=os.path.join("build", "testtmp")
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
-    TARGETS.clear()
-    ALIAS.clear()
+    _TARGETS.clear()
+    _ALIAS.clear()
 
   def test_basic(self):
     t = Target("pythonbuilder.py")
@@ -63,11 +63,6 @@ class TestTargetCreation(unittest.TestCase):
     self.assertEqual(d0, t.dependencies[0])
     self.assertEqual(d1, t.dependencies[1])
 
-  def test_failNoCmd(self):
-    self.assertRaisesRegex(BuildException,
-                           "'t' has dependencies but no ",
-                           lambda: Target("t", "b"))
-
   def test_failWrongState(self):
     self.assertRaisesRegex(BuildException,
                            "'foob' does not exist, cannot ",
@@ -75,7 +70,7 @@ class TestTargetCreation(unittest.TestCase):
 
   def test_buildFailsForUnknownDependency(self):
     with self.assertRaisesRegex(BuildException, "'no-dep' is neither"):
-      Target("t", "no-dep", state="file", cmd=None)
+      Target("t", "no-dep", state="file")
 
 
 def writeToFile(text, fname):
@@ -142,14 +137,14 @@ class TestUpdateTargets(unittest.TestCase):
 
   ##
   # A Target with a fixed state or, more generally, a Target the
-  # state of which does not change on recomputation block does not
+  # state of which does not change on recomputation does not
   # trigger its dependents, even if recreated for the simple reason:
   # If, after recreation, the state is as before, there is no point
   # to trigger the dependents.
   def test_fixedStateStopsUpdate(self):
     source = Target("source", state=self.simpleState)
-    fixed = Target("fixed", source, state="fixed", cmd=None)
-    top = Target("top", fixed, state=self.simpleState, cmd=None)
+    fixed = Target("fixed", source, state="fixed")
+    top = Target("top", fixed, state=self.simpleState)
     self.values[source.name] = "value of source"
     self.values[top.name] = "value of top"
     updateTargets(top)

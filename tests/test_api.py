@@ -19,8 +19,8 @@ from pythonbuilder import (
   updateTargets,
   resetTraversalState,
   LOG,
-  TARGETS,
-  ALIAS,
+  _TARGETS,
+  _ALIAS,
 )
 TMPDIR=os.path.join("build", "testtmp")
 
