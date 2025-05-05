@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S PYTHONPYCACHEPREFIX=build/pyc python3
+
 import os
 import subprocess
 import sys
@@ -9,29 +10,36 @@ from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
 #LOG.setLevel("DEBUG")
 
 pythonbuilder = Target("pythonbuilder.py")
+mavenrepo = Target("mavenrepo.py")
 pb = Target("pb")
 testSources = Target("tests")
 
 ############################################################
 def doMypy(target: Target) -> None:
-  pbexec("mypy", map(lambda d: d.name, target.dependencies))
+  files = glob.glob("*.py") + glob.glob("tests/*.py") + ["pb"]
+  pbexec("mypy",
+         "--cache-dir", os.path.join("build", "mypy_cache"),
+         files)
 
-Target("mypy", pythonbuilder, pb,
+mypy = Target("mypy", pythonbuilder, mavenrepo, pb, testSources,
        state="fixed", cmd=doMypy)
 
 ############################################################
 coverageFile = os.path.join("build", "coverage.data")
 os.environ["COVERAGE_FILE"] = coverageFile
-def runCoverage(target: Target):
-  first = True
-  for testpy in glob.glob(target.dependencies[0].name + "/test_*.py"):
-    append = ["-a"]
-    if first:
-      append += []
-    first = False
-    pbexec("python3-coverage", "run", append, testpy)
+os.environ["TEST_MAVENREPO"] = "TRUE"
 
-Target(coverageFile, testSources, pythonbuilder, "mypy",
+def runCoverage(target: Target):
+  pbexec("python3-coverage", "run", "tests/alltests.py")
+ # first = True
+ #  for testpy in glob.glob(target.dependencies[0].name + "/test_*.py"):
+ #    append = ["-a"]
+ #    if first:
+ #      append += []
+ #    first = False
+ #    pbexec("python3-coverage", "run", append, testpy)
+
+Target(coverageFile, testSources, pythonbuilder, mypy,
        alias="coverageRun", state="file", cmd=runCoverage)
 
 
@@ -46,9 +54,24 @@ coverage = Target(os.path.join("build", "coverage"), "coverageRun",
 ############################################################
 def doApidoc(target: Target):
   pythonbuilder = target.dependencies[0].name
-  pbexec("pdoc3", "--html", "-f", "-o", target.name, pythonbuilder)
+  pbexec("pdoc3", "--html", "-f", "-o", target.name,
+         map(lambda t: t.name, target.dependencies))
 
-Target("./apidoc", pythonbuilder,
+  # see https://github.com/pdoc3/pdoc/issues/101#issuecomment-1563008560
+  from pdoc import import_module, _render_template # type: ignore
+  import inspect
+
+  modules = map(lambda m: (m.__name__ + ".html", inspect.getdoc(m)),
+                [import_module(m, reload=True)
+                 for m in map(lambda t: t.name, target.dependencies)])
+
+  indexHtml = os.path.join(target.name, "index.html")
+  with open(indexHtml, "w", encoding="utf-8") as index:
+    index.write(_render_template("/html.mako",
+                                 modules=modules,
+                                 title="fuck"))
+
+Target("./apidoc", pythonbuilder, mavenrepo,
        state="dir", alias="apidoc", cmd=doApidoc)
 
 ############################################################
@@ -63,4 +86,5 @@ Target("dependencies.svg", pb,
        state="file", alias="graph", cmd=graph)
 
 ############################################################
+
 updateTargets(sys.argv[1])

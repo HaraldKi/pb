@@ -53,7 +53,8 @@ class TestTargetApi(unittest.TestCase):
     hash1 = stateFileContent(t)
     hash2 = stateFileContent(t)
     self.assertEqual(hash1, hash2)
-    
+
 if __name__ == '__main__':
+  LOG.setLevel("ERROR")
   #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
-  unittest.main()
+  unittest.main(verbosity=2)

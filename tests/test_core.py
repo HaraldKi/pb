@@ -32,7 +32,7 @@ class TestTargetCreation(unittest.TestCase):
   def test_basic(self):
     t = Target("pythonbuilder.py")
     self.assertEqual(stateFileContent, t.generateState)
-    self.assertEqual(t, findTarget("pythonbuilder.py")) 
+    self.assertEqual(t, findTarget("pythonbuilder.py"))
 
   def test_alias(self):
     t = Target("pythonbuilder.py", alias="base")
@@ -44,7 +44,7 @@ class TestTargetCreation(unittest.TestCase):
 
     t = Target("c", state="file")
     self.assertEqual(stateFileContent, t.generateState)
-  
+
     t = Target("d", state="fixed")
     self.assertEqual(stateFixed, t.generateState)
 
@@ -117,7 +117,7 @@ class TestStateComputation(unittest.TestCase):
 
 
 class TestUpdateTargets(unittest.TestCase):
-  values = dict()
+  values: dict[str, str] = dict()
   def simpleState(self, target: Target) -> str:
     return self.values.get(target.name, stateNew(target))
 
@@ -179,7 +179,7 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertTrue(fixed.recreated)
     self.assertTrue(top.updated)
     self.assertFalse(top.recreated)
-    
+
   def test_buildFailDoesNotUpdateStatefile(self):
     cmd = lambda t: 1/0 # just fail somehow
     first = Target("first", state=self.simpleState)
@@ -203,5 +203,4 @@ class TestUpdateTargets(unittest.TestCase):
 if __name__ == '__main__':
   LOG.setLevel("ERROR")
   #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
-  unittest.main()
-
+  unittest.main(verbosity=2)

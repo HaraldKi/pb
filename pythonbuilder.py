@@ -1,6 +1,5 @@
 """
-Your primary entry points are the `Target` constructor to create your
-targets and `updateTargets()` to bring some targets up to date.
+Define build targets with `Target` and run the build with `updateTargets()`.
 """
 import sys
 import os
@@ -40,6 +39,15 @@ class BuildException(Exception): #{
 #}
 
 
+## FIXME: We should make Target generic in the first parameter and
+## - call this parameter data
+## - rename alias to name
+## - require a name if the data is not of type str
+## This would allow to store arbitrary data in a Target which may
+## help to run commands on it.
+## Alternatively add an optional (generic) field data for this feature.
+## Example: a Target bringing along a MavenArtifact
+## (Not that the latter can be done by users anyway in python.)
 @dataclass(init=False, eq=False)
 class Target: #{
   """
@@ -54,7 +62,7 @@ class Target: #{
       target (str): a string representing the target, like a file or dir name
       dependencies (str|Target): the dependencies of this target
       options (str): keyword arguments as described below
- 
+
     Returns:
       Target: the target
 
@@ -154,7 +162,7 @@ def stateTextGen(target: Target) -> str:
   digest = hashlib.sha256()
   digest.update(target.name.encode())
   return digest.hexdigest()
-               
+
 def stateDirContent(target: Target) -> str:
   it = itertools.chain.from_iterable(
     map(lambda triple: map(lambda f: os.path.join(triple[0], f), triple[2]),
@@ -251,7 +259,7 @@ def updateTargets(*targets: str | Target):
     _updateTarget(states, target, [])
   states.save()
   buildEnd = time.time_ns()
-  LOG.info("  build took %s, total %s",
+  LOG.info("✓ build took %s, total %s",
            _formatNanoDelta(buildStart, buildEnd),
            _formatNanoDelta(STARTTIME, buildEnd))
 
@@ -290,13 +298,16 @@ def _updateTarget(states: 'StateStore',
     return
 
   cmdName = target.cmd.__name__ if target.cmd is not None else ""
-  if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated",cmdName, target.name)
-  else:
-    LOG.info("+ %s(%s): <- %s", cmdName, target.name, ", ".join(triggeringDeps))
-  
+  startNanos = time.time_ns()
   if target.cmd is not None:
     target.cmd(target)
+  took = _formatNanoDelta(startNanos, time.time_ns())
+  if len(triggeringDeps) == 0:
+    LOG.info("+ %s(%s): outdated, %s", cmdName, target.name, took)
+  else:
+    LOG.info("+ %s(%s): <- %s, %s",
+             cmdName, target.name, ", ".join(triggeringDeps), took)
+
 
   target.recreated = True
   targetStateAfter = target.generateState(target)
@@ -304,7 +315,7 @@ def _updateTarget(states: 'StateStore',
 
 def escdq(s: str) -> str:
   return s.replace('"', '\\"')
-  
+
 def _targetToGraphviz(target: Target) -> str:
   result = ""
   for dep in target.dependencies:
@@ -320,7 +331,7 @@ def toGraphviz() -> str:
 
   for target in TARGETS.values():
     result += _targetToGraphviz(target)
-    
+
   result += "}"
   return result
 
@@ -366,7 +377,6 @@ class StateStore:
   def save(self):
     LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
-      
+
     with open(self.stateFile, "w", encoding="UTF-8") as statefile:
       json.dump(self.hashes, statefile)
-
