@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>mavenrepo.MavenArtifact</title>
+    <meta name="generator" content="pydoctor 21.12.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            pythonbuilder <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="class"><code><code><a href="mavenrepo.html">mavenrepo</a></code><wbr></wbr>.<code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        class documentation
+      </div>
+
+      <div class="extrasDocstring">
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">MavenArtifact</span>:</code></p>
+        <p><a href="classIndex.html#mavenrepo.MavenArtifact">View In Hierarchy</a></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div><p>Encapsulates group, name, version and type (file extension) of an artifact
+as provided, for example, by a maven repository.</p>
+<p>Basically, the pieces are used to create URLs and file names to access a
+repository.</p>
+</div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id6">
+  
+  
+  <tr class="staticmethod">
+    
+    <td>Static Method</td>
+    <td><code><a href="#fromGradleShort">fromGradleShort</a></code></td>
+    <td>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like <tt class="rst-docutils literal">"org.json:json:20250107"</tt>.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#__init__">__init__</a></code></td>
+    <td>Creates the artifact.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#asTarget">asTarget</a></code></td>
+    <td>Provides a <code><a href="pythonbuilder.Target.html">Target</a></code> which can be used to fetch the artifact and place it into the file system.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#filename">filename</a></code></td>
+    <td>Provides the filename of the artifact.</td>
+  </tr><tr class="method">
+    
+    <td>Method</td>
+    <td><code><a href="#repoUrl">repoUrl</a></code></td>
+    <td>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used to fetch the target if prefixed by a repository URL.</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#group">group</a></code></td>
+    <td>group of the artifact</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#name">name</a></code></td>
+    <td>name of the artifact</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#type">type</a></code></td>
+    <td>artifact type, typically a file extension like "jar"</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#version">version</a></code></td>
+    <td>artifact version</td>
+  </tr>
+</table>
+        
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basestaticmethod">
+  
+  
+  <a name="mavenrepo.MavenArtifact.fromGradleShort">
+    
+  </a>
+  <a name="fromGradleShort">
+    
+  </a>
+  <div class="functionHeader">
+    @staticmethod<br />
+    <span class="py-keyword">def</span> <span class="py-defname">fromGradleShort</span>(triple, type):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like
+<tt class="rst-docutils literal">"org.json:json:20250107"</tt>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">triple:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="mavenrepo.MavenArtifact.__init__">
+    
+  </a>
+  <a name="__init__">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, group, name, version, type):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Creates the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">group:</span><code>str</code></td><td class="fieldArgDesc">typically something like <tt class="rst-docutils literal">"org.json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like <tt class="rst-docutils literal">"json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">version:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like "1.2.3"</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc">ends up as the file extension, like <tt class="rst-docutils literal">"jar"</tt></td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="mavenrepo.MavenArtifact.asTarget">
+    
+  </a>
+  <a name="asTarget">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">asTarget</span>(self, dir, mavenRepoUrl=None, alias=None):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Provides a <code><a href="pythonbuilder.Target.html">Target</a></code> which can be used to fetch the artifact and place it into
+the file system.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">dir:</span><code>str</code></td><td class="fieldArgDesc">directory to copy the artifact to, also the name of the
+<code><a href="pythonbuilder.Target.html">Target</a></code> returned.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">mavenRepoUrl:</span><code>str|None</code></td><td class="fieldArgDesc">The URL to fetch the artifact from. If this is not
+provided we assume we have a local repository in <tt class="rst-docutils literal"><span class="pre">~/.m2</span></tt>. The string
+must end with '/' otherwise the resulting URL is likely wrong.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str|None</code></td><td class="fieldArgDesc">optinal alias for the target being created</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc">the target</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="mavenrepo.MavenArtifact.filename">
+    
+  </a>
+  <a name="filename">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">filename</span>(self):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Provides the filename of the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">file name of the form "name-version.type".</td></tr></table></div>
+  </div>
+</div><div class="basemethod">
+  
+  
+  <a name="mavenrepo.MavenArtifact.repoUrl">
+    
+  </a>
+  <a name="repoUrl">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">repoUrl</span>(self):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used
+to fetch the target if prefixed by a repository URL.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">URL of the form "g1/g2/.../name/version/filename" where g1,... are
+the dot-separated parts of the group name</td></tr></table></div>
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="mavenrepo.MavenArtifact.group">
+    
+  </a>
+  <a name="group">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">group</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>group of the artifact</div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="mavenrepo.MavenArtifact.name">
+    
+  </a>
+  <a name="name">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">name</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>name of the artifact</div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="mavenrepo.MavenArtifact.type">
+    
+  </a>
+  <a name="type">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">type</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>artifact type, typically a file extension like "jar"</div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="mavenrepo.MavenArtifact.version">
+    
+  </a>
+  <a name="version">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">version</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>artifact version</div>
+    
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for pythonbuilder,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.12.1 at 2025-05-06 15:50:21.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

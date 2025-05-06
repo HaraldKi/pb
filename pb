@@ -84,4 +84,4 @@ Target("dependencies.svg", pb,
 
 ############################################################
 
-updateTargets(sys.argv[1])
+updateTargets(*(sys.argv[1:]))
