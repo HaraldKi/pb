@@ -3,7 +3,7 @@ import os
 import unittest
 
 ## The tests must be started from the project directory
-sys.path += [os.getcwd()]
+sys.path += [os.path.join(os.getcwd(), "src")]
 from pythonbuilder import LOG
 
 from test_api import *

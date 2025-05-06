@@ -4,7 +4,7 @@ import hashlib
 import shutil
 
 ## The tests must be started from the project directory
-sys.path += [os.getcwd()]
+sys.path += [os.path.join(os.getcwd(), "src")]
 
 from pythonbuilder import (
   BuildException,
@@ -30,12 +30,13 @@ class TestTargetCreation(unittest.TestCase):
     _ALIAS.clear()
 
   def test_basic(self):
-    t = Target("pythonbuilder.py")
+    t = Target("pb")
     self.assertEqual(stateFileContent, t.generateState)
-    self.assertEqual(t, findTarget("pythonbuilder.py"))
+    self.assertEqual(t, findTarget("pb"))
 
   def test_alias(self):
-    t = Target("pythonbuilder.py", alias="base")
+    ## we use an arbitrary existing file (FIXME: create test file)
+    t = Target("pb", alias="base")
     self.assertEqual(t, findTarget("base"))
 
   def test_state(self):

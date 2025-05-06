@@ -4,7 +4,7 @@ import os
 import shutil
 
 ## The tests must be started from the project directory
-sys.path += [os.getcwd()]
+sys.path += [os.path.join(os.getcwd(), "src")]
 from pythonbuilder import updateTargets, resetTraversalState, LOG
 from mavenrepo import MavenArtifact
 

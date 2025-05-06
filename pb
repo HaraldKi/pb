@@ -1,22 +1,23 @@
-#!/usr/bin/env -S PYTHONPYCACHEPREFIX=build/pyc python3
+#!/usr/bin/env python3
 
 import os
 import subprocess
 import sys
 import glob
 
+sys.path += ["src"]
 from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
 
 #LOG.setLevel("DEBUG")
 
-pythonbuilder = Target("pythonbuilder.py")
-mavenrepo = Target("mavenrepo.py")
+pythonbuilder = Target("src/pythonbuilder.py")
+mavenrepo = Target("src/mavenrepo.py")
 pb = Target("pb")
 testSources = Target("tests")
 
 ############################################################
 def doMypy(target: Target) -> None:
-  files = glob.glob("*.py") + glob.glob("tests/*.py") + ["pb"]
+  files = glob.glob("src/*.py") + glob.glob("tests/*.py") + ["pb"]
   pbexec("mypy",
          "--cache-dir", os.path.join("build", "mypy_cache"),
          files)
@@ -31,13 +32,6 @@ os.environ["TEST_MAVENREPO"] = "TRUE"
 
 def runCoverage(target: Target):
   pbexec("python3-coverage", "run", "tests/alltests.py")
- # first = True
- #  for testpy in glob.glob(target.dependencies[0].name + "/test_*.py"):
- #    append = ["-a"]
- #    if first:
- #      append += []
- #    first = False
- #    pbexec("python3-coverage", "run", append, testpy)
 
 Target(coverageFile, testSources, pythonbuilder, mypy,
        alias="coverageRun", state="file", cmd=runCoverage)
