@@ -48,27 +48,15 @@ coverage = Target(os.path.join("build", "coverage"), "coverageRun",
 ############################################################
 def doApidoc(target: Target):
   pythonbuilder = target.dependencies[0].name
-  pbexec("pydoctor", "-q", "--docformat=restructuredtext",
+  pbexec("pydoctor", "-q",
+         "--docformat=restructuredtext",
          "--project-name=pythonbuilder",
+         "--project-url=https://codeberg.org/harald/pythonbuilder",
+         "--template-dir=doc-templates",
          "--html-output=apidoc",
            map(lambda t: t.name, target.dependencies))
-  # pbexec("pdoc3", "--html", "-f", "-o", target.name,
-  #        map(lambda t: t.name, target.dependencies))
 
-  # see https://github.com/pdoc3/pdoc/issues/101#issuecomment-1563008560
-  # from pdoc import import_module, _render_template # type: ignore
-  # import inspect
-
-  # modules = map(lambda m: (m.__name__ + ".html", inspect.getdoc(m)),
-  #               [import_module(m, reload=True)
-  #                for m in map(lambda t: t.name, target.dependencies)])
-
-  # indexHtml = os.path.join(target.name, "index.html")
-  # with open(indexHtml, "w", encoding="utf-8") as index:
-  #   index.write(_render_template("/html.mako",
-  #                               modules=modules))
-
-Target("./apidoc", pythonbuilder, mavenrepo,
+Target("./apidoc", pythonbuilder, mavenrepo, Target("doc-templates/extra.css"),
        state="dir", alias="apidoc", cmd=doApidoc)
 
 ############################################################

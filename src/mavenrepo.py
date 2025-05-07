@@ -78,13 +78,15 @@ class MavenArtifact:
     :param  mavenRepoUrl: The URL to fetch the artifact from. If this is not
       provided we assume we have a local repository in ``~/.m2``. The string
       must end with '/' otherwise the resulting URL is likely wrong.
-    :param alias: optinal alias for the target being created
+    :param alias: optional alias for the target being created, defaults to the name
+      of the artifact
     :return: the target
     """
     fetcher = _MavenArtifactLocal(self) \
       if mavenRepoUrl is None \
       else _MavenArtifactRemote(self, mavenRepoUrl)
-
+    if alias is None:
+      alias = self.name
     return Target(os.path.join(dir, self.filename()),
                   state="file", alias=alias,
                   cmd=fetcher.fetch)

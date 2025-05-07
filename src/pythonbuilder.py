@@ -296,6 +296,13 @@ def flatten(result: list[str], l: Iterable) -> None:
   for elem in l:
     flatten(result, elem)
 
+def logcmd(cmd: list[str]):
+  """A standard way to log external commands. These are often run with
+  ``subprocess.run()`` which accepts a string list as the command line. This is
+  the standard way to log the command list also used by `pbexec`.
+  """
+  LOG.info("* %s", " ".join(cmd))
+
 def pbexec(*args):
   """
   Shallow wrapper around
@@ -312,7 +319,7 @@ def pbexec(*args):
   """
   cmd = []
   flatten(cmd, args)
-  LOG.info("* %s", " ".join(cmd))
+  logcmd(cmd)
   subprocess.run(cmd).check_returncode()
 
 def updateTargets(*targets: str | Target):
@@ -463,4 +470,4 @@ class _StateStore:
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
 
     with open(self.stateFile, "w", encoding="UTF-8") as statefile:
-      json.dump(self.hashes, statefile)
+      json.dump(self.hashes, statefile, indent=2)

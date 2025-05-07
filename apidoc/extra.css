@@ -1,0 +1,15 @@
+.navbar-brand .projecthome {
+  color: #3776ab;
+  text-decoration: underline;
+  filter: brighness(0.8);
+}
+.XXX_navbar-brand .projecthome::before {
+  content: "codeberg/";
+  font-size: 30%;
+}
+
+.navbar-brand .projecthome::after {
+  content: " ↗";
+  font-size: 70%;
+  vertical-align: top;
+}
