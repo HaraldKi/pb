@@ -2,6 +2,7 @@ import unittest
 import sys, os
 import hashlib
 import shutil
+from pathlib import Path
 
 ## The tests must be started from the project directory
 sys.path += [os.path.join(os.getcwd(), "src")]
@@ -74,6 +75,27 @@ class TestTargetCreation(unittest.TestCase):
       Target("t", "no-dep", state="file")
 
 
+  def testFailDoublyDeclared(self):
+    Target(Path("x", "z"), state="file")
+    with self.assertRaisesRegex(BuildException, "defined already"):
+      Target(Path("x") / "z", state="file")
+
+  def testFailWrongStateFun(self):
+    with self.assertRaisesRegex(BuildException, "'1' is not"):
+      Target("yada1", state=1)
+
+    with self.assertRaisesRegex(BuildException, "dir>' is not"):
+      Target("yada1", state=dir)
+
+    with self.assertRaisesRegex(BuildException, "str'>' is not"):
+      Target("yada2", state=str)
+
+    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
+      Target("yada3", state=lambda: 'a')
+
+    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
+      Target("yada4", state=lambda a, b: 'a')
+    
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
@@ -115,7 +137,7 @@ class TestStateComputation(unittest.TestCase):
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
   def simpleState(self, target: Target) -> str:
-    return self.values.get(target.name, stateNew(target))
+    return self.values.get(str(target.item), stateNew(target))
 
   def setUp(self):
     self.values.clear()
@@ -146,8 +168,8 @@ class TestUpdateTargets(unittest.TestCase):
     source = Target("source", state=self.simpleState)
     fixed = Target("fixed", source, state="fixed")
     top = Target("top", fixed, state=self.simpleState)
-    self.values[source.name] = "value of source"
-    self.values[top.name] = "value of top"
+    self.values[source.item] = "value of source"
+    self.values[top.item] = "value of top"
     updateTargets(top)
     self.assertTrue(source.updated)
     self.assertTrue(source.recreated)
@@ -166,7 +188,7 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertFalse(top.recreated)
 
     resetTraversalState()
-    self.values[source.name] = "value of source changed"
+    self.values[source.item] = "value of source changed"
 
     updateTargets(top)
     self.assertTrue(source.updated)
@@ -178,10 +200,10 @@ class TestUpdateTargets(unittest.TestCase):
 
   def test_buildFailDoesNotUpdateStatefile(self):
     cmd = lambda t: 1/0 # just fail somehow
-    first = Target("first", state=self.simpleState)
-    second = Target("second", first, state="fixed", cmd=cmd)
-    self.values[first.name] = "value of first"
-    self.values[second.name] = "value of second"
+    first: Target[str] = Target("first", state=self.simpleState)
+    second: Target[str] = Target("second", first, state="fixed", cmd=cmd)
+    self.values[first.item] = "value of first"
+    self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
       updateTargets(second)
     self.assertTrue(first.updated)

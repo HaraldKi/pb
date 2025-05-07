@@ -4,13 +4,17 @@ The functions starting with "state" can be used for the ``state`` parameter
 of `Target()`, but most have a string shortcut. See there.
 """
 
+## See https://stackoverflow.com/a/33533514/2954288
+## for use of class as type annotations before class is fully defined
+from __future__ import annotations
+
 import time
 _STARTTIME = time.time_ns()
 
 import sys
 import os
 import hashlib
-from typing import Any, TypeGuard
+from typing import TypeVar, Generic, Hashable, Any, TypeGuard
 from collections.abc import Iterable, Collection, Callable
 import itertools
 from dataclasses import dataclass
@@ -31,21 +35,12 @@ than creating its own.
 """
 LOG.setLevel("INFO")
 
-## FIXME: get rid of global variables and encapsulate in a Builder class
-## or so.
-## FIXME: remove mutable state from Target, keep it in a separate object,
-##        but check if it worth it as inspection during the build is more
-#         difficult
-_TARGETS = dict()
-_ALIAS: dict[str, str] = dict()
-
 ## FIXME: only here for tests, should be properly injectable
 STATEFILE = os.path.join("build", "states")
 """Path of the file in which to persist the target states.
 
 To force all targets to be rebuild, delete this file. (FIXME: provide proper
 api).
-
 """
 
 class BuildException(Exception): #{
@@ -54,55 +49,52 @@ class BuildException(Exception): #{
     self.message = message
 #}
 
-## FIXME: We should make Target generic in the first parameter and
-## - call this parameter data
-## - rename alias to name
-## - require a name if the data is not of type str
-## This would allow to store arbitrary data in a Target which may
-## help to run commands on it.
-## Alternatively add an optional (generic) field data for this feature.
-## Example: a Target bringing along a MavenArtifact
-## (Not that the latter can be done by users anyway in python.)
+## From Python 3.12, not needed anymore, see:
+## https://mypy.readthedocs.io/en/stable/generics.html
+T = TypeVar('T', bound=Hashable)
+"""The data type wrapped by a `Target`"""
+
+## FIXME: Rename alias to name and str(item) is just the default name.
 ##
 ## FIXME: we should have a stateForward as a middle ground between fixed and
 ## new. This state should change independent of the target itself iff the
 ## dependency state changed.
 @dataclass(init=False, eq=False)
-class Target: #{
+class Target(Generic[T]): #{
   """
   Represents a target with its dependencies, how to compute its state
   (hashed content, fingerprint), how to (re-)create it and an optional alias.
   """
 
-  def __init__(self, name: str,
+  def __init__(self, item: T,
                *dependencies, #: 'Target' | str,
-               state: str | Callable[['Target'], str] | None = None,
+               state: str | Callable[[Target[T]], str] | None = None,
                alias: str = None,
-               cmd: Callable[['Target'],None] | None = None,
+               cmd: Callable[[Target[T]], None] | None = None,
                ): #{
     """
     Creates a new Target.
 
     An "input target", for example a source code directory, may 
-    may be created with just a name, as it has no dependencies, the state
+    may be created with just an item, as it has no dependencies, the state
     generator is derived automatically, because it is an existing directory,
     and nothing needs to be done, so it has no command.
 
-    :param name: represents the target, like a file or directory name
+    :param item: represents the target, like a file or directory name
     :param dependencies: the dependencies of this target
     :param state: describes how to generate a state (checksum, fingerprint)
       for this target. The function must generate a small fingerprint for the
-      `Target`. If not provided, the `name` must denote an **existing** file
+      `Target`. If not provided, the `item` must denote an **existing** file
       or directory. If given as a string, it must be "dir", "file", "new" or
       "fixed" for `stateDirContent`, `stateFileContent`, `stateNew` or
       `stateFixed` respectively.
-    :param alias: An alterantive name for the target which is easier to use,
-      say, on the command line. If the target name is like "build/stuff/bla.html"
+    :param alias: A name for the target to use, for example, on the command
+      line. If the item is like "build/stuff/bla.html"
       then the alias could be just "bla", for example.
     :param cmd: Defines which command to run to (re-)create the target.
     """
-    if name in _TARGETS:
-      raise BuildException("'%s' defined already" % name)
+    if item in _TARGETS:
+      raise BuildException("'%s' defined already" % item)
 
     stateGenerator: Callable[[Target],str]
     match state:
@@ -115,30 +107,31 @@ class Target: #{
       case "fixed":
         stateGenerator = stateFixed
       case None:
-        if os.path.isdir(name):
+        ## FIXME: allow only Path and str not just any odd type
+        if os.path.isdir(str(item)):
           stateGenerator = stateDirContent
-        elif os.path.isfile(name):
+        elif os.path.isfile(str(item)):
           stateGenerator = stateFileContent
         else:
           raise BuildException(("'%s' does not exist, cannot determine state" +
-                                " generator, provide one with state=") % name)
+                                " generator, provide one with state=") % item)
       case _:
-        if self._isStateGenerator(state):
+        if _isStateGenerator(state):
           stateGenerator = state
         else:
           raise BuildException("'%s' is not a function of Target" % state)
 
-    self.name: str = name
-    """The name of the target, often a file or directory path."""
+    self.item: T = item
+    """The item of the target, often a file or directory path."""
 
-    self.alias: str | None = alias
+    self.alias: str = str(item) if alias is None else alias
     """Alternative name more suitable to use on the command line"""
 
     # FIXME: remove single quotes in python 3.14
     self.generateState: Callable[['Target'], str] = stateGenerator
     """Function to generate the state for the target"""
 
-    self.cmd: Callable[['Target'], None] | None = cmd
+    self.cmd: Callable[[Target[T]], None] | None = cmd
     """Function to (re-)create the target."""
 
     self.dependencies = []
@@ -160,28 +153,29 @@ class Target: #{
     """Set during `updateTargets` if this target was out-of-date and its
     command was run. This does not say whether the target actually changed."""
     
-    if not self.alias is None:
-      _ALIAS[self.alias] = name
-    _TARGETS[name] = self
-
-  def _isStateGenerator(self, g: Any) -> TypeGuard[Callable[['Target'], str]]:
-    if not callable(g):
-      return False
-    ## FIXME: add better test to fail early
-    return True
+    _ALIAS[self.alias] = item
+    _TARGETS[item] = self
 #}
 
+## FIXME: get rid of global variables and encapsulate in a Builder class
+## or so.
+## FIXME: remove mutable state from Target, keep it in a separate object,
+##        but check if it worth it as inspection during the build is more
+#         difficult
+_TARGETS: dict[Hashable, Target] = dict()
+_ALIAS: dict[str, Hashable] = dict()
+
 def findTarget(target: str | Target) -> Target | None: #{
-  """
-  Looks up a target by its name or its alias. For convenience, if the
-  parameter is already a `Target`, it is returned as is.
+  """Looks up a target by its alias. For convenience, if the parameter is
+  already a `Target`, it is returned as is.
  
   :param target: to look up
   :return: either the target or ``None``
+
   """
   if isinstance(target, Target):
     return target
-  mapped: str = _ALIAS.get(target, target)
+  mapped: Hashable = _ALIAS.get(target, target)
   return _TARGETS.get(mapped, None)
 #}
 
@@ -199,24 +193,37 @@ def stateDirContent(target: Target) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
 
-  :param target: the name of which is used as the directory to traverse.
+  :param target: the item of which is used as the directory to traverse.
   :return: a hash
   """
   it = itertools.chain.from_iterable(
     map(lambda triple: map(lambda f: os.path.join(triple[0], f), triple[2]),
-        os.walk(target.name))
+        os.walk(target.item))
   )
   return stateFileIteratorContent(it);
 
 def stateFileContent(target: Target) -> str:
   """
-  Feeds the name of the target is a single file nam into `stateFileIteratorContent`
+  Feeds the item of the target is a single file nam into `stateFileIteratorContent`
   and returns the result.
 
-  :param target: the name of which is used as a file name
+  :param target: the item of which is used as a file name
   :return: a hash
   """
-  return stateFileIteratorContent([target.name])
+  return stateFileIteratorContent([target.item])
+
+
+def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
+  if not callable(g):
+    return False
+  ## FIXME: add better test to fail early
+  try:
+    signature = inspect.signature(g)
+  except:
+    return False
+  if signature.parameters is None or len(signature.parameters) != 1:
+    return False
+  return True
 
 ##
 # Computes a state over all dependencies, ignoring the target itself.  Used for
@@ -345,12 +352,10 @@ def updateTargets(*targets: str | Target):
            _formatNanoDelta(_STARTTIME, buildEnd))
 
 def _updateTarget(states: '_StateStore',
-                  target: Target,
+                  target: Target[T],
                   onbehalf: list[Target]):
-  logTag = target.name \
-    if target.alias is None \
-       else "%s(%s)" % (target.alias, target.name)
-  LOG.debug(". " + logTag)
+  logTag = target.alias
+  LOG.debug(". " + logTag) ## fixme: no need for logTag
 
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'"
@@ -364,7 +369,7 @@ def _updateTarget(states: '_StateStore',
       _updateTarget(states, dep, [target] + onbehalf)
     depsDigest.update(states.getOwnHash(dep).encode())
     if dep.recreated:
-      triggeringDeps.append(dep.name)
+      triggeringDeps.append(dep.alias)
 
   target.updated = True
 
@@ -385,10 +390,10 @@ def _updateTarget(states: '_StateStore',
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated, %s", cmdName, target.name, took)
+    LOG.info("+ %s(%s): outdated, %s", cmdName, target.alias, took)
   else:
     LOG.info("+ %s(%s): <- %s, %s",
-             cmdName, target.name, ", ".join(triggeringDeps), took)
+             cmdName, target.alias, ", ".join(triggeringDeps), took)
 
 
   target.recreated = True
@@ -401,11 +406,12 @@ def _escdq(s: str) -> str:
 def _targetToGraphviz(target: Target) -> str:
   result = ""
   for dep in target.dependencies:
-    result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"'
+    result += f'  "{_escdq(dep.alias)}" -> "{_escdq(target.alias)}"'
 
+  ## fixme: put in str(item) possibly?
   if target.alias is not None:
-    result += (f'"{_escdq(target.name)}"[label=<{_escdq(target.alias)}' +
-               f'<BR/><FONT POINT-SIZE="10">{_escdq(target.name)}</FONT>>]')
+    result += (f'"{_escdq(target.alias)}"[label=<{_escdq(target.alias)}' +
+               f'<BR/><FONT POINT-SIZE="10">{_escdq(target.alias)}</FONT>>]')
   return result
 
 def toGraphviz() -> str:
@@ -454,16 +460,16 @@ class _StateStore:
                 target: Target,
                 targetHash: str,
                 depsHash: str):
-    self.hashes[target.name] = (targetHash, depsHash)
+    self.hashes[target.alias] = (targetHash, depsHash)
 
   def get(self, target: Target) -> tuple[str, str]:
-    return self.hashes.get(target.name, ("", ""))
+    return self.hashes.get(target.alias, ("", ""))
 
   def getOwnHash(self, target: Target) -> str:
-    return self.hashes[target.name][0]
+    return self.hashes[target.alias][0]
 
   def getDepsHash(self, target: Target) -> str:
-    return self.hashes[target.name][1]
+    return self.hashes[target.alias][1]
 
   def save(self):
     LOG.debug("  writing %s" % self.stateFile)

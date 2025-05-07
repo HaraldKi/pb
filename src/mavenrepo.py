@@ -8,6 +8,8 @@ import shutil
 from urllib import request
 from abc import abstractmethod
 
+# FIXME: rework to use Path etc for the Target item
+
 class MavenArtifact:
   """Encapsulates group, name, version and type (file extension) of an artifact
   as provided, for example, by a maven repository.
@@ -106,9 +108,9 @@ class _MavenArtifactLocal(_Fetcher):
 
     """
     path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(target.name), exist_ok=True)
-    LOG.info("* fetch %s -> %s", path, target.name)
-    shutil.copy(path, target.name)
+    os.makedirs(os.path.dirname(str(target.item)), exist_ok=True)
+    LOG.info("* fetch %s -> %s", path, str(target.item))
+    shutil.copy(path, str(target.item))
 
 class _MavenArtifactRemote(_Fetcher):
   def __init__(self, artifact: MavenArtifact, repoUrl: str):
@@ -121,9 +123,9 @@ class _MavenArtifactRemote(_Fetcher):
     to the target's name assumed to be a valid path.
     """
     url = self.repoUrl + self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(target.name), exist_ok=True)
-    LOG.info("* fetch %s -> %s", url, target.name)
+    os.makedirs(os.path.dirname(str(target.item)), exist_ok=True)
+    LOG.info("* fetch %s -> %s", url, str(target.item))
     with request.urlopen(url) as response:
       data = response.read()
-      with open(target.name, "wb") as f:
+      with open(str(target.item), "wb") as f:
         f.write(data)
