@@ -8,8 +8,6 @@ import shutil
 from urllib import request
 from abc import abstractmethod
 
-# FIXME: rework to use Path etc for the Target item
-
 class MavenArtifact:
   """Encapsulates group, name, version and type (file extension) of an artifact
   as provided, for example, by a maven repository.
@@ -70,7 +68,7 @@ class MavenArtifact:
   def asTarget(self,
                dir: str,
                mavenRepoUrl: str | None = None,
-               alias: str | None =None) -> Target:
+               alias: str | None =None) -> Target[Path]:
     """
     Provides a `Target` which can be used to fetch the artifact and place it into
     the file system.
@@ -89,7 +87,7 @@ class MavenArtifact:
       else _MavenArtifactRemote(self, mavenRepoUrl)
     if alias is None:
       alias = self.name
-    return Target(os.path.join(dir, self.filename()),
+    return Target(Path(dir, self.filename()),
                   state="file", alias=alias,
                   cmd=fetcher.fetch)
 
@@ -102,30 +100,30 @@ class _MavenArtifactLocal(_Fetcher):
   def __init__(self, artifact: MavenArtifact):
     self.artifact = artifact;
 
-  def fetch(self, target: Target):
+  def fetch(self, target: Target[Path]):
     """Copy the artifact from the local maven repository at
     ``os.environ(HOME)/.m2`` to the target's name assumed to be a valid path.
 
     """
     path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(str(target.item)), exist_ok=True)
-    LOG.info("* fetch %s -> %s", path, str(target.item))
-    shutil.copy(path, str(target.item))
+    target.item.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", path, target.item)
+    shutil.copy(path, target.item)
 
 class _MavenArtifactRemote(_Fetcher):
   def __init__(self, artifact: MavenArtifact, repoUrl: str):
     self.artifact = artifact
     self.repoUrl = repoUrl
 
-  def fetch(self, target: Target):
+  def fetch(self, target: Target[Path]):
     """
     Copy the artifact from the configured maven repository
     to the target's name assumed to be a valid path.
     """
     url = self.repoUrl + self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(str(target.item)), exist_ok=True)
-    LOG.info("* fetch %s -> %s", url, str(target.item))
+    target.item.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", url, target.item)
     with request.urlopen(url) as response:
       data = response.read()
-      with open(str(target.item), "wb") as f:
+      with open(target.item, "wb") as f:
         f.write(data)

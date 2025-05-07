@@ -1,11 +1,11 @@
 import unittest
-import sys, os
+import sys
 import hashlib
 import shutil
 from pathlib import Path
 
 ## The tests must be started from the project directory
-sys.path += [os.path.join(os.getcwd(), "src")]
+sys.path += [str(Path.cwd() / "src")]
 
 from pythonbuilder import (
   BuildException,
@@ -23,7 +23,7 @@ from pythonbuilder import (
   _TARGETS,
   _ALIAS,
 )
-TMPDIR=os.path.join("build", "testtmp")
+_TMPDIR=Path("build", "testtmp")
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
@@ -31,13 +31,13 @@ class TestTargetCreation(unittest.TestCase):
     _ALIAS.clear()
 
   def test_basic(self):
-    t = Target("pb")
+    t = Target(Path("pb"))
     self.assertEqual(stateFileContent, t.generateState)
     self.assertEqual(t, findTarget("pb"))
 
   def test_alias(self):
     ## we use an arbitrary existing file (FIXME: create test file)
-    t = Target("pb", alias="base")
+    t = Target(Path("pb"), alias="base")
     self.assertEqual(t, findTarget("base"))
 
   def test_state(self):
@@ -102,26 +102,26 @@ def writeToFile(text, fname):
 
 class TestStateComputation(unittest.TestCase):
   def test_iterator(self):
-    file = os.path.join(TMPDIR, "thefile")
+    file = _TMPDIR / "thefile"
     writeToFile("hallo", file)
-    hex = stateFileIteratorContent([file])
+    hex = stateFileIteratorContent(lambda: [file])
     digest = hashlib.sha256()
-    digest.update(file.encode())
+    digest.update(str(file).encode())
     digest.update("hallo".encode())
     self.assertEqual(digest.hexdigest(), hex)
 
   def test_dirContent(self):
-    mydir = os.path.join(TMPDIR, "dircontenttest")
-    if os.path.isdir(mydir):
+    mydir = _TMPDIR / "dircontenttest"
+    if mydir.is_dir():
       shutil.rmtree(mydir)
 
-    dir = os.path.join(mydir, "dir0");
-    os.makedirs(dir)
+    dir = mydir / "dir0"
+    dir.mkdir(parents=True, exist_ok=True)
     t = Target(mydir)
 
-    file1 = os.path.join(mydir, "file1")
-    file2 = os.path.join(mydir, "file2")
-    file3 = os.path.join(dir, "file3")
+    file1 = mydir / "file1"
+    file2 = mydir / "file2"
+    file3 = dir /  "file3"
     writeToFile("file1", file1);
     writeToFile("file2", file2);
     writeToFile("file3", file3);
@@ -129,8 +129,8 @@ class TestStateComputation(unittest.TestCase):
 
     digest = hashlib.sha256()
     for f in [file1, file2, file3]:
-      digest.update(f.encode())
-      digest.update(os.path.basename(f).encode())
+      digest.update(str(f).encode())
+      digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
 
@@ -141,8 +141,8 @@ class TestUpdateTargets(unittest.TestCase):
 
   def setUp(self):
     self.values.clear()
-    if os.path.isfile(STATEFILE):
-      os.remove(STATEFILE)
+    if STATEFILE.is_file():
+      STATEFILE.unlink()
 
   def test_singleTarget(self):
     self.values["blabla"] = "value of blabla"

@@ -23,7 +23,7 @@ import logging
 import inspect
 import subprocess
 import json
-
+from pathlib import Path
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 LOG = logging.getLogger()
@@ -36,7 +36,7 @@ than creating its own.
 LOG.setLevel("INFO")
 
 ## FIXME: only here for tests, should be properly injectable
-STATEFILE = os.path.join("build", "states")
+STATEFILE = Path("build", "states")
 """Path of the file in which to persist the target states.
 
 To force all targets to be rebuild, delete this file. (FIXME: provide proper
@@ -96,7 +96,7 @@ class Target(Generic[T]): #{
     if item in _TARGETS:
       raise BuildException("'%s' defined already" % item)
 
-    stateGenerator: Callable[[Target],str]
+    stateGenerator: Callable[[Target], str]
     match state:
       case "dir":
         stateGenerator = stateDirContent
@@ -107,10 +107,9 @@ class Target(Generic[T]): #{
       case "fixed":
         stateGenerator = stateFixed
       case None:
-        ## FIXME: allow only Path and str not just any odd type
-        if os.path.isdir(str(item)):
+        if isinstance(item, Path) and item.is_dir():
           stateGenerator = stateDirContent
-        elif os.path.isfile(str(item)):
+        elif isinstance(item, Path) and item.is_file():
           stateGenerator = stateFileContent
         else:
           raise BuildException(("'%s' does not exist, cannot determine state" +
@@ -127,8 +126,7 @@ class Target(Generic[T]): #{
     self.alias: str = str(item) if alias is None else alias
     """Alternative name more suitable to use on the command line"""
 
-    # FIXME: remove single quotes in python 3.14
-    self.generateState: Callable[['Target'], str] = stateGenerator
+    self.generateState: Callable[[Target], str] = stateGenerator
     """Function to generate the state for the target"""
 
     self.cmd: Callable[[Target[T]], None] | None = cmd
@@ -189,28 +187,30 @@ def stateFixed(_t: Target) -> str:
   """Always returns the same state string, independent of the input."""
   return "0"
 
-def stateDirContent(target: Target) -> str:
+def stateDirContent(target: Target[Path]) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
 
   :param target: the item of which is used as the directory to traverse.
   :return: a hash
   """
-  it = itertools.chain.from_iterable(
-    map(lambda triple: map(lambda f: os.path.join(triple[0], f), triple[2]),
-        os.walk(target.item))
-  )
-  return stateFileIteratorContent(it);
+  if target.item.is_file():
+    raise BuildException("'%s' is a file but expected a directory"
+                         % target.item)
+  return stateFileIteratorContent(lambda: target.item.rglob("*"))
 
-def stateFileContent(target: Target) -> str:
+def stateFileContent(target: Target[Path]) -> str:
   """
-  Feeds the item of the target is a single file nam into `stateFileIteratorContent`
+  Feeds the item of the target as a single file name into `stateFileIteratorContent`
   and returns the result.
 
   :param target: the item of which is used as a file name
   :return: a hash
   """
-  return stateFileIteratorContent([target.item])
+  if target.item.is_dir():
+    raise BuildException("'%s' is a directory but expected a file"
+                         % target.item)
+  return stateFileIteratorContent(lambda: [target.item])
 
 
 def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
@@ -238,12 +238,13 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
 def _stateDepsOnly( target: Target) -> str:
   pass
 
-def stateFileIteratorContent(it: Iterable[str]) -> str:
-  """Creates a combined state over files provided by the iterator.
+def stateFileIteratorContent(it: Callable[[], Iterable[Path]]) -> str:
+  """Creates a combined state over files provided by the iterable.
 
   If a path string from the iterator exists in the file system, its content is
   fed into the checksum, otherwise a `stateNew` is fed in. If the path string
-  denotes a directory, this function fails.
+  denotes a directory, it is ignored. This is a convenience to be able
+  to use this with ``Path.rglob()`` without extra directory name filter.
 
   To make a difference between sets non existing files, all file names are
   also hashed.
@@ -252,10 +253,12 @@ def stateFileIteratorContent(it: Iterable[str]) -> str:
   :return: a hash of all file names and file contents.
   """
   digest = hashlib.sha256()
-  for fname in it:
-    digest.update(fname.encode())
-    if os.path.exists(fname):
-      with open(fname, "rb") as file:
+  for path in it():
+    if path.is_dir():
+      continue
+    digest.update(str(path).encode())
+    if path.exists():
+      with open(path, "rb") as file:
         digest.update(file.read())
     else:
       digest.update(stateNew().encode())
@@ -354,9 +357,6 @@ def updateTargets(*targets: str | Target):
 def _updateTarget(states: '_StateStore',
                   target: Target[T],
                   onbehalf: list[Target]):
-  logTag = target.alias
-  LOG.debug(". " + logTag) ## fixme: no need for logTag
-
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'"
                          % (target, onbehalf))
@@ -380,7 +380,7 @@ def _updateTarget(states: '_StateStore',
   fresh = (targetStateBefore, depsState)
   #LOG.debug("  old %s\n  new %s", old, fresh)
   if old == fresh:
-    LOG.info("- " + logTag)
+    LOG.info("- " + target.alias)
     return
 
   cmdName: str = ""
@@ -409,9 +409,9 @@ def _targetToGraphviz(target: Target) -> str:
     result += f'  "{_escdq(dep.alias)}" -> "{_escdq(target.alias)}"'
 
   ## fixme: put in str(item) possibly?
-  if target.alias is not None:
+  if target.alias != str(target.item):
     result += (f'"{_escdq(target.alias)}"[label=<{_escdq(target.alias)}' +
-               f'<BR/><FONT POINT-SIZE="10">{_escdq(target.alias)}</FONT>>]')
+               f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]')
   return result
 
 def toGraphviz() -> str:
@@ -435,7 +435,7 @@ def toGraphviz() -> str:
 ########################################################################
 
 class _StateStore:
-  def __init__(self, stateFile: str):
+  def __init__(self, stateFile: Path):
     self.stateFile = stateFile
     self.hashes: dict[str, tuple[str,str]]
     if not os.path.isfile(self.stateFile):

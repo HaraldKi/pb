@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 
-import os
+from os import environ
 import subprocess
 import sys
 import glob
+from pathlib import Path
 
 sys.path += ["src"]
-from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
+from pythonbuilder import (
+  Target, updateTargets, LOG, pbexec, toGraphviz
+)
 
 #LOG.setLevel("DEBUG")
+srcDir = Path("src")
+buildDir = Path("build")
 
 ## FIXME: use Path, not just str
-pythonbuilder = Target[str]("src/pythonbuilder.py")
-mavenrepo = Target[str]("src/mavenrepo.py")
-pb = Target[str]("pb")
-testSources = Target[str]("tests")
+pythonbuilder = Target(srcDir / "pythonbuilder.py")
+mavenrepo = Target(srcDir / "mavenrepo.py")
+pb = Target(Path("pb"))
+testSources = Target(Path("tests"))
 
 ############################################################
 def doMypy(target: Target[str]) -> None:
   files = glob.glob("src/*.py") + glob.glob("tests/*.py") + ["pb"]
   pbexec("mypy",
-         "--cache-dir", os.path.join("build", "mypy_cache"),
+         "--cache-dir", str(buildDir / "mypy_cache"),
          "--python-version", "3.10",
          files)
 
@@ -28,9 +33,9 @@ mypy = Target[str]("mypy", pythonbuilder, mavenrepo, pb, testSources,
                    state="fixed", cmd=doMypy)
 
 ############################################################
-coverageFile = os.path.join("build", "coverage.data")
-os.environ["COVERAGE_FILE"] = coverageFile
-os.environ["TEST_MAVENREPO"] = "TRUE"
+coverageFile = buildDir / "coverage.data"
+environ["COVERAGE_FILE"] = str(coverageFile)
+environ["TEST_MAVENREPO"] = "TRUE"
 
 def runCoverage(target: Target):
   pbexec("python3-coverage", "run", "tests/alltests.py")
@@ -40,12 +45,11 @@ Target(coverageFile, testSources, pythonbuilder, mypy,
 
 
 ############################################################
-def coverageReport(target: Target):
+def coverageReport(target: Target[Path]):
   pbexec("python3-coverage", "html", "-d", str(target.item))
 
-coverage = Target[str](os.path.join("build", "coverage"), "coverageRun",
-                       alias="coverage", state="dir", cmd=coverageReport)
-
+coverage = Target(buildDir / "coverage", "coverageRun",
+                  alias="coverage", state="dir", cmd=coverageReport)
 
 ############################################################
 def doApidoc(target: Target):
@@ -58,19 +62,27 @@ def doApidoc(target: Target):
          "--html-output=apidoc",
            map(lambda t: str(t.item), target.dependencies))
 
-Target("./apidoc", pythonbuilder, mavenrepo, Target("doc-templates/extra.css"),
+Target(Path("doc-templates", "extra.css"), alias="extra.css"),  
+Target(Path("apidoc"), pythonbuilder, mavenrepo, "extra.css",
        state="dir", alias="apidoc", cmd=doApidoc)
 
 ############################################################
-def graph(target: Target):
+def graph(target: Target[Path]):
   result = toGraphviz()
-  with open(str(target.item), "w", encoding="utf-8") as out:
+  with open(target.item, "w", encoding="utf-8") as out:
     subprocess.run(["dot", "-Tsvg", "-Grankdir=LR"],
                    input=result, encoding="utf-8",
                    stdout=out)
 
-Target("dependencies.svg", pb,
+Target(Path("dependencies.svg"), pb,
        state="file", alias="graph", cmd=graph)
+
+############################################################
+
+# Run all targets which have no dependents to see if the
+# full build works
+Target("full", "coverage", "apidoc", "graph",
+       state="new")
 
 ############################################################
 
