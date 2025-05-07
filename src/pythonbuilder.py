@@ -54,22 +54,20 @@ class BuildException(Exception): #{
 T = TypeVar('T', bound=Hashable)
 """The data type wrapped by a `Target`"""
 
-## FIXME: Rename alias to name and str(item) is just the default name.
-##
 ## FIXME: we should have a stateForward as a middle ground between fixed and
 ## new. This state should change independent of the target itself iff the
 ## dependency state changed.
 @dataclass(init=False, eq=False)
 class Target(Generic[T]): #{
-  """
-  Represents a target with its dependencies, how to compute its state
-  (hashed content, fingerprint), how to (re-)create it and an optional alias.
+  """Represents a target with an item to create, its dependencies, how to
+  compute its state (hashed content, fingerprint), how to (re-)create it and an
+  optional nice name.
   """
 
   def __init__(self, item: T,
                *dependencies, #: 'Target' | str,
                state: str | Callable[[Target[T]], str] | None = None,
-               alias: str = None,
+               name: str = None,
                cmd: Callable[[Target[T]], None] | None = None,
                ): #{
     """
@@ -88,14 +86,12 @@ class Target(Generic[T]): #{
       or directory. If given as a string, it must be "dir", "file", "new" or
       "fixed" for `stateDirContent`, `stateFileContent`, `stateNew` or
       `stateFixed` respectively.
-    :param alias: A name for the target to use, for example, on the command
-      line. If the item is like "build/stuff/bla.html"
-      then the alias could be just "bla", for example.
+    :param name: A nice name for the target to use, for example, on the command
+      line. The default is ``str(item), so if it is like
+      ``Path("build", "stuff", "woo.html")``
+      then the name could be just "woo", for example.
     :param cmd: Defines which command to run to (re-)create the target.
     """
-    if item in _TARGETS:
-      raise BuildException("'%s' defined already" % item)
-
     stateGenerator: Callable[[Target], str]
     match state:
       case "dir":
@@ -123,7 +119,7 @@ class Target(Generic[T]): #{
     self.item: T = item
     """The item of the target, often a file or directory path."""
 
-    self.alias: str = str(item) if alias is None else alias
+    self.name: str = str(item) if name is None else name
     """Alternative name more suitable to use on the command line"""
 
     self.generateState: Callable[[Target], str] = stateGenerator
@@ -151,30 +147,29 @@ class Target(Generic[T]): #{
     """Set during `updateTargets` if this target was out-of-date and its
     command was run. This does not say whether the target actually changed."""
     
-    _ALIAS[self.alias] = item
-    _TARGETS[item] = self
+    if self.name in _TARGETS:
+      raise BuildException("'%s' defined already" % item)
+
+    _TARGETS[self.name] = self
 #}
 
 ## FIXME: get rid of global variables and encapsulate in a Builder class
 ## or so.
 ## FIXME: remove mutable state from Target, keep it in a separate object,
-##        but check if it worth it as inspection during the build is more
+##        but check if it worth it, as inspection during the build is more
 #         difficult
-_TARGETS: dict[Hashable, Target] = dict()
-_ALIAS: dict[str, Hashable] = dict()
+_TARGETS: dict[str, Target] = dict()
 
 def findTarget(target: str | Target) -> Target | None: #{
-  """Looks up a target by its alias. For convenience, if the parameter is
+  """Looks up a target by its name. For convenience, if the parameter is
   already a `Target`, it is returned as is.
  
   :param target: to look up
   :return: either the target or ``None``
-
   """
   if isinstance(target, Target):
     return target
-  mapped: Hashable = _ALIAS.get(target, target)
-  return _TARGETS.get(mapped, None)
+  return _TARGETS.get(target, None)
 #}
 
 def stateNew(_t: Any = None) -> str:
@@ -369,7 +364,7 @@ def _updateTarget(states: '_StateStore',
       _updateTarget(states, dep, [target] + onbehalf)
     depsDigest.update(states.getOwnHash(dep).encode())
     if dep.recreated:
-      triggeringDeps.append(dep.alias)
+      triggeringDeps.append(dep.name)
 
   target.updated = True
 
@@ -380,7 +375,7 @@ def _updateTarget(states: '_StateStore',
   fresh = (targetStateBefore, depsState)
   #LOG.debug("  old %s\n  new %s", old, fresh)
   if old == fresh:
-    LOG.info("- " + target.alias)
+    LOG.info("- " + target.name)
     return
 
   cmdName: str = ""
@@ -390,10 +385,10 @@ def _updateTarget(states: '_StateStore',
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated, %s", cmdName, target.alias, took)
+    LOG.info("+ %s(%s): outdated, %s", cmdName, target.name, took)
   else:
     LOG.info("+ %s(%s): <- %s, %s",
-             cmdName, target.alias, ", ".join(triggeringDeps), took)
+             cmdName, target.name, ", ".join(triggeringDeps), took)
 
 
   target.recreated = True
@@ -406,11 +401,10 @@ def _escdq(s: str) -> str:
 def _targetToGraphviz(target: Target) -> str:
   result = ""
   for dep in target.dependencies:
-    result += f'  "{_escdq(dep.alias)}" -> "{_escdq(target.alias)}"'
+    result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"'
 
-  ## fixme: put in str(item) possibly?
-  if target.alias != str(target.item):
-    result += (f'"{_escdq(target.alias)}"[label=<{_escdq(target.alias)}' +
+  if target.name != str(target.item):
+    result += (f'"{_escdq(target.name)}"[label=<{_escdq(target.name)}' +
                f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]')
   return result
 
@@ -460,16 +454,16 @@ class _StateStore:
                 target: Target,
                 targetHash: str,
                 depsHash: str):
-    self.hashes[target.alias] = (targetHash, depsHash)
+    self.hashes[target.name] = (targetHash, depsHash)
 
   def get(self, target: Target) -> tuple[str, str]:
-    return self.hashes.get(target.alias, ("", ""))
+    return self.hashes.get(target.name, ("", ""))
 
   def getOwnHash(self, target: Target) -> str:
-    return self.hashes[target.alias][0]
+    return self.hashes[target.name][0]
 
   def getDepsHash(self, target: Target) -> str:
-    return self.hashes[target.alias][1]
+    return self.hashes[target.name][1]
 
   def save(self):
     LOG.debug("  writing %s" % self.stateFile)

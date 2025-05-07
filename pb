@@ -41,7 +41,7 @@ def runCoverage(target: Target):
   pbexec("python3-coverage", "run", "tests/alltests.py")
 
 Target(coverageFile, testSources, pythonbuilder, mypy,
-       alias="coverageRun", state="file", cmd=runCoverage)
+       name="coverageRun", state="file", cmd=runCoverage)
 
 
 ############################################################
@@ -49,7 +49,7 @@ def coverageReport(target: Target[Path]):
   pbexec("python3-coverage", "html", "-d", str(target.item))
 
 coverage = Target(buildDir / "coverage", "coverageRun",
-                  alias="coverage", state="dir", cmd=coverageReport)
+                  name="coverage", state="dir", cmd=coverageReport)
 
 ############################################################
 def doApidoc(target: Target):
@@ -62,9 +62,9 @@ def doApidoc(target: Target):
          "--html-output=apidoc",
            map(lambda t: str(t.item), target.dependencies))
 
-Target(Path("doc-templates", "extra.css"), alias="extra.css"),  
+Target(Path("doc-templates", "extra.css"), name="extra.css"),  
 Target(Path("apidoc"), pythonbuilder, mavenrepo, "extra.css",
-       state="dir", alias="apidoc", cmd=doApidoc)
+       state="dir", name="apidoc", cmd=doApidoc)
 
 ############################################################
 def graph(target: Target[Path]):
@@ -75,7 +75,7 @@ def graph(target: Target[Path]):
                    stdout=out)
 
 Target(Path("dependencies.svg"), pb,
-       state="file", alias="graph", cmd=graph)
+       state="file", name="graph", cmd=graph)
 
 ############################################################
 

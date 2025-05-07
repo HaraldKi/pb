@@ -22,7 +22,6 @@ from pythonbuilder import (
   resetTraversalState,
   LOG,
   _TARGETS,
-  _ALIAS,
 )
 _TMPDIR=Path("build", "testtmp")
 

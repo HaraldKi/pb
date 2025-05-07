@@ -68,7 +68,7 @@ class MavenArtifact:
   def asTarget(self,
                dir: str,
                mavenRepoUrl: str | None = None,
-               alias: str | None =None) -> Target[Path]:
+               name: str | None =None) -> Target[Path]:
     """
     Provides a `Target` which can be used to fetch the artifact and place it into
     the file system.
@@ -78,17 +78,17 @@ class MavenArtifact:
     :param  mavenRepoUrl: The URL to fetch the artifact from. If this is not
       provided we assume we have a local repository in ``~/.m2``. The string
       must end with '/' otherwise the resulting URL is likely wrong.
-    :param alias: optional alias for the target being created, defaults to the name
+    :param name: optional name for the target being created, defaults to the name
       of the artifact
     :return: the target
     """
     fetcher = _MavenArtifactLocal(self) \
       if mavenRepoUrl is None \
       else _MavenArtifactRemote(self, mavenRepoUrl)
-    if alias is None:
-      alias = self.name
+    if name is None:
+      name = self.name
     return Target(Path(dir, self.filename()),
-                  state="file", alias=alias,
+                  state="file", name=name,
                   cmd=fetcher.fetch)
 
 class _Fetcher:

@@ -21,23 +21,21 @@ from pythonbuilder import (
   resetTraversalState,
   LOG,
   _TARGETS,
-  _ALIAS,
 )
 _TMPDIR=Path("build", "testtmp")
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
     _TARGETS.clear()
-    _ALIAS.clear()
 
   def test_basic(self):
     t = Target(Path("pb"))
     self.assertEqual(stateFileContent, t.generateState)
     self.assertEqual(t, findTarget("pb"))
 
-  def test_alias(self):
+  def test_explictName(self):
     ## we use an arbitrary existing file (FIXME: create test file)
-    t = Target(Path("pb"), alias="base")
+    t = Target(Path("pb"), name="base")
     self.assertEqual(t, findTarget("base"))
 
   def test_state(self):
