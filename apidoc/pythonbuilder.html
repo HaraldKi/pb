@@ -88,12 +88,12 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
     
     <td>Class</td>
     <td><code><a href="pythonbuilder.Target.html">Target</a></code></td>
-    <td>Represents a target with its dependencies, how to compute its state (hashed content, fingerprint), how to (re-)create it and an optional alias.</td>
+    <td>Represents a target with an item to create, its dependencies, how to compute its state (hashed content, fingerprint), how to (re-)create it and an optional nice name.</td>
   </tr><tr class="function">
     
     <td>Function</td>
     <td><code><a href="#findTarget">findTarget</a></code></td>
-    <td>Looks up a target by its name or its alias. For convenience, if the parameter is already a <code><a href="pythonbuilder.Target.html">Target</a></code>, it is returned as is.</td>
+    <td>Looks up a target by its name. For convenience, if the parameter is already a <code><a href="pythonbuilder.Target.html">Target</a></code>, it is returned as is.</td>
   </tr><tr class="function">
     
     <td>Function</td>
@@ -102,8 +102,23 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
   </tr><tr class="function">
     
     <td>Function</td>
+    <td><code><a href="#graphToDot">graphToDot</a></code></td>
+    <td>Convenience function to call <code><a href="#toGraphviz">toGraphviz()</a></code> and pass the output through the <tt class="rst-docutils literal">dot</tt> program, writing the image file to the <tt class="rst-docutils literal">target.item</tt>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#logcmd">logcmd</a></code></td>
+    <td>A standard way to log external commands. These are often run with <tt class="rst-docutils literal">subprocess.run()</tt> which accepts a string list as the command line. This is the standard way to log the command list also used by <code><a href="#pbexec">pbexec</a></code>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
     <td><code><a href="#pbexec">pbexec</a></code></td>
-    <td>Shallow wrapper around <a class="rst-reference external" href="https://docs.python.org/3/search.html?q=subprocess.run" target="_top">subprocess.run()</a>.</td>
+    <td>Shallow wrapper around <a class="rst-reference external" href="https://docs.python.org/3/search.html?q=subprocess.run" target="_top">subprocess.run()</a> which</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#registerDependencyGraphTarget">registerDependencyGraphTarget</a></code></td>
+    <td><span class="undocumented">No summary</span></td>
   </tr><tr class="function">
     
     <td>Function</td>
@@ -118,12 +133,12 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
     
     <td>Function</td>
     <td><code><a href="#stateFileContent">stateFileContent</a></code></td>
-    <td>Feeds the name of the target is a single file nam into <code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code> and returns the result.</td>
+    <td>Feeds the item of the target as a single file name into <code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code> and returns the result.</td>
   </tr><tr class="function">
     
     <td>Function</td>
     <td><code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code></td>
-    <td>Creates a combined state over files provided by the iterator.</td>
+    <td>Creates a combined state over files provided by the iterable.</td>
   </tr><tr class="function">
     
     <td>Function</td>
@@ -154,6 +169,11 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
     <td>Constant</td>
     <td><code><a href="#STATEFILE">STATEFILE</a></code></td>
     <td>Path of the file in which to persist the target states.</td>
+  </tr><tr class="constant">
+    
+    <td>Constant</td>
+    <td><code><a href="#T">T</a></code></td>
+    <td>The data type wrapped by a <code><a href="pythonbuilder.Target.html">Target</a></code></td>
   </tr><tr class="class private">
     
     <td>Class</td>
@@ -172,6 +192,11 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
   </tr><tr class="function private">
     
     <td>Function</td>
+    <td><code><a href="#_isStateGenerator">_isStateGenerator</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
     <td><code><a href="#_stateDepsOnly">_stateDepsOnly</a></code></td>
     <td><span class="undocumented">Undocumented</span></td>
   </tr><tr class="function private">
@@ -183,11 +208,6 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
     
     <td>Function</td>
     <td><code><a href="#_updateTarget">_updateTarget</a></code></td>
-    <td><span class="undocumented">Undocumented</span></td>
-  </tr><tr class="constant private">
-    
-    <td>Constant</td>
-    <td><code><a href="#_ALIAS">_ALIAS</a></code></td>
     <td><span class="undocumented">Undocumented</span></td>
   </tr><tr class="constant private">
     
@@ -230,8 +250,8 @@ of <code><a href="pythonbuilder.Target.html">Target()</a></code>, but most have 
   <div class="docstring functionBody">
     
     
-    <div>Looks up a target by its name or its alias. For convenience, if the
-parameter is already a <code><a href="pythonbuilder.Target.html">Target</a></code>, it is returned as is.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code>str|<a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc">to look up</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html">Target</a>|None</code></td><td class="fieldArgDesc">either the target or <tt class="rst-docutils literal">None</tt></td></tr></table></div>
+    <div>Looks up a target by its name. For convenience, if the parameter is
+already a <code><a href="pythonbuilder.Target.html">Target</a></code>, it is returned as is.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code>str|<a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc">to look up</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html">Target</a>|None</code></td><td class="fieldArgDesc">either the target or <tt class="rst-docutils literal">None</tt></td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -256,6 +276,47 @@ Iterable satisfying the same constraint.</td></tr></table></div>
 </div><div class="basefunction">
   
   
+  <a name="pythonbuilder.graphToDot">
+    
+  </a>
+  <a name="graphToDot">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">graphToDot</span>(target):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Convenience function to call <code><a href="#toGraphviz">toGraphviz()</a></code> and pass the output through
+the <tt class="rst-docutils literal">dot</tt> program, writing the image file to the <tt class="rst-docutils literal">target.item</tt>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="pythonbuilder.logcmd">
+    
+  </a>
+  <a name="logcmd">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">logcmd</span>(cmd):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>A standard way to log external commands. These are often run with
+<tt class="rst-docutils literal">subprocess.run()</tt> which accepts a string list as the command line. This is
+the standard way to log the command list also used by <code><a href="#pbexec">pbexec</a></code>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>list[<wbr></wbr>str]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
   <a name="pythonbuilder.pbexec">
     
   </a>
@@ -271,13 +332,39 @@ Iterable satisfying the same constraint.</td></tr></table></div>
     
     
     <div><p>Shallow wrapper around
-<a class="rst-reference external" href="https://docs.python.org/3/search.html?q=subprocess.run" target="_top">subprocess.run()</a>.</p>
-<p>It
-- logs the command line at <tt class="rst-docutils literal">INFO</tt> level
-- runs <tt class="rst-docutils literal">subprocess.run()</tt> with the flattened input list
-- calls <tt class="rst-docutils literal">check_returncode()</tt> on the result</p>
+<a class="rst-reference external" href="https://docs.python.org/3/search.html?q=subprocess.run" target="_top">subprocess.run()</a>
+which</p>
+<ul class="rst-simple">
+<li>logs the command line at <tt class="rst-docutils literal">INFO</tt> level</li>
+<li>runs <tt class="rst-docutils literal">subprocess.run()</tt> with the flattened input list</li>
+<li>calls <tt class="rst-docutils literal">check_returncode()</tt> on the result</li>
+</ul>
 <p>If you need more, use <tt class="rst-docutils literal">subprocess.run()</tt> directly, possibly with <code><a href="#flatten">flatten</a></code>.</p>
 <table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*args</span></td><td class="fieldArgDesc">a possibly multiply-nested list of <tt class="rst-docutils literal">str</tt></td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="pythonbuilder.registerDependencyGraphTarget">
+    
+  </a>
+  <a name="registerDependencyGraphTarget">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">registerDependencyGraphTarget</span>(graphFile, name, buildscript=Path(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">pb</span><span class="rst-variable-quote">'</span>)):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Creates two targets, one for the build script, if provided and one for
+the dependencies graph. The extension of the <tt class="rst-docutils literal">graphFile</tt> will be used
+as the image type requested from the <tt class="rst-docutils literal">dot</tt> program. If the <tt class="rst-docutils literal">buildscript</tt>
+is already a <tt class="rst-docutils literal">Target</tt> it is used as the dependency.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">graphFile:</span><code>Path</code></td><td class="fieldArgDesc">to create with the dependency graph after converting the
+output of <code><a href="#toGraphviz">toGraphviz</a></code>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the <tt class="rst-docutils literal">Target</tt> for the graph file</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">buildscript:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]|Path</code></td><td class="fieldArgDesc">to depend on such that the graph is re-created if the
+script changes</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">the <tt class="rst-docutils literal">Target</tt> for the dependency graph</td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -298,9 +385,9 @@ Iterable satisfying the same constraint.</td></tr></table></div>
     
     <div><p>Resets the traversal state in all targets.</p>
 <p>If <code><a href="#updateTargets">updateTargets</a></code> is run again afterwards, it considers all targets in
-turn again. NOTE: this does not reset the persited target state, so without
-changing any data, a subsequent run of <code><a href="#updateTargets">updateTargets</a></code> should do nothing,
-except the build process is not set up optimally.</p>
+turn again.</p>
+<p>NOTE: this does not reset the persited target state, so without
+changing any data, a subsequent run of <code><a href="#updateTargets">updateTargets</a></code> should do nothing.</p>
 </div>
   </div>
 </div><div class="basefunction">
@@ -321,7 +408,7 @@ except the build process is not set up optimally.</p>
     
     
     <div>Feeds all recursively contained files of a directory into
-<code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc">the name of which is used as the directory to traverse.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash</td></tr></table></div>
+<code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">the item of which is used as the directory to traverse.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash</td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -340,8 +427,8 @@ except the build process is not set up optimally.</p>
   <div class="docstring functionBody">
     
     
-    <div>Feeds the name of the target is a single file nam into <code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code>
-and returns the result.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc">the name of which is used as a file name</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash</td></tr></table></div>
+    <div>Feeds the item of the target as a single file name into <code><a href="#stateFileIteratorContent">stateFileIteratorContent</a></code>
+and returns the result.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">the item of which is used as a file name</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash</td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -354,19 +441,22 @@ and returns the result.<table class="fieldTable"><tr class="fieldStart"><td clas
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">stateFileIteratorContent</span>(it):
+    <span class="py-keyword">def</span> <span class="py-defname">stateFileIteratorContent</span>(itGen):
     
   </div>
   <div class="docstring functionBody">
     
     
-    <div><p>Creates a combined state over files provided by the iterator.</p>
+    <div><p>Creates a combined state over files provided by the iterable.</p>
 <p>If a path string from the iterator exists in the file system, its content is
 fed into the checksum, otherwise a <code><a href="#stateNew">stateNew</a></code> is fed in. If the path string
-denotes a directory, this function fails.</p>
-<p>To make a difference between sets non existing files, all file names are
+denotes a directory, it is ignored. This is a convenience to be able
+to use this with <tt class="rst-docutils literal">Path.rglob()</tt> without extra directory name filter.</p>
+<p>To make a difference between sets of non existing files, all file names are
 also hashed.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">it:</span><code>Iterable[<wbr></wbr>str]</code></td><td class="fieldArgDesc">an iterator over path names of files, which may or may not exist.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash of all file names and file contents.</td></tr></table></div>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">itGen:</span><code>Callable[<wbr></wbr>[], <wbr></wbr>Iterable[<wbr></wbr>Path]]</code></td><td class="fieldArgDesc">a supplier providing an iterator over path names of files
+which may or may not exist.</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash of all file names and file contents. If the iterator is empty,
+or contains only empty directories, <code><a href="#stateNew">stateNew()</a></code> is returned.</td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -495,7 +585,28 @@ than creating its own.</p>
 <p>To force all targets to be rebuild, delete this file. (FIXME: provide proper
 api).</p>
 </div>
-    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>os.path.join(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">build</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">states</span><span class="rst-variable-quote">'</span>)</code></pre></td></tr></table>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>Path(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">build</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">pbstates</span><span class="rst-variable-quote">'</span>)</code></pre></td></tr></table>
+  </div>
+</div><div class="baseconstant">
+  
+  
+  <a name="pythonbuilder.T">
+    
+  </a>
+  <a name="T">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">T</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>The data type wrapped by a <code><a href="pythonbuilder.Target.html">Target</a></code></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>TypeVar(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">T</span><span class="rst-variable-quote">'</span>,
+        <wbr></wbr>bound=Hashable)</code></pre></td></tr></table>
   </div>
 </div><div class="basefunction private">
   
@@ -534,6 +645,25 @@ api).</p>
     
     
     <div><p class="undocumented">Undocumented</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">start:</span><code>int</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">now:</span><code>int</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="pythonbuilder._isStateGenerator">
+    
+  </a>
+  <a name="_isStateGenerator">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">_isStateGenerator</span>(g):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">g:</span><code>Any</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>TypeGuard[<wbr></wbr>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="#T">T</a>]], <wbr></wbr>str]]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
   </div>
 </div><div class="basefunction private">
   
@@ -590,27 +720,7 @@ api).</p>
   <div class="docstring functionBody">
     
     
-    <div><p class="undocumented">Undocumented</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">states:</span><code><a href="pythonbuilder._StateStore.html">_StateStore</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">onbehalf:</span><code>list[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
-  </div>
-</div><div class="baseconstant private">
-  
-  
-  <a name="pythonbuilder._ALIAS">
-    
-  </a>
-  <a name="_ALIAS">
-    
-  </a>
-  <div class="functionHeader">
-    
-    <span class="py-defname">_ALIAS</span>: <code>dict[<wbr></wbr>str, <wbr></wbr>str]</code> =
-    
-  </div>
-  <div class="functionBody">
-    
-    
-    <div><p class="undocumented">Undocumented</p></div>
-    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>dict()</code></pre></td></tr></table>
+    <div><p class="undocumented">Undocumented</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">states:</span><code><a href="pythonbuilder._StateStore.html">_StateStore</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="#T">T</a>]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">onbehalf:</span><code>list[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
   </div>
 </div><div class="baseconstant private">
   
@@ -643,7 +753,7 @@ api).</p>
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">_TARGETS</span> =
+    <span class="py-defname">_TARGETS</span>: <code>dict[<wbr></wbr>str, <wbr></wbr><a href="pythonbuilder.Target.html">Target</a>]</code> =
     
   </div>
   <div class="functionBody">
@@ -682,7 +792,7 @@ api).</p>
   <div class="container">
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.12.1 at 2025-05-07 09:52:29.
+    21.12.1 at 2025-05-08 19:22:28.
   </div>
 </footer>
 
