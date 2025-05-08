@@ -36,7 +36,7 @@ updateTargets(*(sys.argv[1:]))
 Run `./pb target` to build the given target according to the recipe described in
 your build script, where target is a name of one of the `Target` objects you created.
 
-A more extensive example, is the [our build script](./bp) or see
+A more extensive example, is the [our build script](./pb) or see
 [below](#example).
 
 ## Functional Overview
@@ -99,11 +99,11 @@ def runPandoc(target: Target[Path]):
     subprocess.run(["pandoc", input], stdout=outfile)
 
 Target(
-  Path("README.html"), # target name, often file or directory name
+  Path("README.html"), # target item, often file or directory name
   rmd,                 # one dependency, could be more
   name="readme",       # nicer name to use on the command line
   state="file",        # how to compute a condensed state (fingerprint, checksum)
-  cmd=runPandoc        # how to create the target, if it is out-of-date
+  cmd=runPandoc        # how to create the target if it is out-of-date
 )
 
 updateTargets(*sys.argv[1:])
@@ -113,7 +113,7 @@ The default name of a `Target`, which has to be unique over the whole built, is
 `str(Target.item)`, where `.item` is initialized by first parameter of
 `Target`.
 
-If you run the command `pb README.html` the following will happen (slightly
+If you run the command `pb readme` the following will happen (slightly
 simplified):
 - The builder finds the target for `"README.html"`.
 - It checks the dependencies, in this case only `"README.md"`.
@@ -121,11 +121,6 @@ simplified):
   so there is nothing to do for this target.
 - Back to `"README.html"` which was never created, so it is not up-to-date and
   its command `runPandoc` is run.
-
-On the command line you could also use `pb readme`, because of the name defined
-for the 2nd target.  Also, in the second `Target` constructor call, you could
-have used the target name `"readme"` instead of `rmd` to specify the
-dependency.
 
 See the [full api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html) for more information.
 
