@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path += ["src"]
 from pythonbuilder import (
-  Target, updateTargets, LOG, pbexec, toGraphviz
+  Target, updateTargets, LOG, pbexec, toGraphviz, registerDependencyGraphTarget
 )
 
 #LOG.setLevel("DEBUG")
@@ -67,15 +67,7 @@ Target(Path("apidoc"), pythonbuilder, mavenrepo, "extra.css",
        state="dir", name="apidoc", cmd=doApidoc)
 
 ############################################################
-def graph(target: Target[Path]):
-  result = toGraphviz()
-  with open(target.item, "w", encoding="utf-8") as out:
-    subprocess.run(["dot", "-Tsvg", "-Grankdir=LR"],
-                   input=result, encoding="utf-8",
-                   stdout=out)
-
-Target(Path("dependencies.svg"), pb,
-       state="file", name="graph", cmd=graph)
+registerDependencyGraphTarget(Path("dependencies.svg"), "graph", pb)
 
 ############################################################
 

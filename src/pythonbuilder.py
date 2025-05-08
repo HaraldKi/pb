@@ -33,10 +33,12 @@ For consistent logging, the build process can import this and use it too rather
 than creating its own.
 
 """
-LOG.setLevel("INFO")
+LOG.setLevel(
+  "INFO" if "" == os.environ.get("PBLOGLEVEL", "") else os.environ["PBLOGLEVEL"]
+)
 
 ## FIXME: only here for tests, should be properly injectable
-STATEFILE = Path("build", "states")
+STATEFILE = Path("build", "pbstates")
 """Path of the file in which to persist the target states.
 
 To force all targets to be rebuild, delete this file. (FIXME: provide proper
@@ -108,7 +110,8 @@ class Target(Generic[T]): #{
         elif isinstance(item, Path) and item.is_file():
           stateGenerator = stateFileContent
         else:
-          raise BuildException(("'%s' does not exist, cannot determine state" +
+          raise BuildException(("'%s' is neither a file nor a directory," +
+                                " cannot determine state" +
                                 " generator, provide one with state=") % item)
       case _:
         if _isStateGenerator(state):
@@ -136,8 +139,8 @@ class Target(Generic[T]): #{
       if d is not None:
         self.dependencies.append(d)
       else:
-        raise BuildException(("dependency '%s' is neither Target nor can be" +
-                               " mapped to a target") % dep)
+        raise BuildException(("dependency '%s' of '%s' is neither Target nor" +
+                              " can be mapped to a target") % (dep, self.name))
     self.started: bool = False
     """Set during `updateTargets` when this target is considered for updating."""
     self.updated: bool = False
@@ -151,6 +154,15 @@ class Target(Generic[T]): #{
       raise BuildException("'%s' defined already" % item)
 
     _TARGETS[self.name] = self
+
+  def __repr__(self):
+    deps = ", ".join([d.name for d in self.dependencies])
+    if len(deps) == 0:
+      deps = "-"
+    s = self.generateState.__name__
+    c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
+    return f"Target({self.name}, {deps}, name={self.name}," + \
+      f" state={s}{c})"
 #}
 
 ## FIXME: get rid of global variables and encapsulate in a Builder class
@@ -233,7 +245,7 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
 def _stateDepsOnly( target: Target) -> str:
   pass
 
-def stateFileIteratorContent(it: Callable[[], Iterable[Path]]) -> str:
+def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   """Creates a combined state over files provided by the iterable.
 
   If a path string from the iterator exists in the file system, its content is
@@ -241,31 +253,36 @@ def stateFileIteratorContent(it: Callable[[], Iterable[Path]]) -> str:
   denotes a directory, it is ignored. This is a convenience to be able
   to use this with ``Path.rglob()`` without extra directory name filter.
 
-  To make a difference between sets non existing files, all file names are
+  To make a difference between sets of non existing files, all file names are
   also hashed.
 
-  :param it: an iterator over path names of files, which may or may not exist.
-  :return: a hash of all file names and file contents.
+  :param itGen: a supplier providing an iterator over path names of files
+    which may or may not exist.
+  :return: a hash of all file names and file contents. If the iterator is empty,
+    or contains only empty directories, `stateNew()` is returned.
   """
   digest = hashlib.sha256()
-  for path in it():
+  found = False
+  for path in itGen():
     if path.is_dir():
       continue
+    found = True
     digest.update(str(path).encode())
     if path.exists():
       with open(path, "rb") as file:
         digest.update(file.read())
     else:
       digest.update(stateNew().encode())
-  return digest.hexdigest()
+  return digest.hexdigest() if found else stateNew()
 
 def resetTraversalState():
   """Resets the traversal state in all targets.
 
   If `updateTargets` is run again afterwards, it considers all targets in
-  turn again. NOTE: this does not reset the persited target state, so without
-  changing any data, a subsequent run of `updateTargets` should do nothing,
-  except the build process is not set up optimally.
+  turn again.
+
+  NOTE: this does not reset the persited target state, so without
+  changing any data, a subsequent run of `updateTargets` should do nothing.
   """
   LOG.debug("  resetting traversal state")
   for target in _TARGETS.values():
@@ -311,9 +328,9 @@ def logcmd(cmd: list[str]):
 def pbexec(*args):
   """
   Shallow wrapper around
-  `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_.
+  `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
+  which
 
-  It
   - logs the command line at ``INFO`` level
   - runs ``subprocess.run()`` with the flattened input list
   - calls ``check_returncode()`` on the result
@@ -356,6 +373,7 @@ def _updateTarget(states: '_StateStore',
     raise BuildException("dependency loop detected: '%s'<-'%s'"
                          % (target, onbehalf))
   target.started = True
+  logTag = target.name
 
   triggeringDeps = []
   depsDigest = hashlib.sha256()
@@ -371,24 +389,29 @@ def _updateTarget(states: '_StateStore',
   targetStateBefore = target.generateState(target)
   depsState = depsDigest.hexdigest()
 
+  strItem = str(target.item)
+  logTag = target.name
+  if logTag != strItem:
+    logTag = logTag+":"+strItem
+
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
-  #LOG.debug("  old %s\n  new %s", old, fresh)
+  LOG.debug("  %s:\n  old %s\n  new %s", logTag, old, fresh)
   if old == fresh:
-    LOG.info("- " + target.name)
+    LOG.info("- " + logTag)
     return
 
-  cmdName: str = ""
+  cmdName: str = "no-op"
   startNanos = time.time_ns()
   if target.cmd is not None:
     cmdName = target.cmd.__name__
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated, %s", cmdName, target.name, took)
+    LOG.info("+ %s(%s): outdated, %s", cmdName, logTag, took)
   else:
     LOG.info("+ %s(%s): <- %s, %s",
-             cmdName, target.name, ", ".join(triggeringDeps), took)
+             cmdName, logTag, ", ".join(triggeringDeps), took)
 
 
   target.recreated = True
@@ -425,6 +448,37 @@ def toGraphviz() -> str:
 
   result += "}"
   return result
+
+def registerDependencyGraphTarget(
+    graphFile: Path,
+    name: str,
+    buildscript: Target[Path] | Path = Path("pb")) -> Target[Path]:
+  
+  """Creates two targets, one for the build script, if provided and one for
+  the dependencies graph. The extension of the ``graphFile`` will be used
+  as the image type requested from the ``dot`` program. If the ``buildscript``
+  is already a ``Target`` it is used as the dependency.
+
+  :param graphFile: to create with the dependency graph after converting the
+    output of `toGraphviz`.
+  :param name: of the ``Target`` for the graph file
+  :param buildscript: to depend on such that the graph is re-created if the
+    script changes
+  :return: the ``Target`` for the dependency graph
+  """
+  dep = buildscript if isinstance(buildscript, Target) else Target(buildscript)
+  return Target(graphFile, dep, name=name, state="file", cmd=graphToDot)
+
+def graphToDot(target: Target[Path]):
+  """Convenience function to call `toGraphviz()` and pass the output through
+  the ``dot`` program, writing the image file to the ``target.item``.
+  """
+  result = toGraphviz()
+  filetype = target.item.suffix[1:]
+  cmd = ["dot", "-T" + filetype, "-Grankdir=LR"]
+  logcmd(cmd)
+  with open(target.item, "w", encoding="utf-8") as out:
+    subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
 
 ########################################################################
 

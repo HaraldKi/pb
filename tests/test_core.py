@@ -65,11 +65,11 @@ class TestTargetCreation(unittest.TestCase):
 
   def test_failWrongState(self):
     self.assertRaisesRegex(BuildException,
-                           "'foob' does not exist, cannot ",
+                           "'foob' is neither a file nor a directory, cannot",
                            lambda: Target("foob"))
 
   def test_buildFailsForUnknownDependency(self):
-    with self.assertRaisesRegex(BuildException, "'no-dep' is neither"):
+    with self.assertRaisesRegex(BuildException, "'no-dep' of 't' is neither"):
       Target("t", "no-dep", state="file")
 
 
