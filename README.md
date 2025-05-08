@@ -89,38 +89,43 @@ sys.path += ["pythonbuilder"]
 from pythonbuilder import Target, updateTargets
 
 ## Declare an initial target, assume it is an existing file in the project
-rmd = Target("README.md")
+rmd = Target(Path("README.md"))
 
 ## Declare README.html as file to be created by running runPandoc
-def runPandoc(target: Target):
+def runPandoc(target: Target[Path]):
   # The dependencies are in the order in which they are provided to Target below
-  input = target.dependencies[0].name
-  with open(target.name, "w", encoding="utf-8") as outfile:
+  input = str(target.dependencies[0].item)
+  with open(target.item, "w", encoding="utf-8") as outfile:
     subprocess.run(["pandoc", input], stdout=outfile)
 
-Target("README.html", # target name, often file or directory name
-       rmd,           # one dependency, could be more
-       alias="readme",# nicer name to use on the command line
-       state="file",  # how to compute a condensed state (fingerprint, checksum)
-       cmd=runPandoc  # how to create the target, if it is out-of-date
-       )
+Target(
+  Path("README.html"), # target name, often file or directory name
+  rmd,                 # one dependency, could be more
+  name="readme",       # nicer name to use on the command line
+  state="file",        # how to compute a condensed state (fingerprint, checksum)
+  cmd=runPandoc        # how to create the target, if it is out-of-date
+)
 
 updateTargets(*sys.argv[1:])
 ```
 
+The default name of a `Target`, which has to be unique over the whole built, is
+`str(Target.item)`, where `.item` is initialized by first parameter of
+`Target`.
+
 If you run the command `pb README.html` the following will happen (slightly
 simplified):
 - The builder finds the target for `"README.html"`.
-- It checks the dependencies, in the case only `"README.md"`.
+- It checks the dependencies, in this case only `"README.md"`.
 - It sees that the latter has no dependencies in itself and no `cmd=` parameter,
   so there is nothing to do for this target.
 - Back to `"README.html"` which was never created, so it is not up-to-date and
   its command `runPandoc` is run.
 
-On the command line you could also use `pb readme`, because of the alias defined
+On the command line you could also use `pb readme`, because of the name defined
 for the 2nd target.  Also, in the second `Target` constructor call, you could
-have used the target name `"README.html"` instead of `rmd` to specify the
-dependency, or even an alias, if you had defined one for `"README.md"`
+have used the target name `"readme"` instead of `rmd` to specify the
+dependency.
 
 See the [full api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html) for more information.
 

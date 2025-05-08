@@ -4,13 +4,17 @@ The functions starting with "state" can be used for the ``state`` parameter
 of `Target()`, but most have a string shortcut. See there.
 """
 
+## See https://stackoverflow.com/a/33533514/2954288
+## for use of class as type annotations before class is fully defined
+from __future__ import annotations
+
 import time
 _STARTTIME = time.time_ns()
 
 import sys
 import os
 import hashlib
-from typing import Any, TypeGuard
+from typing import TypeVar, Generic, Hashable, Any, TypeGuard
 from collections.abc import Iterable, Collection, Callable
 import itertools
 from dataclasses import dataclass
@@ -19,7 +23,7 @@ import logging
 import inspect
 import subprocess
 import json
-
+from pathlib import Path
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 LOG = logging.getLogger()
@@ -29,23 +33,16 @@ For consistent logging, the build process can import this and use it too rather
 than creating its own.
 
 """
-LOG.setLevel("INFO")
-
-## FIXME: get rid of global variables and encapsulate in a Builder class
-## or so.
-## FIXME: remove mutable state from Target, keep it in a separate object,
-##        but check if it worth it as inspection during the build is more
-#         difficult
-_TARGETS = dict()
-_ALIAS: dict[str, str] = dict()
+LOG.setLevel(
+  "INFO" if "" == os.environ.get("PBLOGLEVEL", "") else os.environ["PBLOGLEVEL"]
+)
 
 ## FIXME: only here for tests, should be properly injectable
-STATEFILE = os.path.join("build", "states")
+STATEFILE = Path("build", "pbstates")
 """Path of the file in which to persist the target states.
 
 To force all targets to be rebuild, delete this file. (FIXME: provide proper
 api).
-
 """
 
 class BuildException(Exception): #{
@@ -54,57 +51,50 @@ class BuildException(Exception): #{
     self.message = message
 #}
 
-## FIXME: We should make Target generic in the first parameter and
-## - call this parameter data
-## - rename alias to name
-## - require a name if the data is not of type str
-## This would allow to store arbitrary data in a Target which may
-## help to run commands on it.
-## Alternatively add an optional (generic) field data for this feature.
-## Example: a Target bringing along a MavenArtifact
-## (Not that the latter can be done by users anyway in python.)
-##
+## From Python 3.12, not needed anymore, see:
+## https://mypy.readthedocs.io/en/stable/generics.html
+T = TypeVar('T', bound=Hashable)
+"""The data type wrapped by a `Target`"""
+
 ## FIXME: we should have a stateForward as a middle ground between fixed and
 ## new. This state should change independent of the target itself iff the
 ## dependency state changed.
 @dataclass(init=False, eq=False)
-class Target: #{
-  """
-  Represents a target with its dependencies, how to compute its state
-  (hashed content, fingerprint), how to (re-)create it and an optional alias.
+class Target(Generic[T]): #{
+  """Represents a target with an item to create, its dependencies, how to
+  compute its state (hashed content, fingerprint), how to (re-)create it and an
+  optional nice name.
   """
 
-  def __init__(self, name: str,
+  def __init__(self, item: T,
                *dependencies, #: 'Target' | str,
-               state: str | Callable[['Target'], str] | None = None,
-               alias: str = None,
-               cmd: Callable[['Target'],None] | None = None,
+               state: str | Callable[[Target[T]], str] | None = None,
+               name: str = None,
+               cmd: Callable[[Target[T]], None] | None = None,
                ): #{
     """
     Creates a new Target.
 
     An "input target", for example a source code directory, may 
-    may be created with just a name, as it has no dependencies, the state
+    may be created with just an item, as it has no dependencies, the state
     generator is derived automatically, because it is an existing directory,
     and nothing needs to be done, so it has no command.
 
-    :param name: represents the target, like a file or directory name
+    :param item: represents the target, like a file or directory name
     :param dependencies: the dependencies of this target
     :param state: describes how to generate a state (checksum, fingerprint)
       for this target. The function must generate a small fingerprint for the
-      `Target`. If not provided, the `name` must denote an **existing** file
+      `Target`. If not provided, the `item` must denote an **existing** file
       or directory. If given as a string, it must be "dir", "file", "new" or
       "fixed" for `stateDirContent`, `stateFileContent`, `stateNew` or
       `stateFixed` respectively.
-    :param alias: An alterantive name for the target which is easier to use,
-      say, on the command line. If the target name is like "build/stuff/bla.html"
-      then the alias could be just "bla", for example.
+    :param name: A nice name for the target to use, for example, on the command
+      line. The default is ``str(item), so if it is like
+      ``Path("build", "stuff", "woo.html")``
+      then the name could be just "woo", for example.
     :param cmd: Defines which command to run to (re-)create the target.
     """
-    if name in _TARGETS:
-      raise BuildException("'%s' defined already" % name)
-
-    stateGenerator: Callable[[Target],str]
+    stateGenerator: Callable[[Target], str]
     match state:
       case "dir":
         stateGenerator = stateDirContent
@@ -115,30 +105,30 @@ class Target: #{
       case "fixed":
         stateGenerator = stateFixed
       case None:
-        if os.path.isdir(name):
+        if isinstance(item, Path) and item.is_dir():
           stateGenerator = stateDirContent
-        elif os.path.isfile(name):
+        elif isinstance(item, Path) and item.is_file():
           stateGenerator = stateFileContent
         else:
-          raise BuildException(("'%s' does not exist, cannot determine state" +
-                                " generator, provide one with state=") % name)
+          raise BuildException(("'%s' is neither a file nor a directory," +
+                                " cannot determine state" +
+                                " generator, provide one with state=") % item)
       case _:
-        if self._isStateGenerator(state):
+        if _isStateGenerator(state):
           stateGenerator = state
         else:
           raise BuildException("'%s' is not a function of Target" % state)
 
-    self.name: str = name
-    """The name of the target, often a file or directory path."""
+    self.item: T = item
+    """The item of the target, often a file or directory path."""
 
-    self.alias: str | None = alias
+    self.name: str = str(item) if name is None else name
     """Alternative name more suitable to use on the command line"""
 
-    # FIXME: remove single quotes in python 3.14
-    self.generateState: Callable[['Target'], str] = stateGenerator
+    self.generateState: Callable[[Target], str] = stateGenerator
     """Function to generate the state for the target"""
 
-    self.cmd: Callable[['Target'], None] | None = cmd
+    self.cmd: Callable[[Target[T]], None] | None = cmd
     """Function to (re-)create the target."""
 
     self.dependencies = []
@@ -149,8 +139,8 @@ class Target: #{
       if d is not None:
         self.dependencies.append(d)
       else:
-        raise BuildException(("dependency '%s' is neither Target nor can be" +
-                               " mapped to a target") % dep)
+        raise BuildException(("dependency '%s' of '%s' is neither Target nor" +
+                              " can be mapped to a target") % (dep, self.name))
     self.started: bool = False
     """Set during `updateTargets` when this target is considered for updating."""
     self.updated: bool = False
@@ -160,29 +150,38 @@ class Target: #{
     """Set during `updateTargets` if this target was out-of-date and its
     command was run. This does not say whether the target actually changed."""
     
-    if not self.alias is None:
-      _ALIAS[self.alias] = name
-    _TARGETS[name] = self
+    if self.name in _TARGETS:
+      raise BuildException("'%s' defined already" % item)
 
-  def _isStateGenerator(self, g: Any) -> TypeGuard[Callable[['Target'], str]]:
-    if not callable(g):
-      return False
-    ## FIXME: add better test to fail early
-    return True
+    _TARGETS[self.name] = self
+
+  def __repr__(self):
+    deps = ", ".join([d.name for d in self.dependencies])
+    if len(deps) == 0:
+      deps = "-"
+    s = self.generateState.__name__
+    c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
+    return f"Target({self.name}, {deps}, name={self.name}," + \
+      f" state={s}{c})"
 #}
 
+## FIXME: get rid of global variables and encapsulate in a Builder class
+## or so.
+## FIXME: remove mutable state from Target, keep it in a separate object,
+##        but check if it worth it, as inspection during the build is more
+#         difficult
+_TARGETS: dict[str, Target] = dict()
+
 def findTarget(target: str | Target) -> Target | None: #{
-  """
-  Looks up a target by its name or its alias. For convenience, if the
-  parameter is already a `Target`, it is returned as is.
+  """Looks up a target by its name. For convenience, if the parameter is
+  already a `Target`, it is returned as is.
  
   :param target: to look up
   :return: either the target or ``None``
   """
   if isinstance(target, Target):
     return target
-  mapped: str = _ALIAS.get(target, target)
-  return _TARGETS.get(mapped, None)
+  return _TARGETS.get(target, None)
 #}
 
 def stateNew(_t: Any = None) -> str:
@@ -195,28 +194,43 @@ def stateFixed(_t: Target) -> str:
   """Always returns the same state string, independent of the input."""
   return "0"
 
-def stateDirContent(target: Target) -> str:
+def stateDirContent(target: Target[Path]) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
 
-  :param target: the name of which is used as the directory to traverse.
+  :param target: the item of which is used as the directory to traverse.
   :return: a hash
   """
-  it = itertools.chain.from_iterable(
-    map(lambda triple: map(lambda f: os.path.join(triple[0], f), triple[2]),
-        os.walk(target.name))
-  )
-  return stateFileIteratorContent(it);
+  if target.item.is_file():
+    raise BuildException("'%s' is a file but expected a directory"
+                         % target.item)
+  return stateFileIteratorContent(lambda: target.item.rglob("*"))
 
-def stateFileContent(target: Target) -> str:
+def stateFileContent(target: Target[Path]) -> str:
   """
-  Feeds the name of the target is a single file nam into `stateFileIteratorContent`
+  Feeds the item of the target as a single file name into `stateFileIteratorContent`
   and returns the result.
 
-  :param target: the name of which is used as a file name
+  :param target: the item of which is used as a file name
   :return: a hash
   """
-  return stateFileIteratorContent([target.name])
+  if target.item.is_dir():
+    raise BuildException("'%s' is a directory but expected a file"
+                         % target.item)
+  return stateFileIteratorContent(lambda: [target.item])
+
+
+def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
+  if not callable(g):
+    return False
+  ## FIXME: add better test to fail early
+  try:
+    signature = inspect.signature(g)
+  except:
+    return False
+  if signature.parameters is None or len(signature.parameters) != 1:
+    return False
+  return True
 
 ##
 # Computes a state over all dependencies, ignoring the target itself.  Used for
@@ -231,36 +245,44 @@ def stateFileContent(target: Target) -> str:
 def _stateDepsOnly( target: Target) -> str:
   pass
 
-def stateFileIteratorContent(it: Iterable[str]) -> str:
-  """Creates a combined state over files provided by the iterator.
+def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
+  """Creates a combined state over files provided by the iterable.
 
   If a path string from the iterator exists in the file system, its content is
   fed into the checksum, otherwise a `stateNew` is fed in. If the path string
-  denotes a directory, this function fails.
+  denotes a directory, it is ignored. This is a convenience to be able
+  to use this with ``Path.rglob()`` without extra directory name filter.
 
-  To make a difference between sets non existing files, all file names are
+  To make a difference between sets of non existing files, all file names are
   also hashed.
 
-  :param it: an iterator over path names of files, which may or may not exist.
-  :return: a hash of all file names and file contents.
+  :param itGen: a supplier providing an iterator over path names of files
+    which may or may not exist.
+  :return: a hash of all file names and file contents. If the iterator is empty,
+    or contains only empty directories, `stateNew()` is returned.
   """
   digest = hashlib.sha256()
-  for fname in it:
-    digest.update(fname.encode())
-    if os.path.exists(fname):
-      with open(fname, "rb") as file:
+  found = False
+  for path in itGen():
+    if path.is_dir():
+      continue
+    found = True
+    digest.update(str(path).encode())
+    if path.exists():
+      with open(path, "rb") as file:
         digest.update(file.read())
     else:
       digest.update(stateNew().encode())
-  return digest.hexdigest()
+  return digest.hexdigest() if found else stateNew()
 
 def resetTraversalState():
   """Resets the traversal state in all targets.
 
   If `updateTargets` is run again afterwards, it considers all targets in
-  turn again. NOTE: this does not reset the persited target state, so without
-  changing any data, a subsequent run of `updateTargets` should do nothing,
-  except the build process is not set up optimally.
+  turn again.
+
+  NOTE: this does not reset the persited target state, so without
+  changing any data, a subsequent run of `updateTargets` should do nothing.
   """
   LOG.debug("  resetting traversal state")
   for target in _TARGETS.values():
@@ -306,9 +328,9 @@ def logcmd(cmd: list[str]):
 def pbexec(*args):
   """
   Shallow wrapper around
-  `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_.
+  `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
+  which
 
-  It
   - logs the command line at ``INFO`` level
   - runs ``subprocess.run()`` with the flattened input list
   - calls ``check_returncode()`` on the result
@@ -345,17 +367,13 @@ def updateTargets(*targets: str | Target):
            _formatNanoDelta(_STARTTIME, buildEnd))
 
 def _updateTarget(states: '_StateStore',
-                  target: Target,
+                  target: Target[T],
                   onbehalf: list[Target]):
-  logTag = target.name \
-    if target.alias is None \
-       else "%s(%s)" % (target.alias, target.name)
-  LOG.debug(". " + logTag)
-
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'"
                          % (target, onbehalf))
   target.started = True
+  logTag = target.name
 
   triggeringDeps = []
   depsDigest = hashlib.sha256()
@@ -371,24 +389,29 @@ def _updateTarget(states: '_StateStore',
   targetStateBefore = target.generateState(target)
   depsState = depsDigest.hexdigest()
 
+  strItem = str(target.item)
+  logTag = target.name
+  if logTag != strItem:
+    logTag = logTag+":"+strItem
+
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
-  #LOG.debug("  old %s\n  new %s", old, fresh)
+  LOG.debug("  %s:\n  old %s\n  new %s", logTag, old, fresh)
   if old == fresh:
     LOG.info("- " + logTag)
     return
 
-  cmdName: str = ""
+  cmdName: str = "no-op"
   startNanos = time.time_ns()
   if target.cmd is not None:
     cmdName = target.cmd.__name__
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated, %s", cmdName, target.name, took)
+    LOG.info("+ %s(%s): outdated, %s", cmdName, logTag, took)
   else:
     LOG.info("+ %s(%s): <- %s, %s",
-             cmdName, target.name, ", ".join(triggeringDeps), took)
+             cmdName, logTag, ", ".join(triggeringDeps), took)
 
 
   target.recreated = True
@@ -403,9 +426,9 @@ def _targetToGraphviz(target: Target) -> str:
   for dep in target.dependencies:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"'
 
-  if target.alias is not None:
-    result += (f'"{_escdq(target.name)}"[label=<{_escdq(target.alias)}' +
-               f'<BR/><FONT POINT-SIZE="10">{_escdq(target.name)}</FONT>>]')
+  if target.name != str(target.item):
+    result += (f'"{_escdq(target.name)}"[label=<{_escdq(target.name)}' +
+               f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]')
   return result
 
 def toGraphviz() -> str:
@@ -426,10 +449,41 @@ def toGraphviz() -> str:
   result += "}"
   return result
 
+def registerDependencyGraphTarget(
+    graphFile: Path,
+    name: str,
+    buildscript: Target[Path] | Path = Path("pb")) -> Target[Path]:
+  
+  """Creates two targets, one for the build script, if provided and one for
+  the dependencies graph. The extension of the ``graphFile`` will be used
+  as the image type requested from the ``dot`` program. If the ``buildscript``
+  is already a ``Target`` it is used as the dependency.
+
+  :param graphFile: to create with the dependency graph after converting the
+    output of `toGraphviz`.
+  :param name: of the ``Target`` for the graph file
+  :param buildscript: to depend on such that the graph is re-created if the
+    script changes
+  :return: the ``Target`` for the dependency graph
+  """
+  dep = buildscript if isinstance(buildscript, Target) else Target(buildscript)
+  return Target(graphFile, dep, name=name, state="file", cmd=graphToDot)
+
+def graphToDot(target: Target[Path]):
+  """Convenience function to call `toGraphviz()` and pass the output through
+  the ``dot`` program, writing the image file to the ``target.item``.
+  """
+  result = toGraphviz()
+  filetype = target.item.suffix[1:]
+  cmd = ["dot", "-T" + filetype, "-Grankdir=LR"]
+  logcmd(cmd)
+  with open(target.item, "w", encoding="utf-8") as out:
+    subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
+
 ########################################################################
 
 class _StateStore:
-  def __init__(self, stateFile: str):
+  def __init__(self, stateFile: Path):
     self.stateFile = stateFile
     self.hashes: dict[str, tuple[str,str]]
     if not os.path.isfile(self.stateFile):

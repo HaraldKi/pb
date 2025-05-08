@@ -68,7 +68,7 @@ class MavenArtifact:
   def asTarget(self,
                dir: str,
                mavenRepoUrl: str | None = None,
-               alias: str | None =None) -> Target:
+               name: str | None =None) -> Target[Path]:
     """
     Provides a `Target` which can be used to fetch the artifact and place it into
     the file system.
@@ -78,17 +78,17 @@ class MavenArtifact:
     :param  mavenRepoUrl: The URL to fetch the artifact from. If this is not
       provided we assume we have a local repository in ``~/.m2``. The string
       must end with '/' otherwise the resulting URL is likely wrong.
-    :param alias: optional alias for the target being created, defaults to the name
+    :param name: optional name for the target being created, defaults to the name
       of the artifact
     :return: the target
     """
     fetcher = _MavenArtifactLocal(self) \
       if mavenRepoUrl is None \
       else _MavenArtifactRemote(self, mavenRepoUrl)
-    if alias is None:
-      alias = self.name
-    return Target(os.path.join(dir, self.filename()),
-                  state="file", alias=alias,
+    if name is None:
+      name = self.name
+    return Target(Path(dir, self.filename()),
+                  state="file", name=name,
                   cmd=fetcher.fetch)
 
 class _Fetcher:
@@ -100,30 +100,30 @@ class _MavenArtifactLocal(_Fetcher):
   def __init__(self, artifact: MavenArtifact):
     self.artifact = artifact;
 
-  def fetch(self, target: Target):
+  def fetch(self, target: Target[Path]):
     """Copy the artifact from the local maven repository at
     ``os.environ(HOME)/.m2`` to the target's name assumed to be a valid path.
 
     """
     path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(target.name), exist_ok=True)
-    LOG.info("* fetch %s -> %s", path, target.name)
-    shutil.copy(path, target.name)
+    target.item.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", path, target.item)
+    shutil.copy(path, target.item)
 
 class _MavenArtifactRemote(_Fetcher):
   def __init__(self, artifact: MavenArtifact, repoUrl: str):
     self.artifact = artifact
     self.repoUrl = repoUrl
 
-  def fetch(self, target: Target):
+  def fetch(self, target: Target[Path]):
     """
     Copy the artifact from the configured maven repository
     to the target's name assumed to be a valid path.
     """
     url = self.repoUrl + self.artifact.repoUrl()
-    os.makedirs(os.path.dirname(target.name), exist_ok=True)
-    LOG.info("* fetch %s -> %s", url, target.name)
+    target.item.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", url, target.item)
     with request.urlopen(url) as response:
       data = response.read()
-      with open(target.name, "wb") as f:
+      with open(target.item, "wb") as f:
         f.write(data)

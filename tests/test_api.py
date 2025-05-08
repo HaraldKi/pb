@@ -1,10 +1,11 @@
 import unittest
-import sys, os
+import sys
 import hashlib
 import shutil
+from pathlib import Path
 
 ## The tests must be started from the project directory
-sys.path += [os.path.join(os.getcwd(), "src")]
+sys.path += [str(Path.cwd() / "src")]
 
 
 from pythonbuilder import (
@@ -21,9 +22,8 @@ from pythonbuilder import (
   resetTraversalState,
   LOG,
   _TARGETS,
-  _ALIAS,
 )
-TMPDIR=os.path.join("build", "testtmp")
+_TMPDIR=Path("build", "testtmp")
 
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
@@ -35,12 +35,12 @@ class TestTargetApi(unittest.TestCase):
   """
 
   def setUp(self):
-    if os.path.isdir(TMPDIR):
-      shutil.rmtree(TMPDIR)
-    os.makedirs(TMPDIR, exist_ok=True)
+    if _TMPDIR.is_dir():
+      shutil.rmtree(_TMPDIR)
+    _TMPDIR.mkdir(parents=True, exist_ok=True)
 
   def test_stateFileContent(self):
-    f = os.path.join(TMPDIR, "testout")
+    f = _TMPDIR / "testout"
     t = Target(f, state="file")
 
     ## Don't fail for a non-existent file and provide a new hash each time.

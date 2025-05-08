@@ -1,10 +1,11 @@
 import unittest
-import sys, os
+import sys
 import hashlib
 import shutil
+from pathlib import Path
 
 ## The tests must be started from the project directory
-sys.path += [os.path.join(os.getcwd(), "src")]
+sys.path += [str(Path.cwd() / "src")]
 
 from pythonbuilder import (
   BuildException,
@@ -20,23 +21,21 @@ from pythonbuilder import (
   resetTraversalState,
   LOG,
   _TARGETS,
-  _ALIAS,
 )
-TMPDIR=os.path.join("build", "testtmp")
+_TMPDIR=Path("build", "testtmp")
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
     _TARGETS.clear()
-    _ALIAS.clear()
 
   def test_basic(self):
-    t = Target("pb")
+    t = Target(Path("pb"))
     self.assertEqual(stateFileContent, t.generateState)
     self.assertEqual(t, findTarget("pb"))
 
-  def test_alias(self):
+  def test_explictName(self):
     ## we use an arbitrary existing file (FIXME: create test file)
-    t = Target("pb", alias="base")
+    t = Target(Path("pb"), name="base")
     self.assertEqual(t, findTarget("base"))
 
   def test_state(self):
@@ -66,40 +65,61 @@ class TestTargetCreation(unittest.TestCase):
 
   def test_failWrongState(self):
     self.assertRaisesRegex(BuildException,
-                           "'foob' does not exist, cannot ",
+                           "'foob' is neither a file nor a directory, cannot",
                            lambda: Target("foob"))
 
   def test_buildFailsForUnknownDependency(self):
-    with self.assertRaisesRegex(BuildException, "'no-dep' is neither"):
+    with self.assertRaisesRegex(BuildException, "'no-dep' of 't' is neither"):
       Target("t", "no-dep", state="file")
 
 
+  def testFailDoublyDeclared(self):
+    Target(Path("x", "z"), state="file")
+    with self.assertRaisesRegex(BuildException, "defined already"):
+      Target(Path("x") / "z", state="file")
+
+  def testFailWrongStateFun(self):
+    with self.assertRaisesRegex(BuildException, "'1' is not"):
+      Target("yada1", state=1)
+
+    with self.assertRaisesRegex(BuildException, "dir>' is not"):
+      Target("yada1", state=dir)
+
+    with self.assertRaisesRegex(BuildException, "str'>' is not"):
+      Target("yada2", state=str)
+
+    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
+      Target("yada3", state=lambda: 'a')
+
+    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
+      Target("yada4", state=lambda a, b: 'a')
+    
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
 
 class TestStateComputation(unittest.TestCase):
   def test_iterator(self):
-    file = os.path.join(TMPDIR, "thefile")
+    file = _TMPDIR / "thefile"
     writeToFile("hallo", file)
-    hex = stateFileIteratorContent([file])
+    hex = stateFileIteratorContent(lambda: [file])
     digest = hashlib.sha256()
-    digest.update(file.encode())
+    digest.update(str(file).encode())
     digest.update("hallo".encode())
     self.assertEqual(digest.hexdigest(), hex)
 
   def test_dirContent(self):
-    mydir = os.path.join(TMPDIR, "dircontenttest")
-    if os.path.isdir(mydir):
+    mydir = _TMPDIR / "dircontenttest"
+    if mydir.is_dir():
       shutil.rmtree(mydir)
 
-    dir = os.path.join(mydir, "dir0");
-    os.makedirs(dir)
+    dir = mydir / "dir0"
+    dir.mkdir(parents=True, exist_ok=True)
     t = Target(mydir)
 
-    file1 = os.path.join(mydir, "file1")
-    file2 = os.path.join(mydir, "file2")
-    file3 = os.path.join(dir, "file3")
+    file1 = mydir / "file1"
+    file2 = mydir / "file2"
+    file3 = dir /  "file3"
     writeToFile("file1", file1);
     writeToFile("file2", file2);
     writeToFile("file3", file3);
@@ -107,20 +127,20 @@ class TestStateComputation(unittest.TestCase):
 
     digest = hashlib.sha256()
     for f in [file1, file2, file3]:
-      digest.update(f.encode())
-      digest.update(os.path.basename(f).encode())
+      digest.update(str(f).encode())
+      digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
 
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
   def simpleState(self, target: Target) -> str:
-    return self.values.get(target.name, stateNew(target))
+    return self.values.get(str(target.item), stateNew(target))
 
   def setUp(self):
     self.values.clear()
-    if os.path.isfile(STATEFILE):
-      os.remove(STATEFILE)
+    if STATEFILE.is_file():
+      STATEFILE.unlink()
 
   def test_singleTarget(self):
     self.values["blabla"] = "value of blabla"
@@ -146,8 +166,8 @@ class TestUpdateTargets(unittest.TestCase):
     source = Target("source", state=self.simpleState)
     fixed = Target("fixed", source, state="fixed")
     top = Target("top", fixed, state=self.simpleState)
-    self.values[source.name] = "value of source"
-    self.values[top.name] = "value of top"
+    self.values[source.item] = "value of source"
+    self.values[top.item] = "value of top"
     updateTargets(top)
     self.assertTrue(source.updated)
     self.assertTrue(source.recreated)
@@ -166,7 +186,7 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertFalse(top.recreated)
 
     resetTraversalState()
-    self.values[source.name] = "value of source changed"
+    self.values[source.item] = "value of source changed"
 
     updateTargets(top)
     self.assertTrue(source.updated)
@@ -178,10 +198,10 @@ class TestUpdateTargets(unittest.TestCase):
 
   def test_buildFailDoesNotUpdateStatefile(self):
     cmd = lambda t: 1/0 # just fail somehow
-    first = Target("first", state=self.simpleState)
-    second = Target("second", first, state="fixed", cmd=cmd)
-    self.values[first.name] = "value of first"
-    self.values[second.name] = "value of second"
+    first: Target[str] = Target("first", state=self.simpleState)
+    second: Target[str] = Target("second", first, state="fixed", cmd=cmd)
+    self.values[first.item] = "value of first"
+    self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
       updateTargets(second)
     self.assertTrue(first.updated)

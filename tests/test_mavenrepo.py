@@ -25,7 +25,7 @@ class TestMavenArtifact(unittest.TestCase):
 
     ## first download from remote
     remoteTarget = lib.asTarget(TMPDIR, "https://repo1.maven.org/maven2/",
-                                alias="lib")
+                                name="lib")
     updateTargets("lib")
     self.assertTrue(remoteTarget.recreated)
     self.assertTrue(os.path.isfile(os.path.join(TMPDIR, lib.filename())))

@@ -65,13 +65,14 @@
       </div>
 
       <div class="extrasDocstring">
-        <p><code><span class="py-keyword">class</span> <span class="py-defname">Target</span>:</code></p>
+        <p><code><span class="py-keyword">class</span> <span class="py-defname">Target</span>(<span title="Generic[T]">Generic[T]</span>):</code></p>
         <p><a href="classIndex.html#pythonbuilder.Target">View In Hierarchy</a></p>
       </div>
 
       <div class="moduleDocstring">
-        <div>Represents a target with its dependencies, how to compute its state
-(hashed content, fingerprint), how to (re-)create it and an optional alias.</div>
+        <div>Represents a target with an item to create, its dependencies, how to
+compute its state (hashed content, fingerprint), how to (re-)create it and an
+optional nice name.</div>
       </div>
 
       <div id="splitTables">
@@ -83,11 +84,11 @@
     <td>Method</td>
     <td><code><a href="#__init__">__init__</a></code></td>
     <td>Creates a new Target.</td>
-  </tr><tr class="instancevariable">
+  </tr><tr class="method">
     
-    <td>Instance Variable</td>
-    <td><code><a href="#alias">alias</a></code></td>
-    <td>Alternative name more suitable to use on the command line</td>
+    <td>Method</td>
+    <td><code><a href="#__repr__">__repr__</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -106,8 +107,13 @@
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
+    <td><code><a href="#item">item</a></code></td>
+    <td>The item of the target, often a file or directory path.</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
     <td><code><a href="#name">name</a></code></td>
-    <td>The name of the target, often a file or directory path.</td>
+    <td>Alternative name more suitable to use on the command line</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -123,11 +129,6 @@
     <td>Instance Variable</td>
     <td><code><a href="#updated">updated</a></code></td>
     <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</td>
-  </tr><tr class="method private">
-    
-    <td>Method</td>
-    <td><code><a href="#_isStateGenerator">_isStateGenerator</a></code></td>
-    <td><span class="undocumented">Undocumented</span></td>
   </tr>
 </table>
         
@@ -148,7 +149,7 @@
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, name, *dependencies, state=None, alias=None, cmd=None):
+    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, item, *dependencies, state=None, name=None, cmd=None):
     
   </div>
   <div class="docstring functionBody">
@@ -156,37 +157,37 @@
     
     <div><p>Creates a new Target.</p>
 <p>An "input target", for example a source code directory, may
-may be created with just a name, as it has no dependencies, the state
+may be created with just an item, as it has no dependencies, the state
 generator is derived automatically, because it is an existing directory,
 and nothing needs to be done, so it has no command.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">represents the target, like a file or directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies</span></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>(str|Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>], <wbr></wbr>str])|None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint)
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T">T</a></code></td><td class="fieldArgDesc">represents the target, like a file or directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies</span></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>(str|Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>str])|None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint)
 for this target. The function must generate a small fingerprint for the
-<code><a href="pythonbuilder.Target.html">Target</a></code>. If not provided, the <code><a href="#name">name</a></code> must denote an <strong>existing</strong> file
+<code><a href="pythonbuilder.Target.html">Target</a></code>. If not provided, the <code><a href="#item">item</a></code> must denote an <strong>existing</strong> file
 or directory. If given as a string, it must be "dir", "file", "new" or
 "fixed" for <code><a href="pythonbuilder.html#stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew">stateNew</a></code> or
-<code><a href="pythonbuilder.html#stateFixed">stateFixed</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">alias:</span><code>str</code></td><td class="fieldArgDesc">An alterantive name for the target which is easier to use,
-say, on the command line. If the target name is like "build/stuff/bla.html"
-then the alias could be just "bla", for example.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>], <wbr></wbr>None]|None</code></td><td class="fieldArgDesc">Defines which command to run to (re-)create the target.</td></tr></table></div>
+<code><a href="pythonbuilder.html#stateFixed">stateFixed</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
+line. The default is <tt class="rst-docutils literal">str(item), so if it is like
+<span class="pre">``Path("build",</span> "stuff", "woo.html")</tt>
+then the name could be just "woo", for example.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>None]|None</code></td><td class="fieldArgDesc">Defines which command to run to (re-)create the target.</td></tr></table></div>
   </div>
-</div><div class="baseinstancevariable">
+</div><div class="basemethod">
   
   
-  <a name="pythonbuilder.Target.alias">
+  <a name="pythonbuilder.Target.__repr__">
     
   </a>
-  <a name="alias">
+  <a name="__repr__">
     
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">alias</span>: <code>str|None</code> =
+    <span class="py-keyword">def</span> <span class="py-defname">__repr__</span>(self):
     
   </div>
-  <div class="functionBody">
+  <div class="docstring functionBody">
     
     
-    <div>Alternative name more suitable to use on the command line</div>
-    
+    <div><p class="undocumented">Undocumented</p></div>
   </div>
 </div><div class="baseinstancevariable">
   
@@ -199,7 +200,7 @@ then the alias could be just "bla", for example.</td></tr><tr><td class="fieldAr
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>], <wbr></wbr>None]|None</code> =
+    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>None]|None</code> =
     
   </div>
   <div class="functionBody">
@@ -251,6 +252,26 @@ then the alias could be just "bla", for example.</td></tr><tr><td class="fieldAr
 </div><div class="baseinstancevariable">
   
   
+  <a name="pythonbuilder.Target.item">
+    
+  </a>
+  <a name="item">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">item</span>: <code><a href="pythonbuilder.html#T">T</a></code> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>The item of the target, often a file or directory path.</div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
   <a name="pythonbuilder.Target.name">
     
   </a>
@@ -265,7 +286,7 @@ then the alias could be just "bla", for example.</td></tr><tr><td class="fieldAr
   <div class="functionBody">
     
     
-    <div>The name of the target, often a file or directory path.</div>
+    <div>Alternative name more suitable to use on the command line</div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -329,25 +350,6 @@ command was run. This does not say whether the target actually changed.</div>
     <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</div>
     
   </div>
-</div><div class="basemethod private">
-  
-  
-  <a name="pythonbuilder.Target._isStateGenerator">
-    
-  </a>
-  <a name="_isStateGenerator">
-    
-  </a>
-  <div class="functionHeader">
-    
-    <span class="py-keyword">def</span> <span class="py-defname">_isStateGenerator</span>(self, g):
-    
-  </div>
-  <div class="docstring functionBody">
-    
-    
-    <div><p class="undocumented">Undocumented</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">g:</span><code>Any</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>TypeGuard[<wbr></wbr>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>], <wbr></wbr>str]]</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
-  </div>
 </div>
 
       </div>
@@ -358,7 +360,7 @@ command was run. This does not say whether the target actually changed.</div>
   <div class="container">
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.12.1 at 2025-05-07 09:52:29.
+    21.12.1 at 2025-05-08 19:22:28.
   </div>
 </footer>
 
