@@ -9,8 +9,6 @@ of `Target()`, but most have a string shortcut. See there.
 from __future__ import annotations
 
 import time
-_STARTTIME = time.time_ns()
-
 import sys
 import os
 import hashlib
@@ -26,16 +24,32 @@ import json
 from pathlib import Path
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
-LOG = logging.getLogger()
-"""The logger we use, initialized to level "INFO".
+logging.addLevelName(logging.INFO - 5, "VERBOSE")
+logging.Logger.verbose = lambda instance, msg, *args, **kwargs: \
+  instance.log(logging.INFO - 5, msg, *args, **kwargs)
 
-For consistent logging, the build process can import this and use it too rather
-than creating its own.
+LOG = logging.getLogger()
+"""The logger we use.
+
+For consistent logging, the build script can import and use it too, rather than
+creating its own. This logger is used by ``pythonbuilder`` throughout. It has
+the additional level VERBOSE. If the environment variable PBLOGLEVEL is set, it
+is used as the default, otherwise it is ``"INFO"``. The levels are used as
+follows:
+
+- INFO: Show only output from `logcmd` which, in particular, is used by
+  `pbexec`, but is also recommended to be used for target generating commands
+  which don't call external programs.
+
+- VERBOSE: also show targets considered and whether they are determined
+  up-to-date or not
 
 """
+
 LOG.setLevel(
   "INFO" if "" == os.environ.get("PBLOGLEVEL", "") else os.environ["PBLOGLEVEL"]
 )
+
 
 ## FIXME: only here for tests, should be properly injectable
 STATEFILE = Path("build", "pbstates")
@@ -353,7 +367,11 @@ def updateTargets(*targets: str | Target):
 
   """
   buildStart = time.time_ns()
-  LOG.info("  startup took %s", _formatNanoDelta(_STARTTIME, buildStart))
+  ## Somewhat off as it excludes sleep times, found no way to get those.
+  ## Do not use psutil.create_time() it can be off by 999ms.
+  startNanos = buildStart - time.process_time_ns()
+  LOG.verbose("  startup took %s", _formatNanoDelta(startNanos, buildStart))
+
   states = _StateStore(STATEFILE)
   for t in targets:
     target = findTarget(t)
@@ -364,7 +382,7 @@ def updateTargets(*targets: str | Target):
   buildEnd = time.time_ns()
   LOG.info("✓ build took %s, total %s",
            _formatNanoDelta(buildStart, buildEnd),
-           _formatNanoDelta(_STARTTIME, buildEnd))
+           _formatNanoDelta(startNanos, buildEnd))
 
 def _updateTarget(states: '_StateStore',
                   target: Target[T],
@@ -398,7 +416,7 @@ def _updateTarget(states: '_StateStore',
   fresh = (targetStateBefore, depsState)
   LOG.debug("  %s:\n  old %s\n  new %s", logTag, old, fresh)
   if old == fresh:
-    LOG.info("- " + logTag)
+    LOG.verbose("- " + logTag)
     return
 
   cmdName: str = "no-op"
@@ -408,10 +426,10 @@ def _updateTarget(states: '_StateStore',
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.info("+ %s(%s): outdated, %s", cmdName, logTag, took)
+    LOG.verbose("+ %s(%s): outdated, %s", cmdName, logTag, took)
   else:
-    LOG.info("+ %s(%s): <- %s, %s",
-             cmdName, logTag, ", ".join(triggeringDeps), took)
+    LOG.verbose("+ %s(%s): <- %s, %s",
+                cmdName, logTag, ", ".join(triggeringDeps), took)
 
 
   target.recreated = True
