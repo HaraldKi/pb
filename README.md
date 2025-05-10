@@ -40,7 +40,7 @@ A more extensive example, is the [our build script](./pb) or see
 [below](#example).
 
 ## Functional Overview
-A **target** is something you want to build. Usually it is a file or a the
+A **target** is something you want to build. Usually it is a file or the
 contents of a whole directory. To build `target1` it may be necessary to build
 `targetA` and `targetB` first. Then those two are called **dependencies** of
 `target1`.
@@ -50,22 +50,25 @@ may have the same dependencies. The result is a directed graph without
 cycles. If a target directly or indirectly has itself as a dependency, this is
 flagged as an error.
 
-To create a target, it has an associated **command**. It is a Python function
-with one parameter, the target. If `pythonbuilder` determines that it must
-(re-)create a target `target1` with its command `cmd1` it will call the command
-with one arguments, namely the target.
+To create or recreate a target, it has an associated **command**. It is a Python
+function with one parameter, the target. If `pythonbuilder` determines that it
+must (re-)create a target `target1` with its command `cmd1` it will call the
+command with one argument, namely the target.
 
 ```python
   cmd1(target1)
 ```
 
-To know whether a target needs to be updated, a target has a **state** which,
-internally, is a checksum (`hashlib.sha256I()` for now) of the target's content,
-combined with the check-sums of its dependencies. A target gets updated if any
-of the following two conditions hold:
+When pythonbuilder analyzes a target to find out whether its command needs to be
+run, we say the it **updates** the target, independent of whether the command is
+run or if the target is still up-to-date anyway.  To know whether a target needs
+to be updated, a target has a **state** which, internally, is a checksum
+(`hashlib.sha256()` for now) of the target's content, combined with the
+check-sums of its dependencies. A target's command is run if any of the
+following two conditions hold:
 
-1. After updating the dependencies their combined state is different from a
-   previously recorded state.
+1. After updating all dependencies, their combined state is different from a
+   previously recorded combined state.
 2. The state of the target is different from a previously recorded state.
 
 The latter makes sure that manual editing or even deletion of the target can be
@@ -74,9 +77,8 @@ detected.
 If there is no previous recorded state, then the target is outdated by
 definition and must be updated.
 
-If a dependency is updated but its resulting state is the same as
-before, like after it was accidentally deleted, the target will not be build
-unnecessarily.
+If a dependency is created but its resulting state is the same as before, like
+after it was accidentally deleted, the target will not be created unnecessarily.
 
 ## Example
 
@@ -85,6 +87,7 @@ A minimal example, assumed to be stored in file `pb`:
 #!/usr/bin/env python3
 import subprocess
 import sys
+from pathlib import Path
 sys.path += ["pythonbuilder"]
 from pythonbuilder import Target, updateTargets
 
@@ -111,9 +114,13 @@ updateTargets(*sys.argv[1:])
 
 The default name of a `Target`, which has to be unique over the whole built, is
 `str(Target.item)`, where `.item` is initialized by first parameter of
-`Target`.
+`Target`. In many cases it is convenient, though, to define a nice name with the
+`name=` parameter, as it makes it easier to refer to a on the command line. In
+the list of dependencies, both can be used, the target name or a variable
+holding the target object.
 
-If you run the command `pb readme` the following will happen (slightly
+Given the above, you can now build `README.html` from `README.md` by running 
+`python3 ./pb readme`, and the following will happen (slightly
 simplified):
 - The builder finds the target for `"README.html"`.
 - It checks the dependencies, in this case only `"README.md"`.
@@ -122,8 +129,20 @@ simplified):
 - Back to `"README.html"` which was never created, so it is not up-to-date and
   its command `runPandoc` is run.
 
-See the [full api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html) for more information.
+Try also the following:
+- Remove build/pbstates to force a full rebuild.
+- Set the environment variable PBLOGLEVEL to `DEBUG`, `VERBOSE`, `INFO`
+(default) or `WARNING` for mor or less logging.
+- Experiment with
+[registerDependencyGraphTarget](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html#registerDependencyGraphTarget)
+to create a dependency graph for you build like the one shown for this project.
+
+See the [full
+api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html)
+for more information.
 
 If you use this in a Java project, the
 [mavenrepo](https://harald.codeberg.page/pythonbuilder/@main/apidoc/mavenrepo.MavenArtifact.html) might be interesting too.
 
+## Dependency Graph of pythonbuilder's build
+<img src="dependencies.svg" width="95%">
