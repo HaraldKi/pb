@@ -18,6 +18,7 @@ buildDir = Path("build")
 ## FIXME: use Path, not just str
 pythonbuilder = Target(srcDir / "pythonbuilder.py")
 mavenrepo = Target(srcDir / "mavenrepo.py")
+java = Target(srcDir / "java.py")
 pb = Target(Path("pb"))
 testSources = Target(Path("tests"))
 
@@ -29,7 +30,7 @@ def doMypy(target: Target[str]) -> None:
          "--python-version", "3.10",
          files)
 
-mypy = Target[str]("mypy", pythonbuilder, mavenrepo, pb, testSources,
+mypy = Target[str]("mypy", pythonbuilder, mavenrepo, java, pb, testSources,
                    state="fixed", cmd=doMypy)
 
 ############################################################
@@ -63,7 +64,7 @@ def doApidoc(target: Target):
            map(lambda t: str(t.item), target.dependencies))
 
 Target(Path("doc-templates", "extra.css"), name="extra.css"),  
-Target(Path("apidoc"), pythonbuilder, mavenrepo, "extra.css",
+Target(Path("apidoc"), pythonbuilder, mavenrepo, java, "extra.css",
        state="dir", name="apidoc", cmd=doApidoc)
 
 ############################################################

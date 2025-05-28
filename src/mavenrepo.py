@@ -15,13 +15,15 @@ class MavenArtifact:
   Basically, the pieces are used to create URLs and file names to access a
   repository.
   """
-  def __init__(self, group: str, name: str, version: str, type: str):
+  def __init__(self, group: str, name: str, version: str,
+               classifier: str | None, type: str):
     """
     Creates the artifact.
 
     :param group: typically something like ``"org.json"``
     :param name: of the artifact, like ``"json"``
     :param version: of the artifact, like "1.2.3"
+    :param classifier: of the artifact, like "runtime", may be `None`
     :param type: ends up as the file extension, like ``"jar"``
     """
     self.group = group
@@ -33,27 +35,36 @@ class MavenArtifact:
     self.version = version
     """artifact version"""
 
+    self.classifier = classifier
+    """artifact classifier"""
+
     self.type = type
     """artifact type, typically a file extension like "jar" """
 
   @staticmethod
-  def fromGradleShort(triple: str, type: str) -> 'MavenArtifact':
+  def fromGradleShort(groupNameVersionClassifier: str, type: str) -> 'MavenArtifact':
     """
     Create an `MavenArtifact` from a Gradle short form like
-    ``"org.json:json:20250107"``.
+    ``"org.json:json:20250107"`` A forth element, the classifier, may be given
+    too.
     """
-    parts = triple.split(":")
-    if len(parts) != 3:
-      raise ValueError("parameter have the form str0:str1:str2 but has %s parts"
-                       % len(parts))
-    return MavenArtifact(parts[0], parts[1], parts[2], type)
+    parts = groupNameVersionClassifier.split(":")
+    if len(parts) == 3:
+      return MavenArtifact(parts[0], parts[1], parts[2], None, type)
+    if len(parts) == 4:
+      return MavenArtifact(parts[0], parts[1], parts[2], parts[3], type)
+    raise ValueError("parameter must be group:name:version:classifier" +
+                     " where :classifier is optional, but is: " +
+                     groupNameVersionClassifier)
 
   def filename(self) -> str:
     """Provides the filename of the artifact.
 
-    :return: file name of the form "name-version.type".
+    :return: file name of the form "name-version-classifier.type" where
+      -classifier only provided if defined in the constructor..
     """
-    return "%s-%s.%s" % (self.name, self.version, self.type)
+    cls = "-" + self.classifier if self.classifier is not None else ""
+    return "%s-%s%s.%s" % (self.name, self.version, cls, self.type)
 
   def repoUrl(self) -> str:
     """Creates the relative URL part, including `filename()`, which can be used
