@@ -24,9 +24,8 @@ import json
 from pathlib import Path
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
-logging.addLevelName(logging.INFO - 5, "VERBOSE")
-logging.Logger.verbose = lambda instance, msg, *args, **kwargs: \
-  instance.log(logging.INFO - 5, msg, *args, **kwargs)
+VERBOSE = logging.INFO - 5
+logging.addLevelName(VERBOSE, "VERBOSE")
 
 LOG = logging.getLogger()
 """The logger we use.
@@ -67,7 +66,8 @@ class BuildException(Exception): #{
 
 ## From Python 3.12, not needed anymore, see:
 ## https://mypy.readthedocs.io/en/stable/generics.html
-T = TypeVar('T', bound=Hashable)
+T = TypeVar("T", bound=Hashable)
+
 """The data type wrapped by a `Target`"""
 
 ## FIXME: we should have a stateForward as a middle ground between fixed and
@@ -370,7 +370,7 @@ def updateTargets(*targets: str | Target):
   ## Somewhat off as it excludes sleep times, found no way to get those.
   ## Do not use psutil.create_time() it can be off by 999ms.
   startNanos = buildStart - time.process_time_ns()
-  LOG.verbose("  startup took %s", _formatNanoDelta(startNanos, buildStart))
+  LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
   states = _StateStore(STATEFILE)
   for t in targets:
@@ -416,7 +416,7 @@ def _updateTarget(states: '_StateStore',
   fresh = (targetStateBefore, depsState)
   LOG.debug("  %s:\n  old %s\n  new %s", logTag, old, fresh)
   if old == fresh:
-    LOG.verbose("- " + logTag)
+    LOG.log(VERBOSE, "- " + logTag)
     return
 
   cmdName: str = "no-op"
@@ -426,9 +426,9 @@ def _updateTarget(states: '_StateStore',
     target.cmd(target)
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
-    LOG.verbose("+ %s(%s): outdated, %s", cmdName, logTag, took)
+    LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
   else:
-    LOG.verbose("+ %s(%s): <- %s, %s",
+    LOG.log(VERBOSE, "+ %s(%s): <- %s, %s",
                 cmdName, logTag, ", ".join(triggeringDeps), took)
 
 
