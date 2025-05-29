@@ -23,6 +23,9 @@ from pythonbuilder import (
   LOG,
   _TARGETS,
 )
+
+# mypy: allow-untyped-defs
+
 _TMPDIR=Path("build", "testtmp")
 
 def writeToFile(text, fname):

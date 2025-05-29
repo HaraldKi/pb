@@ -12,7 +12,9 @@ import time
 import sys
 import os
 import hashlib
-from typing import TypeVar, Generic, Hashable, Any, TypeGuard
+from typing import (
+  TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
+)
 from collections.abc import Iterable, Collection, Callable
 import itertools
 from dataclasses import dataclass
@@ -60,7 +62,7 @@ api).
 
 class BuildException(Exception): #{
   """Raised on failures detected by pythonbuilder."""
-  def __init__(self, message):
+  def __init__(self, message: str) -> None:
     self.message = message
 #}
 
@@ -81,10 +83,10 @@ class Target(Generic[T]): #{
   """
 
   def __init__(self, item: T,
-               *dependencies, #: 'Target' | str,
+               *dependencies: Target,
                state: str | Callable[[Target[T]], str] | None = None,
-               name: str = None,
-               cmd: Callable[[Target[T]], None] | None = None,
+               name: str | None = None,
+               cmd: Callable[Concatenate[T, ...], None] | None = None
                ): #{
     """
     Creates a new Target.
@@ -142,19 +144,12 @@ class Target(Generic[T]): #{
     self.generateState: Callable[[Target], str] = stateGenerator
     """Function to generate the state for the target"""
 
-    self.cmd: Callable[[Target[T]], None] | None = cmd
+    self.cmd: Callable[Concatenate[T,...], None] | None = cmd
     """Function to (re-)create the target."""
 
-    self.dependencies = []
+    self.dependencies = dependencies
     """The target's dependencies."""
 
-    for dep in dependencies:
-      d = findTarget(dep)
-      if d is not None:
-        self.dependencies.append(d)
-      else:
-        raise BuildException(("dependency '%s' of '%s' is neither Target nor" +
-                              " can be mapped to a target") % (dep, self.name))
     self.started: bool = False
     """Set during `updateTargets` when this target is considered for updating."""
     self.updated: bool = False
@@ -169,7 +164,7 @@ class Target(Generic[T]): #{
 
     _TARGETS[self.name] = self
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     deps = ", ".join([d.name for d in self.dependencies])
     if len(deps) == 0:
       deps = "-"
@@ -257,7 +252,7 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
 # Problem: when a Target is created we are far from having
 # a state store anywhere near.
 def _stateDepsOnly( target: Target) -> str:
-  pass
+  return ""
 
 def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   """Creates a combined state over files provided by the iterable.
@@ -289,7 +284,7 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
       digest.update(stateNew().encode())
   return digest.hexdigest() if found else stateNew()
 
-def resetTraversalState():
+def resetTraversalState() -> None:
   """Resets the traversal state in all targets.
 
   If `updateTargets` is run again afterwards, it considers all targets in
@@ -317,8 +312,9 @@ def _formatNanoDelta(start: int, now: int) -> str:
     delta = delta // _UNITS[i][2]
   return "%s%s" %(delta, "min")
 
-def flatten(result: list[str], l: Iterable) -> None:
-  """Flattens a multiply nested Iterable into the given result.
+def flatten(result: list[str], l: Any) -> None:
+  """Flattens a multiply nested Iterable into the given result. Any element not
+  ``Iterable`` and not ``str`` is added to the result as ``str(element)``
 
   :param result: to which elements are appended
   :param l: either a string or an Iterable containing only str or
@@ -326,20 +322,20 @@ def flatten(result: list[str], l: Iterable) -> None:
   """
   if isinstance(l, str):
     result.append(l)
-    return
-  if not isinstance(l, Iterable):
-    raise TypeError("parameter must be Iterable but is %s" % l)
-  for elem in l:
-    flatten(result, elem)
+  elif  isinstance(l, Iterable):
+    for elem in l:
+      flatten(result, elem)
+  else:
+    result.append(str(l))
 
-def logcmd(cmd: list[str]):
+def logcmd(cmd: list[str]) -> None:
   """A standard way to log external commands. These are often run with
   ``subprocess.run()`` which accepts a string list as the command line. This is
   the standard way to log the command list also used by `pbexec`.
   """
   LOG.info("* %s", " ".join(cmd))
 
-def pbexec(*args):
+def pbexec(*args: Any) -> None:
   """
   Shallow wrapper around
   `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
@@ -351,20 +347,16 @@ def pbexec(*args):
 
   If you need more, use ``subprocess.run()`` directly, possibly with `flatten`.
 
-  :param args: a possibly multiply-nested list of ``str``
+  :param args: a possibly multiply-nested list flattened with `flatten`
   """
-  cmd = []
+  cmd: list[str] = []
   flatten(cmd, args)
   logcmd(cmd)
   subprocess.run(cmd).check_returncode()
 
-def updateTargets(*targets: str | Target):
-  """Updates all targets in turn without resetting the traversal state in
-  between, so if target T1 depends on target T0, in th call ``updateTargets(T1,
-  T0)``, the T0 is redundant, because it will be updated already when doing T1.
-
-  :param targets: a ``str`` provided is looked up with `findTarget`
-
+def updateTargets(*targets: str | Target) -> None:
+  """Calls `rawUpdateTargets` with logging times and trimming any exception to
+  just its message.
   """
   buildStart = time.time_ns()
   ## Somewhat off as it excludes sleep times, found no way to get those.
@@ -372,6 +364,28 @@ def updateTargets(*targets: str | Target):
   startNanos = buildStart - time.process_time_ns()
   LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
+  resultState = "✔"
+  try:
+    rawUpdateTargets(*targets)
+  except Exception as e:
+    resultState = "✘"
+    if LOG.isEnabledFor(VERBOSE):
+      raise e # let default traceback be shown
+    else:
+      print(e)
+      
+  buildEnd = time.time_ns()
+  LOG.info(resultState + " build took %s, total %s",
+           _formatNanoDelta(buildStart, buildEnd),
+           _formatNanoDelta(startNanos, buildEnd))
+
+def rawUpdateTargets(*targets: str | Target) -> None:
+  """Updates all targets in turn without resetting the traversal state in
+  between, so if target T1 depends on target T0, in the call ``updateTargets(T1,
+  T0)``, the T0 is redundant, because it will be updated already when doing T1.
+
+  :param targets: a ``str`` provided is looked up with `findTarget`
+  """
   states = _StateStore(STATEFILE)
   for t in targets:
     target = findTarget(t)
@@ -379,19 +393,14 @@ def updateTargets(*targets: str | Target):
       raise BuildException("target '%s' not defined" % t)
     _updateTarget(states, target, [])
   states.save()
-  buildEnd = time.time_ns()
-  LOG.info("✓ build took %s, total %s",
-           _formatNanoDelta(buildStart, buildEnd),
-           _formatNanoDelta(startNanos, buildEnd))
-
+  
 def _updateTarget(states: '_StateStore',
                   target: Target[T],
-                  onbehalf: list[Target]):
+                  onbehalf: list[Target]) -> None:
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'"
                          % (target, onbehalf))
   target.started = True
-  logTag = target.name
 
   triggeringDeps = []
   depsDigest = hashlib.sha256()
@@ -423,7 +432,7 @@ def _updateTarget(states: '_StateStore',
   startNanos = time.time_ns()
   if target.cmd is not None:
     cmdName = target.cmd.__name__
-    target.cmd(target)
+    target.cmd(target.item, *map(lambda d: d.item, target.dependencies))
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
     LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
@@ -487,15 +496,15 @@ def registerDependencyGraphTarget(
   dep = buildscript if isinstance(buildscript, Target) else Target(buildscript)
   return Target(graphFile, dep, name=name, state="file", cmd=graphToDot)
 
-def graphToDot(target: Target[Path]):
+def graphToDot(target: Path, buildFile: Path) -> None:
   """Convenience function to call `toGraphviz()` and pass the output through
   the ``dot`` program, writing the image file to the ``target.item``.
   """
   result = toGraphviz()
-  filetype = target.item.suffix[1:]
+  filetype = target.suffix[1:]
   cmd = ["dot", "-T" + filetype, "-Grankdir=LR"]
   logcmd(cmd)
-  with open(target.item, "w", encoding="utf-8") as out:
+  with open(target, "w", encoding="utf-8") as out:
     subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
 
 ########################################################################
@@ -519,13 +528,13 @@ class _StateStore:
     for (key, value) in self.hashes.items():
       self.hashes[key] = (value[0], value[1])
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return "_StateStore[%s]" % self.hashes
 
   def setHashes(self,
                 target: Target,
                 targetHash: str,
-                depsHash: str):
+                depsHash: str) -> None:
     self.hashes[target.name] = (targetHash, depsHash)
 
   def get(self, target: Target) -> tuple[str, str]:
@@ -537,7 +546,7 @@ class _StateStore:
   def getDepsHash(self, target: Target) -> str:
     return self.hashes[target.name][1]
 
-  def save(self):
+  def save(self) -> None:
     LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
 

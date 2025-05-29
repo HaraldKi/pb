@@ -10,6 +10,8 @@ from mavenrepo import MavenArtifact
 
 TMPDIR=os.path.join("build", "testtmp")
 
+# mypy: allow-untyped-defs
+
 @unittest.skipUnless(os.environ.get("TEST_MAVENREPO", "") == "TRUE",
                      "run test with file download only on demand")
 class TestMavenArtifact(unittest.TestCase):

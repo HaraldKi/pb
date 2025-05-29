@@ -8,7 +8,7 @@ from pythonbuilder import Target, LOG, BuildException, pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 
-def compileJava(target: Target[Path]):
+def compileJava(target: Target[Path]) -> None:
   """A default java compilation command. Kept simple. If you need a more
   elaborate setup, it is easy enough to write your own, rather than this
   function being extremely configurable and configure it.
@@ -28,7 +28,7 @@ def compileJava(target: Target[Path]):
          files)
 
   
-def jacocoRunJunit4(target: Target[Path]):
+def jacocoRunJunit4(target: Target[Path]) -> None:
   """Runs junit4 tests with the default `JunitCore` class.
   The dependencies of the target must have the following order:
 
@@ -52,7 +52,7 @@ def jacocoRunJunit4(target: Target[Path]):
          "org.junit.runner.JUnitCore",
          *testclasses)
 
-def jacocoReport(target: Target[Path]):
+def jacocoReport(target: Target[Path]) -> None:
   """
   Creates a coverage report from the output of `jacocoRunJunit4`. The
   dependencies must have the following order:
@@ -72,7 +72,7 @@ def jacocoReport(target: Target[Path]):
          "--html", str(target.item)
          )
          
-def classForPath(classpathEntry: Path, p: Path):
+def classForPath(classpathEntry: Path, p: Path) -> str:
   """
   Convert the path ``p`` to a class name assuming it is some decendent of
   ``classpathEntry``. For example if the former is ``build/test`` and the

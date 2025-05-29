@@ -18,11 +18,14 @@ from pythonbuilder import (
   stateFixed,
   stateNew,
   updateTargets,
+  rawUpdateTargets,
   resetTraversalState,
   LOG,
   _TARGETS,
 )
 _TMPDIR=Path("build", "testtmp")
+
+# mypy: allow-untyped-defs
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
@@ -59,7 +62,7 @@ class TestTargetCreation(unittest.TestCase):
   def test_deps(self):
     d0 = Target("d0", state="file")
     d1 = Target("d1", state="file")
-    t = Target("b", d0, "d1", state="file", cmd=lambda: None)
+    t = Target("b", d0, d1, state="file", cmd=lambda: None)
     self.assertEqual(d0, t.dependencies[0])
     self.assertEqual(d1, t.dependencies[1])
 
@@ -67,11 +70,6 @@ class TestTargetCreation(unittest.TestCase):
     self.assertRaisesRegex(BuildException,
                            "'foob' is neither a file nor a directory, cannot",
                            lambda: Target("foob"))
-
-  def test_buildFailsForUnknownDependency(self):
-    with self.assertRaisesRegex(BuildException, "'no-dep' of 't' is neither"):
-      Target("t", "no-dep", state="file")
-
 
   def testFailDoublyDeclared(self):
     Target(Path("x", "z"), state="file")
@@ -196,14 +194,17 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertTrue(top.updated)
     self.assertFalse(top.recreated)
 
-  def test_buildFailDoesNotUpdateStatefile(self):
-    cmd = lambda t: 1/0 # just fail somehow
+  def failWithZDE(self, t: str, u: str):
+    print(len(t)/0)
+
+  def test_buildFailDoesNotUpdateStatefile(self) -> None:
     first: Target[str] = Target("first", state=self.simpleState)
-    second: Target[str] = Target("second", first, state="fixed", cmd=cmd)
+    second: Target[str] = Target("second", first, state="fixed",
+                                 cmd=self.failWithZDE)
     self.values[first.item] = "value of first"
     self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
-      updateTargets(second)
+      rawUpdateTargets(second)
     self.assertTrue(first.updated)
     self.assertTrue(first.recreated)
     self.assertTrue(second.updated)
@@ -212,11 +213,10 @@ class TestUpdateTargets(unittest.TestCase):
     ## Now run again and see that first is again recreated
     resetTraversalState()
     with self.assertRaises(ZeroDivisionError):
-      updateTargets(second)
+      rawUpdateTargets(second)
     self.assertTrue(first.recreated)
-
 
 if __name__ == '__main__':
   LOG.setLevel("ERROR")
-  #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
+  #unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')
   unittest.main(verbosity=2)
