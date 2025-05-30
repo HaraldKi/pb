@@ -83,7 +83,7 @@ class Target(Generic[T]): #{
   """
 
   def __init__(self, item: T,
-               *dependencies: Target,
+               *dependencies: Target[Any],
                state: str | Callable[[Target[T]], str] | None = None,
                name: str | None = None,
                cmd: Callable[Concatenate[T, ...], None] | None = None
@@ -101,9 +101,9 @@ class Target(Generic[T]): #{
     :param state: describes how to generate a state (checksum, fingerprint)
       for this target. The function must generate a small fingerprint for the
       `Target`. If not provided, the `item` must denote an **existing** file
-      or directory. If given as a string, it must be "dir", "file", "new" or
-      "fixed" for `stateDirContent`, `stateFileContent`, `stateNew` or
-      `stateFixed` respectively.
+      or directory. If given as a string, it must be "dir", "file", "new",
+      "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
+      `stateFixed` or `stateValue` respectively.
     :param name: A nice name for the target to use, for example, on the command
       line. The default is ``str(item), so if it is like
       ``Path("build", "stuff", "woo.html")``
@@ -120,6 +120,8 @@ class Target(Generic[T]): #{
         stateGenerator = stateNew
       case "fixed":
         stateGenerator = stateFixed
+      case "value":
+        stateGenerator = stateValue
       case None:
         if isinstance(item, Path) and item.is_dir():
           stateGenerator = stateDirContent
@@ -202,6 +204,12 @@ def stateNew(_t: Any = None) -> str:
 def stateFixed(_t: Target) -> str:
   """Always returns the same state string, independent of the input."""
   return "0"
+
+def stateValue(t: Target) -> str:
+  """Returns the ``repr(t.item)`` as the state, so it can be used for in-memory
+  targets like, for example, a version string generated from the current date.
+  """
+  return repr(t.item)
 
 def stateDirContent(target: Target[Path]) -> str:
   """Feeds all recursively contained files of a directory into
@@ -361,21 +369,24 @@ def updateTargets(*targets: str | Target) -> None:
   buildStart = time.time_ns()
   ## Somewhat off as it excludes sleep times, found no way to get those.
   ## Do not use psutil.create_time() it can be off by 999ms.
+  ## BUT: according to docs, process_time_ns() has an undefined reference
+  ## point, yet at least on Linux so far this seems to be close to 0 at
+  ## process start. Hmm.
   startNanos = buildStart - time.process_time_ns()
   LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
-  resultState = "✔"
+  resultState = ansiGreen("build ✔")
   try:
     rawUpdateTargets(*targets)
   except Exception as e:
-    resultState = "✘"
+    resultState = ansiRed("build ✘")
     if LOG.isEnabledFor(VERBOSE):
-      raise e # let default traceback be shown
+      logging.error(e, exc_info=True)
     else:
-      print(e)
-      
+      logging.error(e)
+  
   buildEnd = time.time_ns()
-  LOG.info(resultState + " build took %s, total %s",
+  LOG.info(resultState + ", took %s, total %s",
            _formatNanoDelta(buildStart, buildEnd),
            _formatNanoDelta(startNanos, buildEnd))
 
@@ -506,6 +517,12 @@ def graphToDot(target: Path, buildFile: Path) -> None:
   logcmd(cmd)
   with open(target, "w", encoding="utf-8") as out:
     subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
+
+def ansiRed(text: str) -> str:
+  return "\x1b[1;91m%s\x1b[0m" % text
+
+def ansiGreen(text: str) -> str:
+  return "\x1b[38;2;20;110;20m%s\x1b[0m" % text
 
 ########################################################################
 

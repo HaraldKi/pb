@@ -23,7 +23,7 @@ class MavenArtifact:
     :param group: typically something like ``"org.json"``
     :param name: of the artifact, like ``"json"``
     :param version: of the artifact, like "1.2.3"
-    :param classifier: of the artifact, like "runtime", may be `None`
+    :param classifier: of the artifact, like "runtime", may be ``None``
     :param type: ends up as the file extension, like ``"jar"``
     """
     self.group = group
