@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import subprocess
+import sys
+from pathlib import Path
+sys.path += ["pythonbuilder", "src"]
+from pythonbuilder import Target, updateTargets, LOG
+
+LOG.setLevel("VERBOSE")
+
+def declareTargets() -> None:
+  ## Declare an initial target, assume it is an existing file in the project
+  rmd = Target(Path("README.md"))
+
+  ## Declare README.html as file to be created by running runPandoc
+  Target(
+    Path("README.html"), # target item, often file or directory name
+    rmd,                 # one dependency, could be more
+    name="readme",       # nicer name to use on the command line
+    state="file",        # how to compute a condensed state (fingerprint, checksum)
+    cmd=runPandoc        # how to create the target if it is out-of-date
+  )
+
+
+def runPandoc(targetPath: Path, readmeMd: Path):
+  # The dependencies are in the order in which they are provided to Target below
+  input = str(readmeMd)
+  with open(targetPath, "w", encoding="utf-8") as outfile:
+    subprocess.run(["pandoc", input], stdout=outfile)
+
+
+declareTargets()
+updateTargets(*sys.argv[1:])
