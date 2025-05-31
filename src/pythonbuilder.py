@@ -13,7 +13,7 @@ import sys
 import os
 import hashlib
 from typing import (
-  TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
+  cast, TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
 )
 from collections.abc import Iterable, Collection, Callable
 import itertools
@@ -85,7 +85,7 @@ class Target(Generic[T]): #{
 
   def __init__(self, item: T,
                *dependencies: Target[Any],
-               state: str | Callable[[Target[T]], str] | None = None,
+               state: str | Callable[[T], str] | None = None,
                name: str | None = None,
                cmd: Callable[Concatenate[T, ...], None] | None = None
                ): #{
@@ -99,9 +99,9 @@ class Target(Generic[T]): #{
     :param item: represents the item to keep up-to-date, like a file or
       directory name
     :param dependencies: the dependencies of this target
-    :param state: describes how to generate a state (checksum, fingerprint)
-      for this target. The function must generate a small fingerprint for the
-      target's item. If not provided, the `item` must denote an **existing** file
+    :param state: describes how to generate a state (checksum, fingerprint) for
+      this target's item. The function must generate a small fingerprint.
+      If not provided, the `item` must denote an **existing** file
       or directory. If given as a string, it must be "dir", "file", "new",
       "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
       `stateFixed` or `stateValue` respectively.
@@ -110,12 +110,12 @@ class Target(Generic[T]): #{
     :param cmd: the command to run to (re-)create the target. Its parameters will
       be the target's ``item`` as well as the items of all dependencies.
     """
-    stateGenerator: Callable[[Target], str]
+    stateGenerator: Callable[[T], str]
     match state:
       case "dir":
-        stateGenerator = stateDirContent
+        stateGenerator = cast(Callable[[T], str], stateDirContent)
       case "file":
-        stateGenerator = stateFileContent
+        stateGenerator = cast(Callable[[T], str], stateFileContent)
       case "new":
         stateGenerator = stateNew
       case "fixed":
@@ -124,9 +124,9 @@ class Target(Generic[T]): #{
         stateGenerator = stateValue
       case None:
         if isinstance(item, Path) and item.is_dir():
-          stateGenerator = stateDirContent
+          stateGenerator = cast(Callable[[T], str], stateDirContent)
         elif isinstance(item, Path) and item.is_file():
-          stateGenerator = stateFileContent
+          stateGenerator = cast(Callable[[T], str], stateFileContent)
         else:
           raise BuildException(("'%s' is neither a file nor a directory," +
                                 " cannot determine state" +
@@ -146,7 +146,7 @@ class Target(Generic[T]): #{
     It can be used as parameter for `updateTargets`.
     """
 
-    self.generateState: Callable[[Target], str] = stateGenerator
+    self.generateState: Callable[[T], str] = stateGenerator
     """Function to generate the state for the target."""
 
     self.cmd: Callable[Concatenate[T,...], None] | None = cmd
@@ -220,7 +220,7 @@ def stateNew(_t: Any = None) -> str:
   """
   return str(time.time_ns());
 
-def stateFixed(_t: Target) -> str:
+def stateFixed(_t: Any = None) -> str:
   """Always returns the same state string, independent of the input.
 
   :param _t: unused
@@ -228,7 +228,7 @@ def stateFixed(_t: Target) -> str:
   """
   return "0"
 
-def stateValue(t: Target) -> str:
+def stateValue(item: Any) -> str:
   """Computes a state string from `t.item`, so it can be used for in-memory
   targets like, for example, a version string generated from the current date.
 
@@ -236,35 +236,35 @@ def stateValue(t: Target) -> str:
   :return: an implementation dependent string is always the same for
     same ``t.item`` values and typically changes for changed ``t.item`` values
   """
-  return repr(t.item)
+  return repr(item)
 
-def stateDirContent(target: Target[Path]) -> str:
+def stateDirContent(targetPath: Path) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
 
-  :param target: the item of which is used as the directory to traverse.
+  :param targetPath: of the directory to compute the state from
   :return: a hash
   """
-  if target.item.is_file():
+  if targetPath.is_file():
     raise BuildException("'%s' is a file but expected a directory"
-                         % target.item)
-  return stateFileIteratorContent(lambda: target.item.rglob("*"))
+                         % targetPath)
+  return stateFileIteratorContent(lambda: targetPath.rglob("*"))
 
-def stateFileContent(target: Target[Path]) -> str:
-  """
-  Feeds the item of the target as a single file name into `stateFileIteratorContent`
-  and returns the result.
+def stateFileContent(targetPath: Path) -> str:
+  """Feeds the path a single file name into `stateFileIteratorContent` and
+  returns the result.
 
-  :param target: the item of which is used as a file name
+  :param targetPath: of the file to compute the state from
   :return: a hash
+
   """
-  if target.item.is_dir():
+  if targetPath.is_dir():
     raise BuildException("'%s' is a directory but expected a file"
-                         % target.item)
-  return stateFileIteratorContent(lambda: [target.item])
+                         % targetPath)
+  return stateFileIteratorContent(lambda: [targetPath])
 
 
-def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
+def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
   if not callable(g):
     return False
   ## FIXME: add better test to fail early
@@ -448,7 +448,7 @@ def _updateTarget(states: '_StateStore',
 
   target.updated = True
 
-  targetStateBefore = target.generateState(target)
+  targetStateBefore = target.generateState(target.item)
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -477,7 +477,7 @@ def _updateTarget(states: '_StateStore',
 
 
   target.recreated = True
-  targetStateAfter = target.generateState(target)
+  targetStateAfter = target.generateState(target.item)
   states.setHashes(target, targetStateAfter, depsState)
 
 def _escdq(s: str) -> str:

@@ -49,13 +49,13 @@ class TestTargetApi(unittest.TestCase):
     ## Don't fail for a non-existent file and provide a new hash each time.
     ## hello future when this fails due to same nanosecond, you have
     ## really fast computers
-    hash1 = stateFileContent(t)
-    hash2 = stateFileContent(t)
+    hash1 = stateFileContent(t.item)
+    hash2 = stateFileContent(t.item)
     self.assertNotEqual(hash1, hash2)
 
     writeToFile("hallo", f)
-    hash1 = stateFileContent(t)
-    hash2 = stateFileContent(t)
+    hash1 = stateFileContent(t.item)
+    hash2 = stateFileContent(t.item)
     self.assertEqual(hash1, hash2)
 
 if __name__ == '__main__':

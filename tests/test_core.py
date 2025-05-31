@@ -122,7 +122,7 @@ class TestStateComputation(unittest.TestCase):
     writeToFile("file1", file1);
     writeToFile("file2", file2);
     writeToFile("file3", file3);
-    hex = stateDirContent(t)
+    hex = stateDirContent(t.item)
 
     digest = hashlib.sha256()
     for f in [file1, file2, file3]:
@@ -132,8 +132,8 @@ class TestStateComputation(unittest.TestCase):
 
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
-  def simpleState(self, target: Target) -> str:
-    return self.values.get(str(target.item), stateNew(target))
+  def simpleState(self, value: str) -> str:
+    return self.values.get(value, stateNew(value))
 
   def setSimpleValue(self, key: str, value: Any) -> None:
     self.values[key] = str(value)
