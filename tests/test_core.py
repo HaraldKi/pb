@@ -3,6 +3,7 @@ import sys
 import hashlib
 import shutil
 from pathlib import Path
+from typing import Any
 
 ## The tests must be started from the project directory
 sys.path += [str(Path.cwd() / "src")]
@@ -91,7 +92,7 @@ class TestTargetCreation(unittest.TestCase):
 
     with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
       Target("yada4", state=lambda a, b: 'a')
-    
+
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
@@ -129,11 +130,13 @@ class TestStateComputation(unittest.TestCase):
       digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
-
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
   def simpleState(self, target: Target) -> str:
     return self.values.get(str(target.item), stateNew(target))
+
+  def setSimpleValue(self, key: str, value: Any) -> None:
+    self.values[key] = str(value)
 
   def setUp(self):
     self.values.clear()
@@ -215,6 +218,24 @@ class TestUpdateTargets(unittest.TestCase):
     with self.assertRaises(ZeroDivisionError):
       rawUpdateTargets(second)
     self.assertTrue(first.recreated)
+
+  def test_inMemTarget(self):
+    t0 = Target(117, state="value")
+    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
+
+    rawUpdateTargets(other)
+    self.assertTrue(other.recreated)
+    self.assertEqual("117", self.values["other"])
+
+    resetTraversalState()
+    rawUpdateTargets(other)
+    self.assertFalse(other.recreated)
+
+    resetTraversalState()
+    t0.item = 116
+    rawUpdateTargets(other)
+    self.assertTrue(other.recreated)
+    self.assertEqual("116", self.values["other"])
 
 if __name__ == '__main__':
   LOG.setLevel("ERROR")
