@@ -1,82 +1,90 @@
 """
-Provide helpers to compile Java and run unit tests with  coverage.
+Helpers to compile Java and run unit tests with  coverage.
 """
 import sys
+import os
 
 from pathlib import Path
 from pythonbuilder import Target, LOG, BuildException, pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 
-def compileJava(target: Target[Path]):
+def compileJava(targetPath: Path, srcPath: Path, *classpath: Path) -> None:
   """A default java compilation command. Kept simple. If you need a more
   elaborate setup, it is easy enough to write your own, rather than this
   function being extremely configurable and configure it.
 
-  * target.dependencies[0] must be the source files
-  * all other dependencies go on the class path
-
-  :param target: a `Path` target where to drop the compiled files
+  :param targetPath: a ``Path`` where to drop the compiled files
+  :param srcPath: the source files directory
+  :param classpath: classpath members
   """
-  files = map(str, target.dependencies[0].item.rglob("*.java"))
-  cp = _PATHSEP.join(map(lambda d: str(d.item), target.dependencies[1:]))
+  files = map(str, srcPath.rglob("*.java"))
+  cp = os.pathsep.join(map(lambda d: str(d), classpath))
   pbexec("javac", "-g",
-         "-d", str(target.item),
+         "-d", str(targetPath),
          "-Xmaxerrs", "5",
          "-Xmaxwarns", "5",
          "-cp", cp,
          files)
 
   
-def jacocoRunJunit4(target: Target[Path]):
-  """Runs junit4 tests with the default `JunitCore` class.
-  The dependencies of the target must have the following order:
+def jacocoRunJunit4(targetPath: Path,
+                    jacocoJar: Path,
+                    testClassesPath: Path,
+                    *classpath: Path) -> None:
+  """Runs junit4 tests with the default ``JunitCore`` class.
 
-  1. the jar `org.jacoco.agent...jar`, not going on the class path
-  2. a `Path` representing a classpath entry for test classes, all files
-     matching Test*.class are used as test classes.
-  3. ... further class path parameters, i.e. classes, junit jar, etc
-
-  :param target: the path of the coverage data to produce by running with jacoco
+  :param targetPath: the path of the coverage data to produce by running with
+    jacoco
+  :param jacocoJar: the jar ``org.jacoco.agent...jar``, not going on the class
+    path
+  :param testClassesPath: a ``Path`` representing a classpath entry for test
+     classes, all files matching ``Test*.class`` are used as test classes.
+  :param classpath: further classpath entries, i.e. classes, junit jar, etc.
   """
-  jacocoJar = str(target.dependencies[0].item)
-  testClassesPath = target.dependencies[1].item;
+
   testclasses = \
     map(lambda p: classForPath(testClassesPath, p),
         filter(lambda p: p.name.find("$")<0,
                testClassesPath.rglob("Test*.class")))
-  cp = _PATHSEP.join(map(lambda d: str(d.item), target.dependencies[1:]))
+  cp = _PATHSEP.join(map(lambda d: str(d), [testClassesPath] + list(classpath)))
   pbexec("java",
-         "-javaagent:%s=destfile=%s,append=false" % (jacocoJar, str(target.item)),
+         "-javaagent:%s=destfile=%s,append=false" % (jacocoJar, targetPath),
          "-cp", cp,
          "org.junit.runner.JUnitCore",
          *testclasses)
 
-def jacocoReport(target: Target[Path]):
+def jacocoReport(targetPath: Path,
+                 jacocoCli: Path,
+                 jacocoData: Path,
+                 classFiles: Path,
+                 sourceFiles: Path) -> None:
   """
-  Creates a coverage report from the output of `jacocoRunJunit4`. The
-  dependencies must have the following order:
+  Creates a coverage report from the output of `jacocoRunJunit4`.
 
-  1. the jar ``org.jacoco.cli...jar``.
-  2. the output ``Path`` of `jacocoRunJunit4`
-  3. the compiled classes classpath as a Path
-  4. the source file directory as a Path
 
-  :param target: the directory where to place the coverage html files
+  :param targetPath: the directory where to place the coverage html files
+  :param jacocoCli: the jar ``org.jacoco.cli...jar``.
+  :param jacocoData: the output of ``jacocoRunJunit4``
+  :param classFiles: the compiled classes classpath
+  :param sourceFiles: directory with the source files
   """
   pbexec("java",
-         "-jar", str(target.dependencies[0].item),
-         "report", str(target.dependencies[1].item),
-         "--classfiles", str(target.dependencies[2].item),
-         "--sourcefiles", str(target.dependencies[3].item),
-         "--html", str(target.item)
+         "-jar", jacocoCli,
+         "report", jacocoData,
+         "--classfiles", classFiles,
+         "--sourcefiles", sourceFiles,
+         "--html", targetPath
          )
          
-def classForPath(classpathEntry: Path, p: Path):
-  """
-  Convert the path ``p`` to a class name assuming it is some decendent of
-  ``classpathEntry``. For example if the former is ``build/test`` and the
-  latter is ``build/test/my/package/Dodo.class``, the result is
+def classForPath(classpathEntry: Path, p: Path) -> str:
+  """Converts a path relative to root directory to a class name.
+
+  For example if ``classpathEntry`` is ``build/test`` and the
+  ``p`` is ``build/test/my/package/Dodo.class``, the result is
   ``my.package.Dodo``.
+
+  :param classpathEntry: a directory containing compiled classes
+  :param p: a ``*.class` file within ``classpathEntry``
   """
   return ".".join(p.relative_to(classpathEntry).parts).replace(".class", "")

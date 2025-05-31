@@ -12,7 +12,9 @@ import time
 import sys
 import os
 import hashlib
-from typing import TypeVar, Generic, Hashable, Any, TypeGuard
+from typing import (
+  cast, TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
+)
 from collections.abc import Iterable, Collection, Callable
 import itertools
 from dataclasses import dataclass
@@ -25,6 +27,8 @@ from pathlib import Path
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 VERBOSE = logging.INFO - 5
+"""Additional logging level providing more information than ``INFO``."""
+
 logging.addLevelName(VERBOSE, "VERBOSE")
 
 LOG = logging.getLogger()
@@ -54,21 +58,20 @@ LOG.setLevel(
 STATEFILE = Path("build", "pbstates")
 """Path of the file in which to persist the target states.
 
-To force all targets to be rebuild, delete this file. (FIXME: provide proper
-api).
+Set this before calling `updateTargets`.To force all targets to be rebuild,
+delete this file. (FIXME: provide proper api).
 """
 
 class BuildException(Exception): #{
   """Raised on failures detected by pythonbuilder."""
-  def __init__(self, message):
+  def __init__(self, message: str) -> None:
     self.message = message
 #}
 
 ## From Python 3.12, not needed anymore, see:
 ## https://mypy.readthedocs.io/en/stable/generics.html
 T = TypeVar("T", bound=Hashable)
-
-"""The data type wrapped by a `Target`"""
+"""The data type wrapped by a `Target`."""
 
 ## FIXME: we should have a stateForward as a middle ground between fixed and
 ## new. This state should change independent of the target itself iff the
@@ -81,48 +84,49 @@ class Target(Generic[T]): #{
   """
 
   def __init__(self, item: T,
-               *dependencies, #: 'Target' | str,
-               state: str | Callable[[Target[T]], str] | None = None,
-               name: str = None,
-               cmd: Callable[[Target[T]], None] | None = None,
+               *dependencies: Target[Any],
+               state: str | Callable[[T], str] | None = None,
+               name: str | None = None,
+               cmd: Callable[Concatenate[T, ...], None] | None = None
                ): #{
-    """
-    Creates a new Target.
+    """Creates a new Target.
 
-    An "input target", for example a source code directory, may 
-    may be created with just an item, as it has no dependencies, the state
-    generator is derived automatically, because it is an existing directory,
-    and nothing needs to be done, so it has no command.
+    An "input target", for example a source code directory, may be created with
+    just an item, as it has no dependencies, the state generator is derived
+    automatically, because it is an existing directory, and nothing needs to be
+    done, so it has no command.
 
-    :param item: represents the target, like a file or directory name
+    :param item: represents the item to keep up-to-date, like a file or
+      directory name
     :param dependencies: the dependencies of this target
-    :param state: describes how to generate a state (checksum, fingerprint)
-      for this target. The function must generate a small fingerprint for the
-      `Target`. If not provided, the `item` must denote an **existing** file
-      or directory. If given as a string, it must be "dir", "file", "new" or
-      "fixed" for `stateDirContent`, `stateFileContent`, `stateNew` or
-      `stateFixed` respectively.
+    :param state: describes how to generate a state (checksum, fingerprint) for
+      this target's item. The function must generate a small fingerprint.
+      If not provided, the `item` must denote an **existing** file
+      or directory. If given as a string, it must be "dir", "file", "new",
+      "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
+      `stateFixed` or `stateValue` respectively.
     :param name: A nice name for the target to use, for example, on the command
-      line. The default is ``str(item), so if it is like
-      ``Path("build", "stuff", "woo.html")``
-      then the name could be just "woo", for example.
-    :param cmd: Defines which command to run to (re-)create the target.
+      line. The default is name is ``str(item)``.
+    :param cmd: the command to run to (re-)create the target. Its parameters will
+      be the target's ``item`` as well as the items of all dependencies.
     """
-    stateGenerator: Callable[[Target], str]
+    stateGenerator: Callable[[T], str]
     match state:
       case "dir":
-        stateGenerator = stateDirContent
+        stateGenerator = cast(Callable[[T], str], stateDirContent)
       case "file":
-        stateGenerator = stateFileContent
+        stateGenerator = cast(Callable[[T], str], stateFileContent)
       case "new":
         stateGenerator = stateNew
       case "fixed":
         stateGenerator = stateFixed
+      case "value":
+        stateGenerator = stateValue
       case None:
         if isinstance(item, Path) and item.is_dir():
-          stateGenerator = stateDirContent
+          stateGenerator = cast(Callable[[T], str], stateDirContent)
         elif isinstance(item, Path) and item.is_file():
-          stateGenerator = stateFileContent
+          stateGenerator = cast(Callable[[T], str], stateFileContent)
         else:
           raise BuildException(("'%s' is neither a file nor a directory," +
                                 " cannot determine state" +
@@ -137,39 +141,45 @@ class Target(Generic[T]): #{
     """The item of the target, often a file or directory path."""
 
     self.name: str = str(item) if name is None else name
-    """Alternative name more suitable to use on the command line"""
+    """The target's name, defaulting to ``str(item)``.
 
-    self.generateState: Callable[[Target], str] = stateGenerator
-    """Function to generate the state for the target"""
+    It can be used as parameter for `updateTargets`.
+    """
 
-    self.cmd: Callable[[Target[T]], None] | None = cmd
+    self.generateState: Callable[[T], str] = stateGenerator
+    """Function to generate the state for the target."""
+
+    self.cmd: Callable[Concatenate[T,...], None] | None = cmd
     """Function to (re-)create the target."""
 
-    self.dependencies = []
+    self.dependencies = dependencies
     """The target's dependencies."""
 
-    for dep in dependencies:
-      d = findTarget(dep)
-      if d is not None:
-        self.dependencies.append(d)
-      else:
-        raise BuildException(("dependency '%s' of '%s' is neither Target nor" +
-                              " can be mapped to a target") % (dep, self.name))
     self.started: bool = False
-    """Set during `updateTargets` when this target is considered for updating."""
+    """Set during `updateTargets` as soon as this target is considered for
+    updating."""
+
     self.updated: bool = False
-    """Set during `updateTargets` as soon as all dependencies are done."""
+    """Set during `updateTargets` as soon as all dependencies are done.
+
+    The target's command may or may not be run subsequently.
+    """
 
     self.recreated: bool = False  
     """Set during `updateTargets` if this target was out-of-date and its
-    command was run. This does not say whether the target actually changed."""
+    command was run.
+
+    This does not say whether the target was actually changed by running its
+    ``cmd``.
+    """
     
     if self.name in _TARGETS:
       raise BuildException("'%s' defined already" % item)
 
     _TARGETS[self.name] = self
 
-  def __repr__(self):
+  def __str__(self) -> str:
+    """Readable short form for a ``Target``"""
     deps = ", ".join([d.name for d in self.dependencies])
     if len(deps) == 0:
       deps = "-"
@@ -200,41 +210,61 @@ def findTarget(target: str | Target) -> Target | None: #{
 
 def stateNew(_t: Any = None) -> str:
   """Returns a state string which is never the same, independent of the
-  input.
+  input
+
+  This is subject to ``time.time_ns()`` changing more frequently than this
+  function is called.
+
+  :param _t: unused
+  :return: a different implementation dependent string for each call
   """
   return str(time.time_ns());
 
-def stateFixed(_t: Target) -> str:
-  """Always returns the same state string, independent of the input."""
+def stateFixed(_t: Any = None) -> str:
+  """Always returns the same state string, independent of the input.
+
+  :param _t: unused
+  :return: always the same implementation dependent string
+  """
   return "0"
 
-def stateDirContent(target: Target[Path]) -> str:
+def stateValue(item: Any) -> str:
+  """Computes a state string from `t.item`, so it can be used for in-memory
+  targets like, for example, a version string generated from the current date.
+
+  :param t: to compute the state string from
+  :return: an implementation dependent string is always the same for
+    same ``t.item`` values and typically changes for changed ``t.item`` values
+  """
+  return repr(item)
+
+def stateDirContent(targetPath: Path) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
 
-  :param target: the item of which is used as the directory to traverse.
+  :param targetPath: of the directory to compute the state from
   :return: a hash
   """
-  if target.item.is_file():
+  if targetPath.is_file():
     raise BuildException("'%s' is a file but expected a directory"
-                         % target.item)
-  return stateFileIteratorContent(lambda: target.item.rglob("*"))
+                         % targetPath)
+  return stateFileIteratorContent(lambda: targetPath.rglob("*"))
 
-def stateFileContent(target: Target[Path]) -> str:
-  """
-  Feeds the item of the target as a single file name into `stateFileIteratorContent`
-  and returns the result.
+def stateFileContent(targetPath: Path) -> str:
+  """Feeds the path a single file name into `stateFileIteratorContent` and
+  returns the result.
 
-  :param target: the item of which is used as a file name
+  :param targetPath: of the file to compute the state from
   :return: a hash
+
   """
-  if target.item.is_dir():
+  if targetPath.is_dir():
     raise BuildException("'%s' is a directory but expected a file"
-                         % target.item)
-  return stateFileIteratorContent(lambda: [target.item])
+                         % targetPath)
+  return stateFileIteratorContent(lambda: [targetPath])
 
 
-def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
+def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
   if not callable(g):
     return False
   ## FIXME: add better test to fail early
@@ -246,21 +276,8 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Target[T]], str]]:
     return False
   return True
 
-##
-# Computes a state over all dependencies, ignoring the target itself.  Used for
-# targets which merely combine a bunch of other targets and have no state on
-# their own. They should trigger their dependents iff the dependencies change.
-#
-# FIXME: We need access to the _StateStore here. Rather than hackily inject the
-# the state store into every Target, try to move this function into a class
-# which has the state store as a field.
-# Problem: when a Target is created we are far from having
-# a state store anywhere near.
-def _stateDepsOnly( target: Target) -> str:
-  pass
-
 def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
-  """Creates a combined state over files provided by the iterable.
+  """Creates a combined state over files.
 
   If a path string from the iterator exists in the file system, its content is
   fed into the checksum, otherwise a `stateNew` is fed in. If the path string
@@ -270,6 +287,10 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   To make a difference between sets of non existing files, all file names are
   also hashed.
 
+  Example: ``stateFileIteratorContent(lambda: Path("src").rglob("*.py"))`` will
+  run all python files recursively found in ``src`` through a hash function
+  and return the result
+  
   :param itGen: a supplier providing an iterator over path names of files
     which may or may not exist.
   :return: a hash of all file names and file contents. If the iterator is empty,
@@ -289,7 +310,7 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
       digest.update(stateNew().encode())
   return digest.hexdigest() if found else stateNew()
 
-def resetTraversalState():
+def resetTraversalState() -> None:
   """Resets the traversal state in all targets.
 
   If `updateTargets` is run again afterwards, it considers all targets in
@@ -317,29 +338,34 @@ def _formatNanoDelta(start: int, now: int) -> str:
     delta = delta // _UNITS[i][2]
   return "%s%s" %(delta, "min")
 
-def flatten(result: list[str], l: Iterable) -> None:
-  """Flattens a multiply nested Iterable into the given result.
+def flatten(result: list[str], l: Any) -> None:
+  """Flattens a multiply nested Iterable into the given result. Any element not
+  ``Iterable`` and not ``str`` is added to the result as ``str(element)``
 
   :param result: to which elements are appended
-  :param l: either a string or an Iterable containing only str or
-    Iterable satisfying the same constraint.
+  :param l: either an ``Iterable`` to flatten or a string or other object to
+    add to the result
   """
   if isinstance(l, str):
     result.append(l)
-    return
-  if not isinstance(l, Iterable):
-    raise TypeError("parameter must be Iterable but is %s" % l)
-  for elem in l:
-    flatten(result, elem)
+  elif  isinstance(l, Iterable):
+    for elem in l:
+      flatten(result, elem)
+  else:
+    result.append(str(l))
 
-def logcmd(cmd: list[str]):
-  """A standard way to log external commands. These are often run with
-  ``subprocess.run()`` which accepts a string list as the command line. This is
-  the standard way to log the command list also used by `pbexec`.
+def logcmd(cmd: list[str]) -> None:
+  """A standard way to log external commands.
+
+  These are often run with ``subprocess.run()`` which accepts a string list as
+  the command line. This is the standard way to log the command list also used
+  by `pbexec`.
+
+  :param cmd: to log
   """
   LOG.info("* %s", " ".join(cmd))
 
-def pbexec(*args):
+def pbexec(*args: Any) -> None:
   """
   Shallow wrapper around
   `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
@@ -351,27 +377,50 @@ def pbexec(*args):
 
   If you need more, use ``subprocess.run()`` directly, possibly with `flatten`.
 
-  :param args: a possibly multiply-nested list of ``str``
+  :param args: a possibly multiply-nested list which will be flattened with
+    `flatten` before passed to ``subprocess.run()``.
   """
-  cmd = []
+  cmd: list[str] = []
   flatten(cmd, args)
   logcmd(cmd)
   subprocess.run(cmd).check_returncode()
 
-def updateTargets(*targets: str | Target):
-  """Updates all targets in turn without resetting the traversal state in
-  between, so if target T1 depends on target T0, in th call ``updateTargets(T1,
-  T0)``, the T0 is redundant, because it will be updated already when doing T1.
-
-  :param targets: a ``str`` provided is looked up with `findTarget`
-
+def updateTargets(*targets: str | Target) -> None:
+  """Wraps `rawUpdateTargets` to log times and trim any exception to
+  just its message.
   """
   buildStart = time.time_ns()
   ## Somewhat off as it excludes sleep times, found no way to get those.
   ## Do not use psutil.create_time() it can be off by 999ms.
+  ## BUT: according to docs, process_time_ns() has an undefined reference
+  ## point, yet at least on Linux so far this seems to be close to 0 at
+  ## process start. Hmm.
   startNanos = buildStart - time.process_time_ns()
   LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
+  resultState = ansiGreen("build ✔")
+  try:
+    rawUpdateTargets(*targets)
+  except Exception as e:
+    resultState = ansiRed("build ✘")
+    if LOG.isEnabledFor(VERBOSE):
+      logging.error(e, exc_info=True)
+    else:
+      logging.error(e)
+  
+  buildEnd = time.time_ns()
+  LOG.info(resultState + ", took %s, total %s",
+           _formatNanoDelta(buildStart, buildEnd),
+           _formatNanoDelta(startNanos, buildEnd))
+
+def rawUpdateTargets(*targets: str | Target) -> None:
+  """Updates all targets in turn without resetting the traversal state in
+  between, so if target T1 depends on target T0, in the call ``updateTargets(T1,
+  T0)``, then T0 is redundant, because it will be updated already when doing T1.
+
+  :param targets: the targets to update where any ``str`` argument is looked up
+    with `findTarget`
+  """
   states = _StateStore(STATEFILE)
   for t in targets:
     target = findTarget(t)
@@ -379,19 +428,14 @@ def updateTargets(*targets: str | Target):
       raise BuildException("target '%s' not defined" % t)
     _updateTarget(states, target, [])
   states.save()
-  buildEnd = time.time_ns()
-  LOG.info("✓ build took %s, total %s",
-           _formatNanoDelta(buildStart, buildEnd),
-           _formatNanoDelta(startNanos, buildEnd))
-
+  
 def _updateTarget(states: '_StateStore',
                   target: Target[T],
-                  onbehalf: list[Target]):
+                  onbehalf: list[Target]) -> None:
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'"
                          % (target, onbehalf))
   target.started = True
-  logTag = target.name
 
   triggeringDeps = []
   depsDigest = hashlib.sha256()
@@ -404,7 +448,7 @@ def _updateTarget(states: '_StateStore',
 
   target.updated = True
 
-  targetStateBefore = target.generateState(target)
+  targetStateBefore = target.generateState(target.item)
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -423,7 +467,7 @@ def _updateTarget(states: '_StateStore',
   startNanos = time.time_ns()
   if target.cmd is not None:
     cmdName = target.cmd.__name__
-    target.cmd(target)
+    target.cmd(target.item, *map(lambda d: d.item, target.dependencies))
   took = _formatNanoDelta(startNanos, time.time_ns())
   if len(triggeringDeps) == 0:
     LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
@@ -433,7 +477,7 @@ def _updateTarget(states: '_StateStore',
 
 
   target.recreated = True
-  targetStateAfter = target.generateState(target)
+  targetStateAfter = target.generateState(target.item)
   states.setHashes(target, targetStateAfter, depsState)
 
 def _escdq(s: str) -> str:
@@ -471,32 +515,57 @@ def registerDependencyGraphTarget(
     graphFile: Path,
     name: str,
     buildscript: Target[Path] | Path = Path("pb")) -> Target[Path]:
-  
-  """Creates two targets, one for the build script, if provided and one for
-  the dependencies graph. The extension of the ``graphFile`` will be used
-  as the image type requested from the ``dot`` program. If the ``buildscript``
-  is already a ``Target`` it is used as the dependency.
+  """Creates a target to create the dependency graph.
 
-  :param graphFile: to create with the dependency graph after converting the
+  If the given ``buildscript`` is a ``Path`` a ``Target`` is created for it.
+
+  The extension of the ``graphFile`` will be used as the image type requested
+  from the ``dot`` program. If the ``buildscript`` is already a ``Target`` it is
+  used as the dependency.
+
+  :param graphFile: the dependency graph after converting the
     output of `toGraphviz`.
   :param name: of the ``Target`` for the graph file
   :param buildscript: to depend on such that the graph is re-created if the
     script changes
   :return: the ``Target`` for the dependency graph
+
   """
   dep = buildscript if isinstance(buildscript, Target) else Target(buildscript)
   return Target(graphFile, dep, name=name, state="file", cmd=graphToDot)
 
-def graphToDot(target: Target[Path]):
-  """Convenience function to call `toGraphviz()` and pass the output through
-  the ``dot`` program, writing the image file to the ``target.item``.
+def graphToDot(targetPath: Path, _unused: Path) -> None:
+  """Convenience function to create a dependency graph of all targets.
+
+  The function calls `toGraphviz()` and pipes the output through
+  the ``dot`` program, writing the image file to the ``targetPath``.
+
+  :param targetPath: to write the graph to. Its suffix is used as the image
+    type requested from ``dot``, like ``svg`` or ``pdf``.
+  :param _unused: not used, facilitates used as a ``cmd`` parameter of ``Target``
   """
   result = toGraphviz()
-  filetype = target.item.suffix[1:]
+  filetype = targetPath.suffix[1:]
   cmd = ["dot", "-T" + filetype, "-Grankdir=LR"]
   logcmd(cmd)
-  with open(target.item, "w", encoding="utf-8") as out:
+  with open(targetPath, "w", encoding="utf-8") as out:
     subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
+
+def ansiRed(text: str) -> str:
+  """Wraps text into ansi sequences to render it red.
+
+  :param text: to wrap
+  :return: wrapped text
+  """
+  return "\x1b[1;91m%s\x1b[0m" % text
+
+def ansiGreen(text: str) -> str:
+  """Wraps text into ansi sequences to render it green.
+
+  :param text: to wrap
+  :return: wrapped text
+  """
+  return "\x1b[38;2;20;110;20m%s\x1b[0m" % text
 
 ########################################################################
 
@@ -519,13 +588,13 @@ class _StateStore:
     for (key, value) in self.hashes.items():
       self.hashes[key] = (value[0], value[1])
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return "_StateStore[%s]" % self.hashes
 
   def setHashes(self,
                 target: Target,
                 targetHash: str,
-                depsHash: str):
+                depsHash: str) -> None:
     self.hashes[target.name] = (targetHash, depsHash)
 
   def get(self, target: Target) -> tuple[str, str]:
@@ -537,7 +606,7 @@ class _StateStore:
   def getDepsHash(self, target: Target) -> str:
     return self.hashes[target.name][1]
 
-  def save(self):
+  def save(self) -> None:
     LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
 

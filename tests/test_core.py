@@ -3,6 +3,7 @@ import sys
 import hashlib
 import shutil
 from pathlib import Path
+from typing import Any
 
 ## The tests must be started from the project directory
 sys.path += [str(Path.cwd() / "src")]
@@ -18,11 +19,14 @@ from pythonbuilder import (
   stateFixed,
   stateNew,
   updateTargets,
+  rawUpdateTargets,
   resetTraversalState,
   LOG,
   _TARGETS,
 )
 _TMPDIR=Path("build", "testtmp")
+
+# mypy: allow-untyped-defs
 
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
@@ -59,7 +63,7 @@ class TestTargetCreation(unittest.TestCase):
   def test_deps(self):
     d0 = Target("d0", state="file")
     d1 = Target("d1", state="file")
-    t = Target("b", d0, "d1", state="file", cmd=lambda: None)
+    t = Target("b", d0, d1, state="file", cmd=lambda: None)
     self.assertEqual(d0, t.dependencies[0])
     self.assertEqual(d1, t.dependencies[1])
 
@@ -67,11 +71,6 @@ class TestTargetCreation(unittest.TestCase):
     self.assertRaisesRegex(BuildException,
                            "'foob' is neither a file nor a directory, cannot",
                            lambda: Target("foob"))
-
-  def test_buildFailsForUnknownDependency(self):
-    with self.assertRaisesRegex(BuildException, "'no-dep' of 't' is neither"):
-      Target("t", "no-dep", state="file")
-
 
   def testFailDoublyDeclared(self):
     Target(Path("x", "z"), state="file")
@@ -93,7 +92,7 @@ class TestTargetCreation(unittest.TestCase):
 
     with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
       Target("yada4", state=lambda a, b: 'a')
-    
+
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
@@ -123,7 +122,7 @@ class TestStateComputation(unittest.TestCase):
     writeToFile("file1", file1);
     writeToFile("file2", file2);
     writeToFile("file3", file3);
-    hex = stateDirContent(t)
+    hex = stateDirContent(t.item)
 
     digest = hashlib.sha256()
     for f in [file1, file2, file3]:
@@ -131,11 +130,13 @@ class TestStateComputation(unittest.TestCase):
       digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
-
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
-  def simpleState(self, target: Target) -> str:
-    return self.values.get(str(target.item), stateNew(target))
+  def simpleState(self, value: str) -> str:
+    return self.values.get(value, stateNew(value))
+
+  def setSimpleValue(self, key: str, value: Any) -> None:
+    self.values[key] = str(value)
 
   def setUp(self):
     self.values.clear()
@@ -196,14 +197,17 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertTrue(top.updated)
     self.assertFalse(top.recreated)
 
-  def test_buildFailDoesNotUpdateStatefile(self):
-    cmd = lambda t: 1/0 # just fail somehow
+  def failWithZDE(self, t: str, u: str):
+    print(len(t)/0)
+
+  def test_buildFailDoesNotUpdateStatefile(self) -> None:
     first: Target[str] = Target("first", state=self.simpleState)
-    second: Target[str] = Target("second", first, state="fixed", cmd=cmd)
+    second: Target[str] = Target("second", first, state="fixed",
+                                 cmd=self.failWithZDE)
     self.values[first.item] = "value of first"
     self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
-      updateTargets(second)
+      rawUpdateTargets(second)
     self.assertTrue(first.updated)
     self.assertTrue(first.recreated)
     self.assertTrue(second.updated)
@@ -212,11 +216,28 @@ class TestUpdateTargets(unittest.TestCase):
     ## Now run again and see that first is again recreated
     resetTraversalState()
     with self.assertRaises(ZeroDivisionError):
-      updateTargets(second)
+      rawUpdateTargets(second)
     self.assertTrue(first.recreated)
 
+  def test_inMemTarget(self):
+    t0 = Target(117, state="value")
+    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
+
+    rawUpdateTargets(other)
+    self.assertTrue(other.recreated)
+    self.assertEqual("117", self.values["other"])
+
+    resetTraversalState()
+    rawUpdateTargets(other)
+    self.assertFalse(other.recreated)
+
+    resetTraversalState()
+    t0.item = 116
+    rawUpdateTargets(other)
+    self.assertTrue(other.recreated)
+    self.assertEqual("116", self.values["other"])
 
 if __name__ == '__main__':
   LOG.setLevel("ERROR")
-  #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
+  #unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')
   unittest.main(verbosity=2)

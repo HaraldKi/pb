@@ -23,7 +23,7 @@ class MavenArtifact:
     :param group: typically something like ``"org.json"``
     :param name: of the artifact, like ``"json"``
     :param version: of the artifact, like "1.2.3"
-    :param classifier: of the artifact, like "runtime", may be `None`
+    :param classifier: of the artifact, like "runtime", may be ``None``
     :param type: ends up as the file extension, like ``"jar"``
     """
     self.group = group
@@ -104,37 +104,36 @@ class MavenArtifact:
 
 class _Fetcher:
   @abstractmethod
-  def fetch(sefl, target: Target):
+  def fetch(self, path: Path) -> None:
     pass
 
 class _MavenArtifactLocal(_Fetcher):
-  def __init__(self, artifact: MavenArtifact):
+  def __init__(self, artifact: MavenArtifact) -> None:
     self.artifact = artifact;
 
-  def fetch(self, target: Target[Path]):
+  def fetch(self, targetPath: Path) -> None:
     """Copy the artifact from the local maven repository at
-    ``os.environ(HOME)/.m2`` to the target's name assumed to be a valid path.
-
+    ``os.environ(HOME)/.m2`` to the given path.
     """
     path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
-    target.item.parent.mkdir(parents=True, exist_ok=True)
-    LOG.info("* fetch %s -> %s", path, target.item)
-    shutil.copy(path, target.item)
+    targetPath.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", path, targetPath)
+    shutil.copy(path, targetPath)
 
 class _MavenArtifactRemote(_Fetcher):
-  def __init__(self, artifact: MavenArtifact, repoUrl: str):
+  def __init__(self, artifact: MavenArtifact, repoUrl: str) -> None:
     self.artifact = artifact
     self.repoUrl = repoUrl
 
-  def fetch(self, target: Target[Path]):
+  def fetch(self, targetPath: Path) -> None:
     """
     Copy the artifact from the configured maven repository
-    to the target's name assumed to be a valid path.
+    to the given path.
     """
     url = self.repoUrl + self.artifact.repoUrl()
-    target.item.parent.mkdir(parents=True, exist_ok=True)
-    LOG.info("* fetch %s -> %s", url, target.item)
+    targetPath.parent.mkdir(parents=True, exist_ok=True)
+    LOG.info("* fetch %s -> %s", url, targetPath)
     with request.urlopen(url) as response:
       data = response.read()
-      with open(target.item, "wb") as f:
+      with open(targetPath, "wb") as f:
         f.write(data)
