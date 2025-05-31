@@ -229,10 +229,10 @@ def stateFixed(_t: Any = None) -> str:
   return "0"
 
 def stateValue(item: Any) -> str:
-  """Computes a state string from `t.item`, so it can be used for in-memory
+  """Computes a state string from ``item``, so it can be used for in-memory
   targets like, for example, a version string generated from the current date.
 
-  :param t: to compute the state string from
+  :param item: to compute the state string from
   :return: an implementation dependent string is always the same for
     same ``t.item`` values and typically changes for changed ``t.item`` values
   """

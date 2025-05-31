@@ -151,7 +151,7 @@ for more information.
 If you use this in a Java project, then
 [mavenrepo.MavenArtifact](https://harald.codeberg.page/pythonbuilder/@main/apidoc/mavenrepo.MavenArtifact.html)
 and module
-[java]("https://harald.codeberg.page/pythonbuilder/@main/apidoc/java.html")
+[java](https://harald.codeberg.page/pythonbuilder/@main/apidoc/java.html)
 might be interesting too.
 
 ## Dependency Graph of pythonbuilder's build

@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+          "DTD/xhtml1-strict.dtd">
+<html>
+  
+
+  <head>
+    
+    <title>java</title>
+    <meta name="generator" content="pydoctor 21.12.1"> 
+        
+    </meta>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="apidocs.css" />
+    <link rel="stylesheet" type="text/css" href="extra.css" />
+</head>
+
+  <body>
+
+    
+
+    <nav class="navbar navbar-default">
+  
+  <div class="container">
+
+    <div class="navbar-header">
+      
+      <div class="navlinks">
+          <span class="navbar-brand">
+            <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+          </span>
+
+          <a href="moduleIndex.html">
+            Modules
+          </a>
+
+          <a href="classIndex.html">
+            Classes
+          </a>
+
+          <a href="nameIndex.html">
+            Names
+          </a>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+    
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1 class="module"><code><code><a href="java.html">java</a></code></code></h1>
+        <div id="showPrivate">
+          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        </div>
+      </div>
+
+      <div class="categoryHeader">
+        module documentation
+      </div>
+
+      <div class="extrasDocstring">
+        
+        <p></p>
+      </div>
+
+      <div class="moduleDocstring">
+        <div>Helpers to compile Java and run unit tests with  coverage.</div>
+      </div>
+
+      <div id="splitTables">
+        <table class="children sortable" id="id10">
+  
+  
+  <tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#classForPath">classForPath</a></code></td>
+    <td>Converts a path relative to root directory to a class name.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#compileJava">compileJava</a></code></td>
+    <td>A default java compilation command. Kept simple. If you need a more elaborate setup, it is easy enough to write your own, rather than this function being extremely configurable and configure it.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#jacocoReport">jacocoReport</a></code></td>
+    <td>Creates a coverage report from the output of <code><a href="#jacocoRunJunit4">jacocoRunJunit4</a></code>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#jacocoRunJunit4">jacocoRunJunit4</a></code></td>
+    <td>Runs junit4 tests with the default <tt class="rst-docutils literal">JunitCore</tt> class.</td>
+  </tr><tr class="constant private">
+    
+    <td>Constant</td>
+    <td><code><a href="#_PATHSEP">_PATHSEP</a></code></td>
+    <td><span class="undocumented">Undocumented</span></td>
+  </tr>
+</table>
+        
+
+          
+      </div>
+
+      <div id="childList">
+
+        <div class="basefunction">
+  
+  
+  <a name="java.classForPath">
+    
+  </a>
+  <a name="classForPath">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">classForPath</span>(classpathEntry, p):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div><p>Converts a path relative to root directory to a class name.</p>
+<p>For example if <tt class="rst-docutils literal">classpathEntry</tt> is <tt class="rst-docutils literal">build/test</tt> and the
+<tt class="rst-docutils literal">p</tt> is <tt class="rst-docutils literal">build/test/my/package/Dodo.class</tt>, the result is
+<tt class="rst-docutils literal">my.package.Dodo</tt>.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">classpathEntry:</span><code>Path</code></td><td class="fieldArgDesc">a directory containing compiled classes</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">p:</span><code>Path</code></td><td class="fieldArgDesc">a <tt class="rst-docutils literal">*.class` file within ``classpathEntry</tt></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="java.compileJava">
+    
+  </a>
+  <a name="compileJava">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">compileJava</span>(targetPath, srcPath, *classpath):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>A default java compilation command. Kept simple. If you need a more
+elaborate setup, it is easy enough to write your own, rather than this
+function being extremely configurable and configure it.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">targetPath:</span><code>Path</code></td><td class="fieldArgDesc">a <tt class="rst-docutils literal">Path</tt> where to drop the compiled files</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">srcPath:</span><code>Path</code></td><td class="fieldArgDesc">the source files directory</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*classpath:</span><code>Path</code></td><td class="fieldArgDesc">classpath members</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="java.jacocoReport">
+    
+  </a>
+  <a name="jacocoReport">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">jacocoReport</span>(targetPath, jacocoCli, jacocoData, classFiles, sourceFiles):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Creates a coverage report from the output of <code><a href="#jacocoRunJunit4">jacocoRunJunit4</a></code>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">targetPath:</span><code>Path</code></td><td class="fieldArgDesc">the directory where to place the coverage html files</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">jacocoCli:</span><code>Path</code></td><td class="fieldArgDesc">the jar <tt class="rst-docutils literal"><span class="pre">org.jacoco.cli...jar</span></tt>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">jacocoData:</span><code>Path</code></td><td class="fieldArgDesc">the output of <tt class="rst-docutils literal">jacocoRunJunit4</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">classFiles:</span><code>Path</code></td><td class="fieldArgDesc">the compiled classes classpath</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">sourceFiles:</span><code>Path</code></td><td class="fieldArgDesc">directory with the source files</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="java.jacocoRunJunit4">
+    
+  </a>
+  <a name="jacocoRunJunit4">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-keyword">def</span> <span class="py-defname">jacocoRunJunit4</span>(targetPath, jacocoJar, testClassesPath, *classpath):
+    
+  </div>
+  <div class="docstring functionBody">
+    
+    
+    <div>Runs junit4 tests with the default <tt class="rst-docutils literal">JunitCore</tt> class.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">targetPath:</span><code>Path</code></td><td class="fieldArgDesc">the path of the coverage data to produce by running with
+jacoco</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">jacocoJar:</span><code>Path</code></td><td class="fieldArgDesc">the jar <tt class="rst-docutils literal"><span class="pre">org.jacoco.agent...jar</span></tt>, not going on the class
+path</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">testClassesPath:</span><code>Path</code></td><td class="fieldArgDesc">a <tt class="rst-docutils literal">Path</tt> representing a classpath entry for test
+classes, all files matching <tt class="rst-docutils literal"><span class="pre">Test*.class</span></tt> are used as test classes.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*classpath:</span><code>Path</code></td><td class="fieldArgDesc">further classpath entries, i.e. classes, junit jar, etc.</td></tr></table></div>
+  </div>
+</div><div class="baseconstant private">
+  
+  
+  <a name="java._PATHSEP">
+    
+  </a>
+  <a name="_PATHSEP">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_PATHSEP</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>(';' if sys.platform == 'windows' else ':')</code></pre></td></tr></table>
+  </div>
+</div>
+
+      </div>
+    </div>
+
+    <footer class="navbar navbar-default">
+  
+  <div class="container">
+    <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
+  generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
+    21.12.1 at 2025-05-31 13:05:17.
+  </div>
+</footer>
+
+    <script src="pydoctor.js" type="text/javascript"></script>
+
+  </body>
+</html>

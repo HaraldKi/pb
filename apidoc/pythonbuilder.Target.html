@@ -87,8 +87,8 @@ optional nice name.</div>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#__repr__">__repr__</a></code></td>
-    <td><span class="undocumented">Undocumented</span></td>
+    <td><code><a href="#__str__">__str__</a></code></td>
+    <td>Readable short form for a <tt class="rst-docutils literal">Target</tt></td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -103,7 +103,7 @@ optional nice name.</div>
     
     <td>Instance Variable</td>
     <td><code><a href="#generateState">generateState</a></code></td>
-    <td>Function to generate the state for the target</td>
+    <td>Function to generate the state for the target.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -113,17 +113,17 @@ optional nice name.</div>
     
     <td>Instance Variable</td>
     <td><code><a href="#name">name</a></code></td>
-    <td>Alternative name more suitable to use on the command line</td>
+    <td>The target's name, defaulting to <tt class="rst-docutils literal">str(item)</tt>.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
     <td><code><a href="#recreated">recreated</a></code></td>
-    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its command was run. This does not say whether the target actually changed.</td>
+    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its command was run.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
     <td><code><a href="#started">started</a></code></td>
-    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> when this target is considered for updating.</td>
+    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as this target is considered for updating.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -156,38 +156,38 @@ optional nice name.</div>
     
     
     <div><p>Creates a new Target.</p>
-<p>An "input target", for example a source code directory, may
-may be created with just an item, as it has no dependencies, the state
-generator is derived automatically, because it is an existing directory,
-and nothing needs to be done, so it has no command.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T">T</a></code></td><td class="fieldArgDesc">represents the target, like a file or directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies</span></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>(str|Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>str])|None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint)
-for this target. The function must generate a small fingerprint for the
-<code><a href="pythonbuilder.Target.html">Target</a></code>. If not provided, the <code><a href="#item">item</a></code> must denote an <strong>existing</strong> file
-or directory. If given as a string, it must be "dir", "file", "new" or
-"fixed" for <code><a href="pythonbuilder.html#stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew">stateNew</a></code> or
-<code><a href="pythonbuilder.html#stateFixed">stateFixed</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
-line. The default is <tt class="rst-docutils literal">str(item), so if it is like
-<span class="pre">``Path("build",</span> "stuff", "woo.html")</tt>
-then the name could be just "woo", for example.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>None]|None</code></td><td class="fieldArgDesc">Defines which command to run to (re-)create the target.</td></tr></table></div>
+<p>An "input target", for example a source code directory, may be created with
+just an item, as it has no dependencies, the state generator is derived
+automatically, because it is an existing directory, and nothing needs to be
+done, so it has no command.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T">T</a></code></td><td class="fieldArgDesc">represents the item to keep up-to-date, like a file or
+directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Any]</code></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>(str|Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>], <wbr></wbr>str])|None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint) for
+this target's item. The function must generate a small fingerprint.
+If not provided, the <code><a href="#item">item</a></code> must denote an <strong>existing</strong> file
+or directory. If given as a string, it must be "dir", "file", "new",
+"fixed" or "value" for <code><a href="pythonbuilder.html#stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew">stateNew</a></code>,
+<code><a href="pythonbuilder.html#stateFixed">stateFixed</a></code> or <code><a href="pythonbuilder.html#stateValue">stateValue</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str|None</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
+line. The default is name is <tt class="rst-docutils literal">str(item)</tt>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None]|None</code></td><td class="fieldArgDesc">the command to run to (re-)create the target. Its parameters will
+be the target's <tt class="rst-docutils literal">item</tt> as well as the items of all dependencies.</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
   
-  <a name="pythonbuilder.Target.__repr__">
+  <a name="pythonbuilder.Target.__str__">
     
   </a>
-  <a name="__repr__">
+  <a name="__str__">
     
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__repr__</span>(self):
+    <span class="py-keyword">def</span> <span class="py-defname">__str__</span>(self):
     
   </div>
   <div class="docstring functionBody">
     
     
-    <div><p class="undocumented">Undocumented</p></div>
+    <div>Readable short form for a <tt class="rst-docutils literal">Target</tt><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
   </div>
 </div><div class="baseinstancevariable">
   
@@ -200,7 +200,7 @@ then the name could be just "woo", for example.</td></tr><tr><td class="fieldArg
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>]], <wbr></wbr>None]|None</code> =
+    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None]|None</code> =
     
   </div>
   <div class="functionBody">
@@ -220,7 +220,7 @@ then the name could be just "woo", for example.</td></tr><tr><td class="fieldArg
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">dependencies</span>: <code>list</code> =
+    <span class="py-defname">dependencies</span> =
     
   </div>
   <div class="functionBody">
@@ -240,13 +240,13 @@ then the name could be just "woo", for example.</td></tr><tr><td class="fieldArg
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html">Target</a>], <wbr></wbr>str]</code> =
+    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>], <wbr></wbr>str]</code> =
     
   </div>
   <div class="functionBody">
     
     
-    <div>Function to generate the state for the target</div>
+    <div>Function to generate the state for the target.</div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -286,7 +286,9 @@ then the name could be just "woo", for example.</td></tr><tr><td class="fieldArg
   <div class="functionBody">
     
     
-    <div>Alternative name more suitable to use on the command line</div>
+    <div><p>The target's name, defaulting to <tt class="rst-docutils literal">str(item)</tt>.</p>
+<p>It can be used as parameter for <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code>.</p>
+</div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -306,8 +308,11 @@ then the name could be just "woo", for example.</td></tr><tr><td class="fieldArg
   <div class="functionBody">
     
     
-    <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its
-command was run. This does not say whether the target actually changed.</div>
+    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its
+command was run.</p>
+<p>This does not say whether the target was actually changed by running its
+<tt class="rst-docutils literal">cmd</tt>.</p>
+</div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -327,7 +332,8 @@ command was run. This does not say whether the target actually changed.</div>
   <div class="functionBody">
     
     
-    <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> when this target is considered for updating.</div>
+    <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as this target is considered for
+updating.</div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -347,7 +353,9 @@ command was run. This does not say whether the target actually changed.</div>
   <div class="functionBody">
     
     
-    <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</div>
+    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</p>
+<p>The target's command may or may not be run subsequently.</p>
+</div>
     
   </div>
 </div>
@@ -360,7 +368,7 @@ command was run. This does not say whether the target actually changed.</div>
   <div class="container">
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.12.1 at 2025-05-09 19:01:40.
+    21.12.1 at 2025-05-31 13:05:17.
   </div>
 </footer>
 

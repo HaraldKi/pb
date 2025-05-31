@@ -85,7 +85,7 @@ repository.</p>
     
     <td>Static Method</td>
     <td><code><a href="#fromGradleShort">fromGradleShort</a></code></td>
-    <td>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like <tt class="rst-docutils literal">"org.json:json:20250107"</tt>.</td>
+    <td>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like <tt class="rst-docutils literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given too.</td>
   </tr><tr class="method">
     
     <td>Method</td>
@@ -106,6 +106,11 @@ repository.</p>
     <td>Method</td>
     <td><code><a href="#repoUrl">repoUrl</a></code></td>
     <td>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used to fetch the target if prefixed by a repository URL.</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#classifier">classifier</a></code></td>
+    <td>artifact classifier</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -146,14 +151,15 @@ repository.</p>
   </a>
   <div class="functionHeader">
     @staticmethod<br />
-    <span class="py-keyword">def</span> <span class="py-defname">fromGradleShort</span>(triple, type):
+    <span class="py-keyword">def</span> <span class="py-defname">fromGradleShort</span>(groupNameVersionClassifier, type):
     
   </div>
   <div class="docstring functionBody">
     
     
     <div>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like
-<tt class="rst-docutils literal">"org.json:json:20250107"</tt>.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">triple:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+<tt class="rst-docutils literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given
+too.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">groupNameVersionClassifier:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -166,13 +172,13 @@ repository.</p>
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, group, name, version, type):
+    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, group, name, version, classifier, type):
     
   </div>
   <div class="docstring functionBody">
     
     
-    <div>Creates the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">group:</span><code>str</code></td><td class="fieldArgDesc">typically something like <tt class="rst-docutils literal">"org.json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like <tt class="rst-docutils literal">"json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">version:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like "1.2.3"</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc">ends up as the file extension, like <tt class="rst-docutils literal">"jar"</tt></td></tr></table></div>
+    <div>Creates the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">group:</span><code>str</code></td><td class="fieldArgDesc">typically something like <tt class="rst-docutils literal">"org.json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like <tt class="rst-docutils literal">"json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">version:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like "1.2.3"</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">classifier:</span><code>str|None</code></td><td class="fieldArgDesc">of the artifact, like "runtime", may be <tt class="rst-docutils literal">None</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc">ends up as the file extension, like <tt class="rst-docutils literal">"jar"</tt></td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -215,7 +221,8 @@ of the artifact</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2
   <div class="docstring functionBody">
     
     
-    <div>Provides the filename of the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">file name of the form "name-version.type".</td></tr></table></div>
+    <div>Provides the filename of the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">file name of the form "name-version-classifier.type" where
+-classifier only provided if defined in the constructor..</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -237,6 +244,26 @@ of the artifact</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2
     <div>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used
 to fetch the target if prefixed by a repository URL.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">URL of the form "g1/g2/.../name/version/filename" where g1,... are
 the dot-separated parts of the group name</td></tr></table></div>
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="mavenrepo.MavenArtifact.classifier">
+    
+  </a>
+  <a name="classifier">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">classifier</span> =
+    
+  </div>
+  <div class="functionBody">
+    
+    
+    <div>artifact classifier</div>
+    
   </div>
 </div><div class="baseinstancevariable">
   
@@ -328,7 +355,7 @@ the dot-separated parts of the group name</td></tr></table></div>
   <div class="container">
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
-    21.12.1 at 2025-05-09 19:01:40.
+    21.12.1 at 2025-05-31 13:05:17.
   </div>
 </footer>
 
