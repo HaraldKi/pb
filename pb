@@ -18,6 +18,8 @@ buildDir = Path("build")
 pythonbuilder = Target(srcDir / "pythonbuilder.py")
 mavenrepo = Target(srcDir / "mavenrepo.py")
 java = Target(srcDir / "java.py")
+pbutil = Target(srcDir / "pbutil.py")
+
 pb = Target(Path("pb"))
 testSources = Target(Path("tests"))
 
@@ -33,7 +35,8 @@ def doMypy(_target: str, testSrcDir: Path, *files: Path) -> None:
          "--warn-return-any",
          allFiles)
 
-mypy = Target[str]("mypy", testSources,pythonbuilder, mavenrepo, java, pb,
+mypy = Target[str]("mypy",
+                   testSources, pythonbuilder, mavenrepo, java, pbutil, pb,
                    state="fixed", cmd=doMypy)
 
 ############################################################
@@ -62,13 +65,13 @@ def doApidoc(docPath: Path, _unused: Path, *pyfiles: Path) -> None:
          "--docformat=restructuredtext",
          "--project-name=pythonbuilder",
          "--project-url=https://codeberg.org/harald/pythonbuilder",
-         "--template-dir=doc-templates",
+         "--template-dir=./doc-templates",
          "--html-output=" + str(docPath),
          pyfiles)
 
-extraCss = Target(Path("doc-templates", "extra.css"), name="extraCss")  
+docTemplates = Target(Path("doc-templates"), name="docTemplates")  
 apidoc = Target(Path("apidoc"),
-                extraCss, pythonbuilder, mavenrepo, java,
+                docTemplates, pythonbuilder, mavenrepo, java, pbutil,
                 state="dir", name="apidoc", cmd=doApidoc)
 
 ############################################################

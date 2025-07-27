@@ -85,6 +85,6 @@ def classForPath(classpathEntry: Path, p: Path) -> str:
   ``my.package.Dodo``.
 
   :param classpathEntry: a directory containing compiled classes
-  :param p: a ``*.class` file within ``classpathEntry``
+  :param p: a ``*.class`` file within ``classpathEntry``
   """
   return ".".join(p.relative_to(classpathEntry).parts).replace(".class", "")
