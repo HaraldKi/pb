@@ -8,19 +8,17 @@ of `Target()`, but most have a string shortcut. See there.
 ## for use of class as type annotations before class is fully defined
 from __future__ import annotations
 
-import time
-import os
 import hashlib
-from typing import (
-  cast, TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
-)
-from collections.abc import Iterable, Callable
-from dataclasses import dataclass
-import logging
 import inspect
-import subprocess
 import json
+import logging
+import os
+import subprocess
+import time
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Concatenate, Generic, Hashable, TypeGuard, TypeVar, cast
 
 logging.basicConfig(format='%(message)s (%(levelname)s)')
 VERBOSE = logging.INFO - 5

@@ -1,10 +1,10 @@
 """
 Helpers to compile Java and run unit tests with  coverage.
 """
-import sys
 import os
-
+import sys
 from pathlib import Path
+
 from pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"

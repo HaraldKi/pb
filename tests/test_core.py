@@ -1,7 +1,7 @@
-import unittest
-import sys
 import hashlib
 import shutil
+import sys
+import unittest
 from pathlib import Path
 from typing import Any
 
@@ -9,21 +9,22 @@ from typing import Any
 sys.path += [str(Path.cwd() / "src")]
 
 from pythonbuilder import (
-  BuildException,
+  _TARGETS,
+  LOG,
   STATEFILE,
+  BuildException,
   Target,
   findTarget,
+  rawUpdateTargets,
+  resetTraversalState,
   stateDirContent,
   stateFileContent,
   stateFileIteratorContent,
   stateFixed,
   stateNew,
   updateTargets,
-  rawUpdateTargets,
-  resetTraversalState,
-  LOG,
-  _TARGETS,
 )
+
 _TMPDIR=Path("build", "testtmp")
 
 # mypy: allow-untyped-defs

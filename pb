@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-from os import environ
 import sys
+from os import environ
 from pathlib import Path
 
 sys.path += ["src"]
 from pythonbuilder import (
-  Target, updateTargets, pbexec, registerDependencyGraphTarget
+  Target,
+  pbexec,
+  registerDependencyGraphTarget,
+  updateTargets,
 )
 
 #LOG.setLevel("DEBUG")
@@ -39,7 +42,6 @@ mypy = Target[str]("mypy",
 
 ############################################################
 def doRuff(_target: str, testSrcDir: Path, *files: Path) -> None:
-  environ["NO_COLOR"] = "1" 
   allFiles = list(testSrcDir.glob("*.py")) + [*files]
   pbexec("ruff",
          "--config",
@@ -47,6 +49,8 @@ def doRuff(_target: str, testSrcDir: Path, *files: Path) -> None:
          "--config",
          "line-length=80",
          "check",
+         "--extend-select",
+         "I",         
          allFiles)
 
 ruff = Target[str]("ruff",

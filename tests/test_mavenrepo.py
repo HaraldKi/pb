@@ -1,12 +1,12 @@
-import unittest
-import sys
 import os
 import shutil
+import sys
+import unittest
 
 ## The tests must be started from the project directory
 sys.path += [os.path.join(os.getcwd(), "src")]
-from pythonbuilder import updateTargets, resetTraversalState, LOG
 from mavenrepo import MavenArtifact
+from pythonbuilder import LOG, resetTraversalState, updateTargets
 
 TMPDIR=os.path.join("build", "testtmp")
 

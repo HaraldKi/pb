@@ -1,16 +1,15 @@
-import unittest
-import sys
 import shutil
+import sys
+import unittest
 from pathlib import Path
 
 ## The tests must be started from the project directory
 sys.path += [str(Path.cwd() / "src")]
 
-
 from pythonbuilder import (
+  LOG,
   Target,
   stateFileContent,
-  LOG,
 )
 
 # mypy: allow-untyped-defs

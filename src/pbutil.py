@@ -6,11 +6,13 @@ is a waste.
 Using this module is completely optional, obviously.
 """
 
-import inspect
 import datetime
+import inspect
 from pathlib import Path
 from typing import Any
+
 import pythonbuilder as pb
+
 
 def touch(targetPath: Path, *deps: Any) -> None:
   """A function intended to be used as the ``cmd`` parameter of a `Target` to

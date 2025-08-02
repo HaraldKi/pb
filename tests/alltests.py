@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import unittest
 
 ## The tests must be started from the project directory

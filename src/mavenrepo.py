@@ -1,11 +1,13 @@
 """Provides a class to work with maven (gradle) style artifacts.
 """
 
-from pathlib import Path
-from pythonbuilder import Target, LOG
 import shutil
-from urllib import request
 from abc import abstractmethod
+from pathlib import Path
+from urllib import request
+
+from pythonbuilder import LOG, Target
+
 
 class MavenArtifact:
   """Encapsulates group, name, version and type (file extension) of an artifact
