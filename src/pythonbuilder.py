@@ -338,7 +338,7 @@ def flatten(result: list[str], nested: Any) -> None:
   ``Iterable`` and not ``str`` is added to the result as ``str(element)``
 
   :param result: to which elements are appended
-  :param l: either an ``Iterable`` to flatten or a string or other object to
+  :param nested: either an ``Iterable`` to flatten or a string or other object to
     add to the result
   """
   if isinstance(nested, str):

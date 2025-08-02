@@ -12,69 +12,87 @@
 <!-- tests -->
 <g id="node1" class="node">
 <title>tests</title>
-<ellipse fill="none" stroke="black" cx="106.59" cy="-351.63" rx="33.6" ry="18"/>
-<text text-anchor="middle" x="106.59" y="-347.93" font-family="Times,serif" font-size="14.00">tests</text>
+<ellipse fill="none" stroke="black" cx="106.59" cy="-297.63" rx="33.6" ry="18"/>
+<text text-anchor="middle" x="106.59" y="-293.93" font-family="Times,serif" font-size="14.00">tests</text>
 </g>
 <!-- mypy -->
 <g id="node2" class="node">
 <title>mypy</title>
-<ellipse fill="none" stroke="black" cx="290.13" cy="-243.63" rx="36.29" ry="18"/>
-<text text-anchor="middle" x="290.13" y="-239.93" font-family="Times,serif" font-size="14.00">mypy</text>
+<ellipse fill="none" stroke="black" cx="290.13" cy="-189.63" rx="36.29" ry="18"/>
+<text text-anchor="middle" x="290.13" y="-185.93" font-family="Times,serif" font-size="14.00">mypy</text>
 </g>
 <!-- tests&#45;&gt;mypy -->
 <g id="edge1" class="edge">
 <title>tests&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M139.88,-348.18C161.78,-344.72 190.7,-337.92 213.18,-324.63 236.85,-310.63 257.73,-287.08 271.57,-268.97"/>
-<polygon fill="black" stroke="black" points="274.64,-270.7 277.78,-260.58 269.02,-266.54 274.64,-270.7"/>
+<path fill="none" stroke="black" d="M140.15,-295.39C162.44,-292.49 191.72,-285.84 213.18,-270.63 236.71,-253.95 228.85,-237.09 249.18,-216.63 251.68,-214.12 254.44,-211.7 257.31,-209.41"/>
+<polygon fill="black" stroke="black" points="259.57,-212.09 265.56,-203.34 255.43,-206.45 259.57,-212.09"/>
+</g>
+<!-- ruff -->
+<g id="node8" class="node">
+<title>ruff</title>
+<ellipse fill="none" stroke="black" cx="290.13" cy="-243.63" rx="27.1" ry="18"/>
+<text text-anchor="middle" x="290.13" y="-239.93" font-family="Times,serif" font-size="14.00">ruff</text>
+</g>
+<!-- tests&#45;&gt;ruff -->
+<g id="edge7" class="edge">
+<title>tests&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M137.83,-290.67C159.06,-285.6 188.02,-278.3 213.18,-270.63 227.47,-266.27 243.06,-260.85 256.37,-256.01"/>
+<polygon fill="black" stroke="black" points="257.87,-259.19 266.04,-252.45 255.45,-252.62 257.87,-259.19"/>
 </g>
 <!-- test -->
-<g id="node8" class="node">
+<g id="node9" class="node">
 <title>test</title>
-<ellipse fill="none" stroke="black" cx="450.51" cy="-266.63" rx="83.38" ry="22.76"/>
-<text text-anchor="start" x="436.51" y="-268.43" font-family="Times,serif" font-size="14.00">test</text>
-<text text-anchor="start" x="399.51" y="-257.63" font-family="Times,serif" font-size="10.00">build/coverage.data</text>
+<ellipse fill="none" stroke="black" cx="450.51" cy="-211.63" rx="83.38" ry="22.76"/>
+<text text-anchor="start" x="436.51" y="-213.43" font-family="Times,serif" font-size="14.00">test</text>
+<text text-anchor="start" x="399.51" y="-202.63" font-family="Times,serif" font-size="10.00">build/coverage.data</text>
 </g>
 <!-- tests&#45;&gt;test -->
-<g id="edge7" class="edge">
+<g id="edge13" class="edge">
 <title>tests&#45;&gt;test</title>
-<path fill="none" stroke="black" d="M137.63,-344.16C191.13,-330.86 304.23,-302.74 378.51,-284.28"/>
-<polygon fill="black" stroke="black" points="379.41,-287.66 388.27,-281.85 377.73,-280.87 379.41,-287.66"/>
+<path fill="none" stroke="black" d="M140.5,-297.14C184.72,-295.7 265.37,-290.32 331.07,-270.63 357.47,-262.71 385.14,-249.26 407.09,-237.2"/>
+<polygon fill="black" stroke="black" points="408.8,-240.25 415.82,-232.31 405.38,-234.14 408.8,-240.25"/>
 </g>
 <!-- mypy&#45;&gt;test -->
-<g id="edge9" class="edge">
+<g id="edge16" class="edge">
 <title>mypy&#45;&gt;test</title>
-<path fill="none" stroke="black" d="M325.49,-248.62C337.69,-250.39 352,-252.47 366.49,-254.57"/>
-<polygon fill="black" stroke="black" points="366.12,-258.05 376.52,-256.03 367.13,-251.13 366.12,-258.05"/>
+<path fill="none" stroke="black" d="M325.49,-194.4C337.54,-196.07 351.66,-198.04 365.96,-200.02"/>
+<polygon fill="black" stroke="black" points="365.48,-203.49 375.87,-201.4 366.45,-196.56 365.48,-203.49"/>
 </g>
 <!-- src/pythonbuilder.py -->
 <g id="node3" class="node">
 <title>src/pythonbuilder.py</title>
-<ellipse fill="none" stroke="black" cx="106.59" cy="-297.63" rx="106.68" ry="18"/>
-<text text-anchor="middle" x="106.59" y="-293.93" font-family="Times,serif" font-size="14.00">src/pythonbuilder.py</text>
+<ellipse fill="none" stroke="black" cx="106.59" cy="-81.63" rx="106.68" ry="18"/>
+<text text-anchor="middle" x="106.59" y="-77.93" font-family="Times,serif" font-size="14.00">src/pythonbuilder.py</text>
 </g>
 <!-- src/pythonbuilder.py&#45;&gt;mypy -->
 <g id="edge2" class="edge">
 <title>src/pythonbuilder.py&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M168.99,-282.93C183.55,-279.17 198.97,-274.96 213.18,-270.63 225.63,-266.83 239.05,-262.23 251.1,-257.91"/>
-<polygon fill="black" stroke="black" points="252.64,-261.08 260.84,-254.38 250.25,-254.5 252.64,-261.08"/>
+<path fill="none" stroke="black" d="M184.13,-94C194.44,-97.68 204.46,-102.45 213.18,-108.63 236.71,-125.31 228.85,-142.17 249.18,-162.63 251.68,-165.14 254.44,-167.56 257.31,-169.84"/>
+<polygon fill="black" stroke="black" points="255.43,-172.81 265.56,-175.91 259.57,-167.17 255.43,-172.81"/>
+</g>
+<!-- src/pythonbuilder.py&#45;&gt;ruff -->
+<g id="edge8" class="edge">
+<title>src/pythonbuilder.py&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M188.69,-93.19C197.68,-97.02 206.12,-102.05 213.18,-108.63 250.21,-143.1 218.6,-176.32 249.18,-216.63 252.13,-220.51 255.79,-224.02 259.71,-227.13"/>
+<polygon fill="black" stroke="black" points="257.74,-230.02 267.93,-232.94 261.78,-224.31 257.74,-230.02"/>
 </g>
 <!-- src/pythonbuilder.py&#45;&gt;test -->
-<g id="edge8" class="edge">
+<g id="edge14" class="edge">
 <title>src/pythonbuilder.py&#45;&gt;test</title>
-<path fill="none" stroke="black" d="M201.02,-289.16C250.97,-284.63 312.11,-279.08 361.25,-274.63"/>
-<polygon fill="black" stroke="black" points="361.59,-278.11 371.23,-273.72 360.95,-271.14 361.59,-278.11"/>
+<path fill="none" stroke="black" d="M213.36,-81.62C251.76,-84.87 294.64,-92.45 331.07,-108.63 368.38,-125.2 402.58,-157.64 424.53,-181.71"/>
+<polygon fill="black" stroke="black" points="421.95,-184.07 431.22,-189.2 427.17,-179.41 421.95,-184.07"/>
 </g>
 <!-- apidoc -->
-<g id="node11" class="node">
+<g id="node12" class="node">
 <title>apidoc</title>
-<ellipse fill="none" stroke="black" cx="290.13" cy="-189.63" rx="40.89" ry="18"/>
-<text text-anchor="middle" x="290.13" y="-185.93" font-family="Times,serif" font-size="14.00">apidoc</text>
+<ellipse fill="none" stroke="black" cx="290.13" cy="-135.63" rx="40.89" ry="18"/>
+<text text-anchor="middle" x="290.13" y="-131.93" font-family="Times,serif" font-size="14.00">apidoc</text>
 </g>
 <!-- src/pythonbuilder.py&#45;&gt;apidoc -->
-<g id="edge12" class="edge">
+<g id="edge19" class="edge">
 <title>src/pythonbuilder.py&#45;&gt;apidoc</title>
-<path fill="none" stroke="black" d="M184.13,-285.25C194.44,-281.58 204.46,-276.81 213.18,-270.63 236.71,-253.95 228.85,-237.09 249.18,-216.63 251.48,-214.31 254.01,-212.07 256.64,-209.95"/>
-<polygon fill="black" stroke="black" points="258.8,-212.7 264.72,-203.92 254.61,-207.09 258.8,-212.7"/>
+<path fill="none" stroke="black" d="M168.99,-96.32C183.55,-100.08 198.97,-104.3 213.18,-108.63 225,-112.23 237.7,-116.56 249.26,-120.69"/>
+<polygon fill="black" stroke="black" points="248.07,-123.98 258.67,-124.08 250.45,-117.39 248.07,-123.98"/>
 </g>
 <!-- src/mavenrepo.py -->
 <g id="node4" class="node">
@@ -85,14 +103,20 @@
 <!-- src/mavenrepo.py&#45;&gt;mypy -->
 <g id="edge3" class="edge">
 <title>src/mavenrepo.py&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M200.22,-243.63C215.26,-243.63 230.22,-243.63 243.47,-243.63"/>
-<polygon fill="black" stroke="black" points="243.7,-247.13 253.7,-243.63 243.7,-240.13 243.7,-247.13"/>
+<path fill="none" stroke="black" d="M166.22,-229.65C181.58,-225.71 198.07,-221.24 213.18,-216.63 225.63,-212.83 239.05,-208.23 251.1,-203.91"/>
+<polygon fill="black" stroke="black" points="252.64,-207.08 260.84,-200.38 250.25,-200.5 252.64,-207.08"/>
+</g>
+<!-- src/mavenrepo.py&#45;&gt;ruff -->
+<g id="edge9" class="edge">
+<title>src/mavenrepo.py&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M200.22,-243.63C218.83,-243.63 237.33,-243.63 252.6,-243.63"/>
+<polygon fill="black" stroke="black" points="252.62,-247.13 262.62,-243.63 252.62,-240.13 252.62,-247.13"/>
 </g>
 <!-- src/mavenrepo.py&#45;&gt;apidoc -->
-<g id="edge13" class="edge">
+<g id="edge20" class="edge">
 <title>src/mavenrepo.py&#45;&gt;apidoc</title>
-<path fill="none" stroke="black" d="M166.22,-229.65C181.58,-225.71 198.07,-221.24 213.18,-216.63 225,-213.02 237.7,-208.7 249.26,-204.57"/>
-<polygon fill="black" stroke="black" points="250.45,-207.86 258.67,-201.17 248.07,-201.28 250.45,-207.86"/>
+<path fill="none" stroke="black" d="M180.56,-232.48C192.12,-228.66 203.46,-223.52 213.18,-216.63 236.71,-199.95 228.85,-183.09 249.18,-162.63 251.48,-160.31 254.01,-158.07 256.64,-155.95"/>
+<polygon fill="black" stroke="black" points="258.8,-158.7 264.72,-149.92 254.61,-153.09 258.8,-158.7"/>
 </g>
 <!-- src/java.py -->
 <g id="node5" class="node">
@@ -103,14 +127,20 @@
 <!-- src/java.py&#45;&gt;mypy -->
 <g id="edge4" class="edge">
 <title>src/java.py&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M154.89,-200.74C173.2,-205.3 194.27,-210.86 213.18,-216.63 225.63,-220.42 239.05,-225.02 251.1,-229.34"/>
-<polygon fill="black" stroke="black" points="250.25,-232.76 260.84,-232.88 252.64,-226.18 250.25,-232.76"/>
+<path fill="none" stroke="black" d="M167.79,-189.63C192.49,-189.63 220.61,-189.63 243.56,-189.63"/>
+<polygon fill="black" stroke="black" points="243.71,-193.13 253.71,-189.63 243.71,-186.13 243.71,-193.13"/>
+</g>
+<!-- src/java.py&#45;&gt;ruff -->
+<g id="edge10" class="edge">
+<title>src/java.py&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M154.89,-200.74C173.2,-205.3 194.27,-210.86 213.18,-216.63 227.47,-220.99 243.06,-226.41 256.37,-231.24"/>
+<polygon fill="black" stroke="black" points="255.45,-234.64 266.04,-234.8 257.87,-228.07 255.45,-234.64"/>
 </g>
 <!-- src/java.py&#45;&gt;apidoc -->
-<g id="edge14" class="edge">
+<g id="edge21" class="edge">
 <title>src/java.py&#45;&gt;apidoc</title>
-<path fill="none" stroke="black" d="M167.79,-189.63C190.86,-189.63 216.93,-189.63 238.97,-189.63"/>
-<polygon fill="black" stroke="black" points="239.11,-193.13 249.11,-189.63 239.11,-186.13 239.11,-193.13"/>
+<path fill="none" stroke="black" d="M154.89,-178.51C173.2,-173.95 194.27,-168.39 213.18,-162.63 225,-159.02 237.7,-154.7 249.26,-150.57"/>
+<polygon fill="black" stroke="black" points="250.45,-153.86 258.67,-147.17 248.07,-147.28 250.45,-153.86"/>
 </g>
 <!-- src/pbutil.py -->
 <g id="node6" class="node">
@@ -121,89 +151,107 @@
 <!-- src/pbutil.py&#45;&gt;mypy -->
 <g id="edge5" class="edge">
 <title>src/pbutil.py&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M169.25,-143.44C184.58,-147.44 200.29,-153.49 213.18,-162.63 236.71,-179.31 228.85,-196.17 249.18,-216.63 251.68,-219.14 254.44,-221.56 257.31,-223.84"/>
-<polygon fill="black" stroke="black" points="255.43,-226.81 265.56,-229.91 259.57,-221.17 255.43,-226.81"/>
+<path fill="none" stroke="black" d="M158.61,-147.67C176.01,-152.05 195.53,-157.25 213.18,-162.63 225.63,-166.42 239.05,-171.02 251.1,-175.34"/>
+<polygon fill="black" stroke="black" points="250.25,-178.76 260.84,-178.88 252.64,-172.18 250.25,-178.76"/>
+</g>
+<!-- src/pbutil.py&#45;&gt;ruff -->
+<g id="edge11" class="edge">
+<title>src/pbutil.py&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M169.25,-143.44C184.58,-147.44 200.29,-153.49 213.18,-162.63 236.71,-179.31 228.85,-196.17 249.18,-216.63 252.61,-220.08 256.55,-223.36 260.58,-226.37"/>
+<polygon fill="black" stroke="black" points="258.66,-229.29 268.87,-232.12 262.65,-223.54 258.66,-229.29"/>
 </g>
 <!-- src/pbutil.py&#45;&gt;apidoc -->
-<g id="edge15" class="edge">
+<g id="edge22" class="edge">
 <title>src/pbutil.py&#45;&gt;apidoc</title>
-<path fill="none" stroke="black" d="M158.61,-147.67C176.01,-152.05 195.53,-157.25 213.18,-162.63 225,-166.23 237.7,-170.56 249.26,-174.69"/>
-<polygon fill="black" stroke="black" points="248.07,-177.98 258.67,-178.08 250.45,-171.39 248.07,-177.98"/>
+<path fill="none" stroke="black" d="M176.22,-135.63C197.07,-135.63 219.59,-135.63 238.98,-135.63"/>
+<polygon fill="black" stroke="black" points="239.11,-139.13 249.11,-135.63 239.11,-132.13 239.11,-139.13"/>
 </g>
 <!-- pb -->
 <g id="node7" class="node">
 <title>pb</title>
-<ellipse fill="none" stroke="black" cx="106.59" cy="-81.63" rx="27" ry="18"/>
-<text text-anchor="middle" x="106.59" y="-77.93" font-family="Times,serif" font-size="14.00">pb</text>
+<ellipse fill="none" stroke="black" cx="106.59" cy="-351.63" rx="27" ry="18"/>
+<text text-anchor="middle" x="106.59" y="-347.93" font-family="Times,serif" font-size="14.00">pb</text>
 </g>
 <!-- pb&#45;&gt;mypy -->
 <g id="edge6" class="edge">
 <title>pb&#45;&gt;mypy</title>
-<path fill="none" stroke="black" d="M133.91,-81.59C157.53,-82.96 191.72,-88.64 213.18,-108.63 250.21,-143.1 218.6,-176.32 249.18,-216.63 251.26,-219.36 253.69,-221.91 256.32,-224.27"/>
-<polygon fill="black" stroke="black" points="254.57,-227.34 264.6,-230.74 258.88,-221.83 254.57,-227.34"/>
+<path fill="none" stroke="black" d="M133.91,-351.67C157.53,-350.29 191.72,-344.61 213.18,-324.63 250.21,-290.15 218.6,-256.93 249.18,-216.63 251.26,-213.89 253.69,-211.34 256.32,-208.99"/>
+<polygon fill="black" stroke="black" points="258.88,-211.43 264.6,-202.51 254.57,-205.91 258.88,-211.43"/>
+</g>
+<!-- pb&#45;&gt;ruff -->
+<g id="edge12" class="edge">
+<title>pb&#45;&gt;ruff</title>
+<path fill="none" stroke="black" d="M133.45,-349.13C155.84,-346.04 188.42,-339.27 213.18,-324.63 237.14,-310.46 258.23,-286.51 272.07,-268.32"/>
+<polygon fill="black" stroke="black" points="275.14,-270.04 278.26,-259.92 269.51,-265.89 275.14,-270.04"/>
 </g>
 <!-- graph -->
-<g id="node12" class="node">
+<g id="node13" class="node">
 <title>graph</title>
-<ellipse fill="none" stroke="black" cx="450.51" cy="-124.63" rx="77.15" ry="22.76"/>
-<text text-anchor="start" x="429.01" y="-126.43" font-family="Times,serif" font-size="14.00">graph</text>
-<text text-anchor="start" x="404.01" y="-115.63" font-family="Times,serif" font-size="10.00">dependencies.svg</text>
+<ellipse fill="none" stroke="black" cx="450.51" cy="-318.63" rx="77.15" ry="22.76"/>
+<text text-anchor="start" x="429.01" y="-320.43" font-family="Times,serif" font-size="14.00">graph</text>
+<text text-anchor="start" x="404.01" y="-309.63" font-family="Times,serif" font-size="10.00">dependencies.svg</text>
 </g>
 <!-- pb&#45;&gt;graph -->
-<g id="edge16" class="edge">
+<g id="edge23" class="edge">
 <title>pb&#45;&gt;graph</title>
-<path fill="none" stroke="black" d="M133.29,-84.86C182.71,-91.07 292.85,-104.93 369.14,-114.52"/>
-<polygon fill="black" stroke="black" points="368.85,-118.01 379.21,-115.79 369.72,-111.07 368.85,-118.01"/>
+<path fill="none" stroke="black" d="M133.57,-349.12C182.64,-344.38 290.84,-333.94 366.89,-326.6"/>
+<polygon fill="black" stroke="black" points="367.31,-330.08 376.93,-325.63 366.64,-323.11 367.31,-330.08"/>
+</g>
+<!-- ruff&#45;&gt;test -->
+<g id="edge15" class="edge">
+<title>ruff&#45;&gt;test</title>
+<path fill="none" stroke="black" d="M316.57,-238.49C332.06,-235.36 352.72,-231.18 373.14,-227.06"/>
+<polygon fill="black" stroke="black" points="374.01,-230.45 383.12,-225.04 372.63,-223.59 374.01,-230.45"/>
 </g>
 <!-- coverage -->
-<g id="node9" class="node">
+<g id="node10" class="node">
 <title>coverage</title>
-<ellipse fill="none" stroke="black" cx="635" cy="-241.63" rx="65.11" ry="22.76"/>
-<text text-anchor="start" x="602.5" y="-243.43" font-family="Times,serif" font-size="14.00">coverage</text>
-<text text-anchor="start" x="597" y="-232.63" font-family="Times,serif" font-size="10.00">build/coverage</text>
+<ellipse fill="none" stroke="black" cx="635" cy="-211.63" rx="65.11" ry="22.76"/>
+<text text-anchor="start" x="602.5" y="-213.43" font-family="Times,serif" font-size="14.00">coverage</text>
+<text text-anchor="start" x="597" y="-202.63" font-family="Times,serif" font-size="10.00">build/coverage</text>
 </g>
 <!-- test&#45;&gt;coverage -->
-<g id="edge10" class="edge">
+<g id="edge17" class="edge">
 <title>test&#45;&gt;coverage</title>
-<path fill="none" stroke="black" d="M525.21,-256.53C538.09,-254.77 551.46,-252.94 564.23,-251.19"/>
-<polygon fill="black" stroke="black" points="564.89,-254.63 574.32,-249.8 563.94,-247.69 564.89,-254.63"/>
+<path fill="none" stroke="black" d="M534.22,-211.63C542.73,-211.63 551.35,-211.63 559.76,-211.63"/>
+<polygon fill="black" stroke="black" points="559.91,-215.13 569.91,-211.63 559.91,-208.13 559.91,-215.13"/>
 </g>
 <!-- full -->
-<g id="node13" class="node">
+<g id="node14" class="node">
 <title>full</title>
-<ellipse fill="none" stroke="black" cx="763.06" cy="-189.63" rx="27" ry="18"/>
-<text text-anchor="middle" x="763.06" y="-185.93" font-family="Times,serif" font-size="14.00">full</text>
+<ellipse fill="none" stroke="black" cx="763.06" cy="-211.63" rx="27" ry="18"/>
+<text text-anchor="middle" x="763.06" y="-207.93" font-family="Times,serif" font-size="14.00">full</text>
 </g>
 <!-- coverage&#45;&gt;full -->
-<g id="edge17" class="edge">
+<g id="edge24" class="edge">
 <title>coverage&#45;&gt;full</title>
-<path fill="none" stroke="black" d="M677.63,-224.46C694.73,-217.4 714.22,-209.36 730.16,-202.79"/>
-<polygon fill="black" stroke="black" points="731.67,-205.95 739.58,-198.9 729,-199.48 731.67,-205.95"/>
+<path fill="none" stroke="black" d="M700.14,-211.63C708.94,-211.63 717.7,-211.63 725.76,-211.63"/>
+<polygon fill="black" stroke="black" points="725.87,-215.13 735.87,-211.63 725.87,-208.13 725.87,-215.13"/>
 </g>
 <!-- docTemplates -->
-<g id="node10" class="node">
+<g id="node11" class="node">
 <title>docTemplates</title>
 <ellipse fill="none" stroke="black" cx="106.59" cy="-22.63" rx="81.13" ry="22.76"/>
 <text text-anchor="start" x="57.09" y="-24.43" font-family="Times,serif" font-size="14.00">docTemplates</text>
 <text text-anchor="start" x="70.09" y="-13.63" font-family="Times,serif" font-size="10.00">doc&#45;templates</text>
 </g>
 <!-- docTemplates&#45;&gt;apidoc -->
-<g id="edge11" class="edge">
+<g id="edge18" class="edge">
 <title>docTemplates&#45;&gt;apidoc</title>
-<path fill="none" stroke="black" d="M175.33,-34.79C188.82,-39.43 202.2,-45.82 213.18,-54.63 248.04,-82.6 269.65,-131.16 280.52,-161.78"/>
-<polygon fill="black" stroke="black" points="277.26,-163.08 283.8,-171.42 283.89,-160.83 277.26,-163.08"/>
+<path fill="none" stroke="black" d="M171.89,-36.27C186.11,-40.85 200.65,-46.84 213.18,-54.63 236.26,-68.96 256.94,-92.07 270.88,-109.94"/>
+<polygon fill="black" stroke="black" points="268.33,-112.37 277.16,-118.23 273.91,-108.14 268.33,-112.37"/>
 </g>
 <!-- apidoc&#45;&gt;full -->
-<g id="edge18" class="edge">
+<g id="edge25" class="edge">
 <title>apidoc&#45;&gt;full</title>
-<path fill="none" stroke="black" d="M331.28,-189.63C421.49,-189.63 639.1,-189.63 725.66,-189.63"/>
-<polygon fill="black" stroke="black" points="725.79,-193.13 735.79,-189.63 725.79,-186.13 725.79,-193.13"/>
+<path fill="none" stroke="black" d="M331.28,-135.11C405.67,-135.2 569.27,-140.34 700.06,-179.63 711.69,-183.12 723.73,-188.79 734.06,-194.39"/>
+<polygon fill="black" stroke="black" points="732.59,-197.58 743.02,-199.46 736.04,-191.49 732.59,-197.58"/>
 </g>
 <!-- graph&#45;&gt;full -->
-<g id="edge19" class="edge">
+<g id="edge26" class="edge">
 <title>graph&#45;&gt;full</title>
-<path fill="none" stroke="black" d="M514.66,-137.23C564.94,-147.35 637.08,-162.06 700.06,-175.63 708.9,-177.53 718.43,-179.65 727.31,-181.65"/>
-<polygon fill="black" stroke="black" points="726.82,-185.13 737.34,-183.93 728.37,-178.3 726.82,-185.13"/>
+<path fill="none" stroke="black" d="M510.06,-304.22C561.09,-290.89 636.66,-269.3 700.06,-243.63 711.15,-239.14 722.91,-233.35 733.17,-227.93"/>
+<polygon fill="black" stroke="black" points="734.97,-230.94 742.12,-223.11 731.65,-224.78 734.97,-230.94"/>
 </g>
 </g>
 </svg>
