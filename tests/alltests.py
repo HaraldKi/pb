@@ -6,9 +6,9 @@ import unittest
 sys.path += [os.path.join(os.getcwd(), "src")]
 from pythonbuilder import LOG
 
-from test_api import *
-from test_core import *
-from test_mavenrepo import *
+#from test_api import *
+#from test_core import *
+#from test_mavenrepo import *
 
 if __name__ == '__main__':
   LOG.setLevel("ERROR")

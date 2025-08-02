@@ -9,16 +9,13 @@ of `Target()`, but most have a string shortcut. See there.
 from __future__ import annotations
 
 import time
-import sys
 import os
 import hashlib
 from typing import (
   cast, TypeVar, Generic, Hashable, Any, TypeGuard, Concatenate
 )
-from collections.abc import Iterable, Collection, Callable
-import itertools
+from collections.abc import Iterable, Callable
 from dataclasses import dataclass
-from configparser import ConfigParser
 import logging
 import inspect
 import subprocess
@@ -218,7 +215,7 @@ def stateNew(_t: Any = None) -> str:
   :param _t: unused
   :return: a different implementation dependent string for each call
   """
-  return str(time.time_ns());
+  return str(time.time_ns())
 
 def stateFixed(_t: Any = None) -> str:
   """Always returns the same state string, independent of the input.
@@ -270,7 +267,7 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
   ## FIXME: add better test to fail early
   try:
     signature = inspect.signature(g)
-  except:
+  except Exception as _e:
     return False
   if signature.parameters is None or len(signature.parameters) != 1:
     return False
@@ -338,7 +335,7 @@ def _formatNanoDelta(start: int, now: int) -> str:
     delta = delta // _UNITS[i][2]
   return "%s%s" %(delta, "min")
 
-def flatten(result: list[str], l: Any) -> None:
+def flatten(result: list[str], nested: Any) -> None:
   """Flattens a multiply nested Iterable into the given result. Any element not
   ``Iterable`` and not ``str`` is added to the result as ``str(element)``
 
@@ -346,13 +343,13 @@ def flatten(result: list[str], l: Any) -> None:
   :param l: either an ``Iterable`` to flatten or a string or other object to
     add to the result
   """
-  if isinstance(l, str):
-    result.append(l)
-  elif  isinstance(l, Iterable):
-    for elem in l:
+  if isinstance(nested, str):
+    result.append(nested)
+  elif  isinstance(nested, Iterable):
+    for elem in nested:
       flatten(result, elem)
   else:
-    result.append(str(l))
+    result.append(str(nested))
 
 def logcmd(cmd: list[str]) -> None:
   """A standard way to log external commands.

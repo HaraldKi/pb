@@ -2,8 +2,7 @@
 """
 
 from pathlib import Path
-from pythonbuilder import Target, LOG, BuildException
-import os
+from pythonbuilder import Target, LOG
 import shutil
 from urllib import request
 from abc import abstractmethod
@@ -109,7 +108,7 @@ class _Fetcher:
 
 class _MavenArtifactLocal(_Fetcher):
   def __init__(self, artifact: MavenArtifact) -> None:
-    self.artifact = artifact;
+    self.artifact = artifact
 
   def fetch(self, targetPath: Path) -> None:
     """Copy the artifact from the local maven repository at

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 from os import environ
-import subprocess
 import sys
-import glob
 from pathlib import Path
 
 sys.path += ["src"]
 from pythonbuilder import (
-  Target, updateTargets, LOG, pbexec, toGraphviz, registerDependencyGraphTarget
+  Target, updateTargets, pbexec, registerDependencyGraphTarget
 )
 
 #LOG.setLevel("DEBUG")
@@ -40,6 +38,22 @@ mypy = Target[str]("mypy",
                    state="fixed", cmd=doMypy)
 
 ############################################################
+def doRuff(_target: str, testSrcDir: Path, *files: Path) -> None:
+  environ["NO_COLOR"] = "1" 
+  allFiles = list(testSrcDir.glob("*.py")) + [*files]
+  pbexec("ruff",
+         "--config",
+         "indent-width=2",
+         "--config",
+         "line-length=80",
+         "check",
+         allFiles)
+
+ruff = Target[str]("ruff",
+                   testSources, pythonbuilder, mavenrepo, java, pbutil, pb,
+                   state="fixed", cmd=doRuff)
+
+############################################################
 coverageFile = buildDir / "coverage.data"
 environ["COVERAGE_FILE"] = str(coverageFile)
 environ["TEST_MAVENREPO"] = "TRUE"
@@ -47,7 +61,7 @@ environ["TEST_MAVENREPO"] = "TRUE"
 def doRunCoverage(_coverageFile: Path, testSources: Path, *_unused: Path) -> None:
   pbexec("python3-coverage", "run", testSources / "alltests.py")
 
-test = Target(coverageFile, testSources, pythonbuilder, mypy,
+test = Target(coverageFile, testSources, pythonbuilder, ruff, mypy,
               name="test", state="file", cmd=doRunCoverage)
 
 

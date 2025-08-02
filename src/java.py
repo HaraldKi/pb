@@ -5,7 +5,7 @@ import sys
 import os
 
 from pathlib import Path
-from pythonbuilder import Target, LOG, BuildException, pbexec
+from pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 

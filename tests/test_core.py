@@ -28,6 +28,9 @@ _TMPDIR=Path("build", "testtmp")
 
 # mypy: allow-untyped-defs
 
+def noop(t: Any) -> None:
+  return None
+  
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
     _TARGETS.clear()
@@ -56,9 +59,8 @@ class TestTargetCreation(unittest.TestCase):
     self.assertEqual(stateNew, t.generateState)
 
   def test_cmd(self):
-    cmd = lambda t: None
-    t = Target("b", state="file", cmd=cmd)
-    self.assertEqual(cmd, t.cmd)
+    t = Target("b", state="file", cmd=noop)
+    self.assertEqual(noop, t.cmd)
 
   def test_deps(self):
     d0 = Target("d0", state="file")
@@ -119,9 +121,9 @@ class TestStateComputation(unittest.TestCase):
     file1 = mydir / "file1"
     file2 = mydir / "file2"
     file3 = dir /  "file3"
-    writeToFile("file1", file1);
-    writeToFile("file2", file2);
-    writeToFile("file3", file3);
+    writeToFile("file1", file1)
+    writeToFile("file2", file2)
+    writeToFile("file3", file3)
     hex = stateDirContent(t.item)
 
     digest = hashlib.sha256()
@@ -147,14 +149,14 @@ class TestUpdateTargets(unittest.TestCase):
     self.values["blabla"] = "value of blabla"
     t = Target("blabla", state=self.simpleState)
     updateTargets("blabla")
-    self.assertTrue(t.started);
-    self.assertTrue(t.updated);
-    self.assertTrue(t.recreated);
+    self.assertTrue(t.started)
+    self.assertTrue(t.updated)
+    self.assertTrue(t.recreated)
 
     resetTraversalState()
     updateTargets("blabla")
-    self.assertTrue(t.started);
-    self.assertTrue(t.updated);
+    self.assertTrue(t.started)
+    self.assertTrue(t.updated)
     self.assertFalse(t.recreated)
 
   ##
