@@ -25,13 +25,15 @@ from pythonbuilder import (
   updateTargets,
 )
 
-_TMPDIR=Path("build", "testtmp")
+_TMPDIR = Path("build", "testtmp")
 
 # mypy: allow-untyped-defs
 
+
 def noop(t: Any) -> None:
   return None
-  
+
+
 class TestTargetCreation(unittest.TestCase):
   def setUp(self):
     _TARGETS.clear()
@@ -71,9 +73,11 @@ class TestTargetCreation(unittest.TestCase):
     self.assertEqual(d1, t.dependencies[1])
 
   def test_failWrongState(self):
-    self.assertRaisesRegex(BuildException,
-                           "'foob' is neither a file nor a directory, cannot",
-                           lambda: Target("foob"))
+    self.assertRaisesRegex(
+      BuildException,
+      "'foob' is neither a file nor a directory, cannot",
+      lambda: Target("foob"),
+    )
 
   def testFailDoublyDeclared(self):
     Target(Path("x", "z"), state="file")
@@ -91,14 +95,16 @@ class TestTargetCreation(unittest.TestCase):
       Target("yada2", state=str)
 
     with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
-      Target("yada3", state=lambda: 'a')
+      Target("yada3", state=lambda: "a")
 
     with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
-      Target("yada4", state=lambda a, b: 'a')
+      Target("yada4", state=lambda a, b: "a")
+
 
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
+
 
 class TestStateComputation(unittest.TestCase):
   def test_iterator(self):
@@ -121,7 +127,7 @@ class TestStateComputation(unittest.TestCase):
 
     file1 = mydir / "file1"
     file2 = mydir / "file2"
-    file3 = dir /  "file3"
+    file3 = dir / "file3"
     writeToFile("file1", file1)
     writeToFile("file2", file2)
     writeToFile("file3", file3)
@@ -133,8 +139,10 @@ class TestStateComputation(unittest.TestCase):
       digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
+
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
+
   def simpleState(self, value: str) -> str:
     return self.values.get(value, stateNew(value))
 
@@ -201,12 +209,11 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertFalse(top.recreated)
 
   def failWithZDE(self, t: str, u: str):
-    print(len(t)/0)
+    print(len(t) / 0)
 
   def test_buildFailDoesNotUpdateStatefile(self) -> None:
     first: Target[str] = Target("first", state=self.simpleState)
-    second: Target[str] = Target("second", first, state="fixed",
-                                 cmd=self.failWithZDE)
+    second: Target[str] = Target("second", first, state="fixed", cmd=self.failWithZDE)
     self.values[first.item] = "value of first"
     self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
@@ -240,7 +247,8 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertTrue(other.recreated)
     self.assertEqual("116", self.values["other"])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
   LOG.setLevel("ERROR")
-  #unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')
+  # unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')
   unittest.main(verbosity=2)

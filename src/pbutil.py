@@ -18,9 +18,13 @@ def touch(targetPath: Path, *deps: Any) -> None:
   """A function intended to be used as the ``cmd`` parameter of a `Target` to
   write the current iso datetime into the ``targetPath``.
 
-  Use this function for a shortcut/alias target, for example ``allLibs``, which
-  has no command to execute itself, but merely combines a list of targets into
-  one to be conveniently invoked by the alias.
+  Use this function for
+
+  * a shortcut/alias target, for example ``allLibs``, which
+    has no command to execute itself, but merely combines a list of targets into
+    one to be conveniently invoked by the alias.
+  * a target with no natural output, like a linter which is only run for its
+    error output.
 
   The ``targetPath`` is merely a bookkeeping file which is freshly written
   if and only if any of the dependencies was re-created (or the file itself
@@ -31,7 +35,7 @@ def touch(targetPath: Path, *deps: Any) -> None:
   :param deps: the dependencies are ignored
   """
   frame = inspect.currentframe()
-  me = "touch" if frame is None  else frame.f_code.co_name
+  me = "touch" if frame is None else frame.f_code.co_name
   pb.logcmd([me, str(targetPath)])
   targetPath.write_text(datetime.datetime.now().isoformat() + "\n")
 #}

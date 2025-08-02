@@ -1,6 +1,7 @@
 """
 Helpers to compile Java and run unit tests with  coverage.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
+
 
 def compileJava(targetPath: Path, srcPath: Path, *classpath: Path) -> None:
   """A default java compilation command. Kept simple. If you need a more
@@ -20,18 +22,24 @@ def compileJava(targetPath: Path, srcPath: Path, *classpath: Path) -> None:
   """
   files = map(str, srcPath.rglob("*.java"))
   cp = os.pathsep.join(map(lambda d: str(d), classpath))
-  pbexec("javac", "-g",
-         "-d", str(targetPath),
-         "-Xmaxerrs", "5",
-         "-Xmaxwarns", "5",
-         "-cp", cp,
-         files)
+  pbexec(
+    "javac",
+    "-g",
+    "-d",
+    str(targetPath),
+    "-Xmaxerrs",
+    "5",
+    "-Xmaxwarns",
+    "5",
+    "-cp",
+    cp,
+    files,
+  )
 
-  
-def jacocoRunJunit4(targetPath: Path,
-                    jacocoJar: Path,
-                    testClassesPath: Path,
-                    *classpath: Path) -> None:
+
+def jacocoRunJunit4(
+  targetPath: Path, jacocoJar: Path, testClassesPath: Path, *classpath: Path
+) -> None:
   """Runs junit4 tests with the default ``JunitCore`` class.
 
   :param targetPath: the path of the coverage data to produce by running with
@@ -43,22 +51,28 @@ def jacocoRunJunit4(targetPath: Path,
   :param classpath: further classpath entries, i.e. classes, junit jar, etc.
   """
 
-  testclasses = \
-    map(lambda p: classForPath(testClassesPath, p),
-        filter(lambda p: p.name.find("$")<0,
-               testClassesPath.rglob("Test*.class")))
+  testclasses = map(
+    lambda p: classForPath(testClassesPath, p),
+    filter(lambda p: p.name.find("$") < 0, testClassesPath.rglob("Test*.class")),
+  )
   cp = _PATHSEP.join(map(lambda d: str(d), [testClassesPath] + list(classpath)))
-  pbexec("java",
-         "-javaagent:%s=destfile=%s,append=false" % (jacocoJar, targetPath),
-         "-cp", cp,
-         "org.junit.runner.JUnitCore",
-         *testclasses)
+  pbexec(
+    "java",
+    "-javaagent:%s=destfile=%s,append=false" % (jacocoJar, targetPath),
+    "-cp",
+    cp,
+    "org.junit.runner.JUnitCore",
+    *testclasses,
+  )
 
-def jacocoReport(targetPath: Path,
-                 jacocoCli: Path,
-                 jacocoData: Path,
-                 classFiles: Path,
-                 sourceFiles: Path) -> None:
+
+def jacocoReport(
+  targetPath: Path,
+  jacocoCli: Path,
+  jacocoData: Path,
+  classFiles: Path,
+  sourceFiles: Path,
+) -> None:
   """
   Creates a coverage report from the output of `jacocoRunJunit4`.
 
@@ -69,14 +83,21 @@ def jacocoReport(targetPath: Path,
   :param classFiles: the compiled classes classpath
   :param sourceFiles: directory with the source files
   """
-  pbexec("java",
-         "-jar", jacocoCli,
-         "report", jacocoData,
-         "--classfiles", classFiles,
-         "--sourcefiles", sourceFiles,
-         "--html", targetPath
-         )
-         
+  pbexec(
+    "java",
+    "-jar",
+    jacocoCli,
+    "report",
+    jacocoData,
+    "--classfiles",
+    classFiles,
+    "--sourcefiles",
+    sourceFiles,
+    "--html",
+    targetPath,
+  )
+
+
 def classForPath(classpathEntry: Path, p: Path) -> str:
   """Converts a path relative to root directory to a class name.
 

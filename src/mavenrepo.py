@@ -1,5 +1,4 @@
-"""Provides a class to work with maven (gradle) style artifacts.
-"""
+"""Provides a class to work with maven (gradle) style artifacts."""
 
 import shutil
 from abc import abstractmethod
@@ -16,8 +15,10 @@ class MavenArtifact:
   Basically, the pieces are used to create URLs and file names to access a
   repository.
   """
-  def __init__(self, group: str, name: str, version: str,
-               classifier: str | None, type: str):
+
+  def __init__(
+    self, group: str, name: str, version: str, classifier: str | None, type: str
+  ):
     """
     Creates the artifact.
 
@@ -32,7 +33,7 @@ class MavenArtifact:
 
     self.name = name
     """name of the artifact"""
-    
+
     self.version = version
     """artifact version"""
 
@@ -43,7 +44,7 @@ class MavenArtifact:
     """artifact type, typically a file extension like "jar" """
 
   @staticmethod
-  def fromGradleShort(groupNameVersionClassifier: str, type: str) -> 'MavenArtifact':
+  def fromGradleShort(groupNameVersionClassifier: str, type: str) -> "MavenArtifact":
     """
     Create an `MavenArtifact` from a Gradle short form like
     ``"org.json:json:20250107"`` A forth element, the classifier, may be given
@@ -54,9 +55,11 @@ class MavenArtifact:
       return MavenArtifact(parts[0], parts[1], parts[2], None, type)
     if len(parts) == 4:
       return MavenArtifact(parts[0], parts[1], parts[2], parts[3], type)
-    raise ValueError("parameter must be group:name:version:classifier" +
-                     " where :classifier is optional, but is: " +
-                     groupNameVersionClassifier)
+    raise ValueError(
+      "parameter must be group:name:version:classifier"
+      + " where :classifier is optional, but is: "
+      + groupNameVersionClassifier
+    )
 
   def filename(self) -> str:
     """Provides the filename of the artifact.
@@ -74,13 +77,16 @@ class MavenArtifact:
     :return: URL of the form "g1/g2/.../name/version/filename" where g1,... are
       the dot-separated parts of the group name
     """
-    return "%s/%s/%s/%s" \
-      % (self.group.replace(".", "/"), self.name, self.version, self.filename())
+    return "%s/%s/%s/%s" % (
+      self.group.replace(".", "/"),
+      self.name,
+      self.version,
+      self.filename(),
+    )
 
-  def asTarget(self,
-               dir: str,
-               mavenRepoUrl: str | None = None,
-               name: str | None =None) -> Target[Path]:
+  def asTarget(
+    self, dir: str, mavenRepoUrl: str | None = None, name: str | None = None
+  ) -> Target[Path]:
     """
     Provides a `Target` which can be used to fetch the artifact and place it into
     the file system.
@@ -94,19 +100,23 @@ class MavenArtifact:
       of the artifact
     :return: the target
     """
-    fetcher = _MavenArtifactLocal(self) \
-      if mavenRepoUrl is None \
+    fetcher = (
+      _MavenArtifactLocal(self)
+      if mavenRepoUrl is None
       else _MavenArtifactRemote(self, mavenRepoUrl)
+    )
     if name is None:
       name = self.name
-    return Target(Path(dir, self.filename()),
-                  state="file", name=name,
-                  cmd=fetcher.fetch)
+    return Target(
+      Path(dir, self.filename()), state="file", name=name, cmd=fetcher.fetch
+    )
+
 
 class _Fetcher:
   @abstractmethod
   def fetch(self, path: Path) -> None:
     pass
+
 
 class _MavenArtifactLocal(_Fetcher):
   def __init__(self, artifact: MavenArtifact) -> None:
@@ -116,10 +126,11 @@ class _MavenArtifactLocal(_Fetcher):
     """Copy the artifact from the local maven repository at
     ``os.environ(HOME)/.m2`` to the given path.
     """
-    path = Path.home() / '.m2' / 'repository' / self.artifact.repoUrl()
+    path = Path.home() / ".m2" / "repository" / self.artifact.repoUrl()
     targetPath.parent.mkdir(parents=True, exist_ok=True)
     LOG.info("* fetch %s -> %s", path, targetPath)
     shutil.copy(path, targetPath)
+
 
 class _MavenArtifactRemote(_Fetcher):
   def __init__(self, artifact: MavenArtifact, repoUrl: str) -> None:

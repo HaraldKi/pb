@@ -14,11 +14,13 @@ from pythonbuilder import (
 
 # mypy: allow-untyped-defs
 
-_TMPDIR=Path("build", "testtmp")
+_TMPDIR = Path("build", "testtmp")
+
 
 def writeToFile(text, fname):
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
+
 
 class TestTargetApi(unittest.TestCase):
   """Test various functions provided by python builder, mainly taken out of core
@@ -46,7 +48,8 @@ class TestTargetApi(unittest.TestCase):
     hash2 = stateFileContent(t.item)
     self.assertEqual(hash1, hash2)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
   LOG.setLevel("ERROR")
-  #unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
+  # unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
   unittest.main(verbosity=2)

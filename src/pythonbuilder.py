@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Concatenate, Generic, Hashable, TypeGuard, TypeVar, cast
 
-logging.basicConfig(format='%(message)s (%(levelname)s)')
+logging.basicConfig(format="%(message)s (%(levelname)s)")
 VERBOSE = logging.INFO - 5
 """Additional logging level providing more information than ``INFO``."""
 
@@ -57,33 +57,40 @@ Set this before calling `updateTargets`.To force all targets to be rebuild,
 delete this file. (FIXME: provide proper api).
 """
 
-class BuildException(Exception): #{
+
+class BuildException(Exception):  # {
   """Raised on failures detected by pythonbuilder."""
+
   def __init__(self, message: str) -> None:
     self.message = message
-#}
+
+
+# }
 
 ## From Python 3.12, not needed anymore, see:
 ## https://mypy.readthedocs.io/en/stable/generics.html
 T = TypeVar("T", bound=Hashable)
 """The data type wrapped by a `Target`."""
 
+
 ## FIXME: we should have a stateForward as a middle ground between fixed and
 ## new. This state should change independent of the target itself iff the
 ## dependency state changed.
 @dataclass(init=False, eq=False)
-class Target(Generic[T]): #{
+class Target(Generic[T]):  # {
   """Represents a target with an item to create, its dependencies, how to
   compute its state (hashed content, fingerprint), how to (re-)create it and an
   optional nice name.
   """
 
-  def __init__(self, item: T,
-               *dependencies: Target[Any],
-               state: str | Callable[[T], str] | None = None,
-               name: str | None = None,
-               cmd: Callable[Concatenate[T, ...], None] | None = None
-               ): #{
+  def __init__(
+    self,
+    item: T,
+    *dependencies: Target[Any],
+    state: str | Callable[[T], str] | None = None,
+    name: str | None = None,
+    cmd: Callable[Concatenate[T, ...], None] | None = None,
+  ):  # {
     """Creates a new Target.
 
     An "input target", for example a source code directory, may be created with
@@ -123,9 +130,14 @@ class Target(Generic[T]): #{
         elif isinstance(item, Path) and item.is_file():
           stateGenerator = cast(Callable[[T], str], stateFileContent)
         else:
-          raise BuildException(("'%s' is neither a file nor a directory," +
-                                " cannot determine state" +
-                                " generator, provide one with state=") % item)
+          raise BuildException(
+            (
+              "'%s' is neither a file nor a directory,"
+              + " cannot determine state"
+              + " generator, provide one with state="
+            )
+            % item
+          )
       case _:
         if _isStateGenerator(state):
           stateGenerator = state
@@ -144,7 +156,7 @@ class Target(Generic[T]): #{
     self.generateState: Callable[[T], str] = stateGenerator
     """Function to generate the state for the target."""
 
-    self.cmd: Callable[Concatenate[T,...], None] | None = cmd
+    self.cmd: Callable[Concatenate[T, ...], None] | None = cmd
     """Function to (re-)create the target."""
 
     self.dependencies = dependencies
@@ -160,14 +172,14 @@ class Target(Generic[T]): #{
     The target's command may or may not be run subsequently.
     """
 
-    self.recreated: bool = False  
+    self.recreated: bool = False
     """Set during `updateTargets` if this target was out-of-date and its
     command was run.
 
     This does not say whether the target was actually changed by running its
     ``cmd``.
     """
-    
+
     if self.name in _TARGETS:
       raise BuildException("'%s' defined already" % item)
 
@@ -180,9 +192,10 @@ class Target(Generic[T]): #{
       deps = "-"
     s = self.generateState.__name__
     c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
-    return f"Target({self.name}, {deps}, name={self.name}," + \
-      f" state={s}{c})"
-#}
+    return f"Target({self.name}, {deps}, name={self.name}," + f" state={s}{c})"
+
+
+# }
 
 ## FIXME: get rid of global variables and encapsulate in a Builder class
 ## or so.
@@ -191,17 +204,21 @@ class Target(Generic[T]): #{
 #         difficult
 _TARGETS: dict[str, Target] = dict()
 
-def findTarget(target: str | Target) -> Target | None: #{
+
+def findTarget(target: str | Target) -> Target | None:  # {
   """Looks up a target by its name. For convenience, if the parameter is
   already a `Target`, it is returned as is.
- 
+
   :param target: to look up
   :return: either the target or ``None``
   """
   if isinstance(target, Target):
     return target
   return _TARGETS.get(target, None)
-#}
+
+
+# }
+
 
 def stateNew(_t: Any = None) -> str:
   """Returns a state string which is never the same, independent of the
@@ -215,6 +232,7 @@ def stateNew(_t: Any = None) -> str:
   """
   return str(time.time_ns())
 
+
 def stateFixed(_t: Any = None) -> str:
   """Always returns the same state string, independent of the input.
 
@@ -222,6 +240,7 @@ def stateFixed(_t: Any = None) -> str:
   :return: always the same implementation dependent string
   """
   return "0"
+
 
 def stateValue(item: Any) -> str:
   """Computes a state string from ``item``, so it can be used for in-memory
@@ -233,6 +252,7 @@ def stateValue(item: Any) -> str:
   """
   return repr(item)
 
+
 def stateDirContent(targetPath: Path) -> str:
   """Feeds all recursively contained files of a directory into
   `stateFileIteratorContent`.
@@ -241,9 +261,9 @@ def stateDirContent(targetPath: Path) -> str:
   :return: a hash
   """
   if targetPath.is_file():
-    raise BuildException("'%s' is a file but expected a directory"
-                         % targetPath)
+    raise BuildException("'%s' is a file but expected a directory" % targetPath)
   return stateFileIteratorContent(lambda: targetPath.rglob("*"))
+
 
 def stateFileContent(targetPath: Path) -> str:
   """Feeds the path a single file name into `stateFileIteratorContent` and
@@ -254,8 +274,7 @@ def stateFileContent(targetPath: Path) -> str:
 
   """
   if targetPath.is_dir():
-    raise BuildException("'%s' is a directory but expected a file"
-                         % targetPath)
+    raise BuildException("'%s' is a directory but expected a file" % targetPath)
   return stateFileIteratorContent(lambda: [targetPath])
 
 
@@ -271,6 +290,7 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
     return False
   return True
 
+
 def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   """Creates a combined state over files.
 
@@ -285,7 +305,7 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   Example: ``stateFileIteratorContent(lambda: Path("src").rglob("*.py"))`` will
   run all python files recursively found in ``src`` through a hash function
   and return the result
-  
+
   :param itGen: a supplier providing an iterator over path names of files
     which may or may not exist.
   :return: a hash of all file names and file contents. If the iterator is empty,
@@ -305,6 +325,7 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
       digest.update(stateNew().encode())
   return digest.hexdigest() if found else stateNew()
 
+
 def resetTraversalState() -> None:
   """Resets the traversal state in all targets.
 
@@ -320,18 +341,23 @@ def resetTraversalState() -> None:
     target.updated = False
     target.recreated = False
 
-_UNITS = [("ns", 10000, 1000),
-         ("µs", 10000, 1000),
-         ("ms", 10000, 1000),
-         ("s", 120, 60),
-         ]
+
+_UNITS = [
+  ("ns", 10000, 1000),
+  ("µs", 10000, 1000),
+  ("ms", 10000, 1000),
+  ("s", 120, 60),
+]
+
+
 def _formatNanoDelta(start: int, now: int) -> str:
   delta = now - start
   for i in range(0, len(_UNITS)):
     if delta < _UNITS[i][1]:
-      return "%s%s" %(delta, _UNITS[i][0])
+      return "%s%s" % (delta, _UNITS[i][0])
     delta = delta // _UNITS[i][2]
-  return "%s%s" %(delta, "min")
+  return "%s%s" % (delta, "min")
+
 
 def flatten(result: list[str], nested: Any) -> None:
   """Flattens a multiply nested Iterable into the given result. Any element not
@@ -343,11 +369,12 @@ def flatten(result: list[str], nested: Any) -> None:
   """
   if isinstance(nested, str):
     result.append(nested)
-  elif  isinstance(nested, Iterable):
+  elif isinstance(nested, Iterable):
     for elem in nested:
       flatten(result, elem)
   else:
     result.append(str(nested))
+
 
 def logcmd(cmd: list[str]) -> None:
   """A standard way to log external commands.
@@ -359,6 +386,7 @@ def logcmd(cmd: list[str]) -> None:
   :param cmd: to log
   """
   LOG.info("* %s", " ".join(cmd))
+
 
 def pbexec(*args: Any) -> None:
   """
@@ -379,6 +407,7 @@ def pbexec(*args: Any) -> None:
   flatten(cmd, args)
   logcmd(cmd)
   subprocess.run(cmd).check_returncode()
+
 
 def updateTargets(*targets: str | Target) -> None:
   """Wraps `rawUpdateTargets` to log times and trim any exception to
@@ -402,11 +431,14 @@ def updateTargets(*targets: str | Target) -> None:
       logging.error(e, exc_info=True)
     else:
       logging.error(e)
-  
+
   buildEnd = time.time_ns()
-  LOG.info(resultState + ", took %s, total %s",
-           _formatNanoDelta(buildStart, buildEnd),
-           _formatNanoDelta(startNanos, buildEnd))
+  LOG.info(
+    resultState + ", took %s, total %s",
+    _formatNanoDelta(buildStart, buildEnd),
+    _formatNanoDelta(startNanos, buildEnd),
+  )
+
 
 def rawUpdateTargets(*targets: str | Target) -> None:
   """Updates all targets in turn without resetting the traversal state in
@@ -423,13 +455,13 @@ def rawUpdateTargets(*targets: str | Target) -> None:
       raise BuildException("target '%s' not defined" % t)
     _updateTarget(states, target, [])
   states.save()
-  
-def _updateTarget(states: '_StateStore',
-                  target: Target[T],
-                  onbehalf: list[Target]) -> None:
+
+
+def _updateTarget(
+  states: "_StateStore", target: Target[T], onbehalf: list[Target]
+) -> None:
   if target.started:
-    raise BuildException("dependency loop detected: '%s'<-'%s'"
-                         % (target, onbehalf))
+    raise BuildException("dependency loop detected: '%s'<-'%s'" % (target, onbehalf))
   target.started = True
 
   triggeringDeps = []
@@ -449,7 +481,7 @@ def _updateTarget(states: '_StateStore',
   strItem = str(target.item)
   logTag = target.name
   if logTag != strItem:
-    logTag = logTag+":"+strItem
+    logTag = logTag + ":" + strItem
 
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
@@ -467,16 +499,18 @@ def _updateTarget(states: '_StateStore',
   if len(triggeringDeps) == 0:
     LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
   else:
-    LOG.log(VERBOSE, "+ %s(%s): <- %s, %s",
-                cmdName, logTag, ", ".join(triggeringDeps), took)
-
+    LOG.log(
+      VERBOSE, "+ %s(%s): <- %s, %s", cmdName, logTag, ", ".join(triggeringDeps), took
+    )
 
   target.recreated = True
   targetStateAfter = target.generateState(target.item)
   states.setHashes(target, targetStateAfter, depsState)
 
+
 def _escdq(s: str) -> str:
   return s.replace('"', '\\"')
+
 
 def _targetToGraphviz(target: Target) -> str:
   result = ""
@@ -484,9 +518,12 @@ def _targetToGraphviz(target: Target) -> str:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"'
 
   if target.name != str(target.item):
-    result += (f'"{_escdq(target.name)}"[label=<{_escdq(target.name)}' +
-               f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]')
+    result += (
+      f'"{_escdq(target.name)}"[label=<{_escdq(target.name)}'
+      + f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]'
+    )
   return result
+
 
 def toGraphviz() -> str:
   """Creates the dependency graph of all targets in `dot <https://graphviz.org>`_
@@ -506,10 +543,10 @@ def toGraphviz() -> str:
   result += "}"
   return result
 
+
 def registerDependencyGraphTarget(
-    graphFile: Path,
-    name: str,
-    buildscript: Target[Path] | Path = Path("pb")) -> Target[Path]:
+  graphFile: Path, name: str, buildscript: Target[Path] | Path = Path("pb")
+) -> Target[Path]:
   """Creates a target to create the dependency graph.
 
   If the given ``buildscript`` is a ``Path`` a ``Target`` is created for it.
@@ -529,6 +566,7 @@ def registerDependencyGraphTarget(
   dep = buildscript if isinstance(buildscript, Target) else Target(buildscript)
   return Target(graphFile, dep, name=name, state="file", cmd=graphToDot)
 
+
 def graphToDot(targetPath: Path, _unused: Path) -> None:
   """Convenience function to create a dependency graph of all targets.
 
@@ -546,6 +584,7 @@ def graphToDot(targetPath: Path, _unused: Path) -> None:
   with open(targetPath, "w", encoding="utf-8") as out:
     subprocess.run(cmd, input=result, encoding="utf-8", stdout=out)
 
+
 def ansiRed(text: str) -> str:
   """Wraps text into ansi sequences to render it red.
 
@@ -553,6 +592,7 @@ def ansiRed(text: str) -> str:
   :return: wrapped text
   """
   return "\x1b[1;91m%s\x1b[0m" % text
+
 
 def ansiGreen(text: str) -> str:
   """Wraps text into ansi sequences to render it green.
@@ -562,15 +602,16 @@ def ansiGreen(text: str) -> str:
   """
   return "\x1b[38;2;20;110;20m%s\x1b[0m" % text
 
+
 ########################################################################
+
 
 class _StateStore:
   def __init__(self, stateFile: Path):
     self.stateFile = stateFile
-    self.hashes: dict[str, tuple[str,str]]
+    self.hashes: dict[str, tuple[str, str]]
     if not os.path.isfile(self.stateFile):
-      LOG.debug("  no file '%s', starting with empty states"
-                % self.stateFile)
+      LOG.debug("  no file '%s', starting with empty states" % self.stateFile)
       self.hashes = dict()
       return
 
@@ -580,16 +621,13 @@ class _StateStore:
       self.hashes = json.load(statefile)
 
     ## prefer a tuple (pair) over a list for the two hashes per target
-    for (key, value) in self.hashes.items():
+    for key, value in self.hashes.items():
       self.hashes[key] = (value[0], value[1])
 
   def __repr__(self) -> str:
     return "_StateStore[%s]" % self.hashes
 
-  def setHashes(self,
-                target: Target,
-                targetHash: str,
-                depsHash: str) -> None:
+  def setHashes(self, target: Target, targetHash: str, depsHash: str) -> None:
     self.hashes[target.name] = (targetHash, depsHash)
 
   def get(self, target: Target) -> tuple[str, str]:
