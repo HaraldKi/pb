@@ -7,140 +7,416 @@
   <head>
     
     <title>mavenrepo.MavenArtifact</title>
-    <meta name="generator" content="pydoctor 21.12.1"> 
+    <meta name="generator" content="pydoctor 25.4.0"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
 
     
 
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default mainnavbar">
+      
   
-  <div class="container">
+  <div class="container-fluid">
+
 
     <div class="navbar-header">
       
       <div class="navlinks">
-          <span class="navbar-brand">
-            <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
-          </span>
+        <span class="navbar-brand">
+          <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        </span>
 
-          <a href="moduleIndex.html">
-            Modules
-          </a>
+        <a href="moduleIndex.html">
+          Modules
+        </a>
 
-          <a href="classIndex.html">
-            Classes
-          </a>
+        <a href="classIndex.html">
+          Classes
+        </a>
 
-          <a href="nameIndex.html">
-            Names
-          </a>
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
       </div>
 
-    </div>
-  </div>
-</nav>
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
 
-    
+        <div id="search-status"> </div>
 
-    <div class="container">
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
 
-      <div class="page-header">
-        <h1 class="class"><code><code><a href="mavenrepo.html">mavenrepo</a></code><wbr></wbr>.<code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></code></h1>
-        <div id="showPrivate">
-          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
-      <div class="categoryHeader">
-        class documentation
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="This class"><wbr></wbr>Maven<wbr></wbr>Artifact</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#fromGradleShort" class="internal-link" title="mavenrepo.MavenArtifact.fromGradleShort">from<wbr></wbr>Gradle<wbr></wbr>Short</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="mavenrepo.MavenArtifact.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#asTarget" class="internal-link" title="mavenrepo.MavenArtifact.asTarget">as<wbr></wbr>Target</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#filename" class="internal-link" title="mavenrepo.MavenArtifact.filename">filename</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#repoUrl" class="internal-link" title="mavenrepo.MavenArtifact.repoUrl">repo<wbr></wbr>Url</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#classifier" class="internal-link" title="mavenrepo.MavenArtifact.classifier">classifier</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#group" class="internal-link" title="mavenrepo.MavenArtifact.group">group</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#name" class="internal-link" title="mavenrepo.MavenArtifact.name">name</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#type" class="internal-link" title="mavenrepo.MavenArtifact.type">type</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#version" class="internal-link" title="mavenrepo.MavenArtifact.version">version</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="mavenrepo.html" class="internal-link" title="The parent of this class">mavenrepo</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="mavenrepo.MavenArtifact"><wbr></wbr>Maven<wbr></wbr>Artifact</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="mavenrepo._Fetcher.html" class="internal-link" title="mavenrepo._Fetcher">_<wbr></wbr>Fetcher</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="mavenrepo._MavenArtifactLocal.html" class="internal-link" title="mavenrepo._MavenArtifactLocal">_<wbr></wbr>Maven<wbr></wbr>Artifact<wbr></wbr>Local</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="mavenrepo._MavenArtifactRemote.html" class="internal-link" title="mavenrepo._MavenArtifactRemote">_<wbr></wbr>Maven<wbr></wbr>Artifact<wbr></wbr>Remote</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        
+         
+
+        
+         
+
+        
+         
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapseSideBar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
       </div>
 
-      <div class="extrasDocstring">
-        <p><code><span class="py-keyword">class</span> <span class="py-defname">MavenArtifact</span>:</code></p>
-        <p><a href="classIndex.html#mavenrepo.MavenArtifact">View In Hierarchy</a></p>
-      </div>
+      <div id="main" class="">
+        
 
-      <div class="moduleDocstring">
-        <div><p>Encapsulates group, name, version and type (file extension) of an artifact
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="mavenrepo.html" class="internal-link">mavenrepo</a></code><wbr></wbr>.<code><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="mavenrepo.MavenArtifact">MavenArtifact</a></code></code></h1>
+          <div id="showPrivate">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">MavenArtifact</span>:</code></p><p>Constructors: <code><a href="#fromGradleShort" class="internal-link" title="mavenrepo.MavenArtifact.fromGradleShort">MavenArtifact.fromGradleShort(groupNameVersionClassifier, type)</a></code>, <code><a href="#__init__" class="internal-link" title="mavenrepo.MavenArtifact.__init__">MavenArtifact(group, name, version, classifier, type)</a></code></p>
+          <p><a href="classIndex.html#mavenrepo.MavenArtifact">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Encapsulates group, name, version and type (file extension) of an artifact
 as provided, for example, by a maven repository.</p>
 <p>Basically, the pieces are used to create URLs and file names to access a
 repository.</p>
 </div>
-      </div>
+        </div>
 
-      <div id="splitTables">
-        <table class="children sortable" id="id6">
+        <div id="splitTables">
+          <table class="children sortable" id="id2">
   
   
   <tr class="staticmethod">
     
     <td>Static Method</td>
-    <td><code><a href="#fromGradleShort">fromGradleShort</a></code></td>
-    <td>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like <tt class="rst-docutils literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given too.</td>
+    <td><code><a href="#fromGradleShort" class="internal-link" title="mavenrepo.MavenArtifact.fromGradleShort">from<wbr></wbr>Gradle<wbr></wbr>Short</a></code></td>
+    <td>Create an <code><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="mavenrepo.MavenArtifact">MavenArtifact</a></code> from a Gradle short form like <tt class="rst-docutils rst-literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given too.</td>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#__init__">__init__</a></code></td>
+    <td><code><a href="#__init__" class="internal-link" title="mavenrepo.MavenArtifact.__init__">__init__</a></code></td>
     <td>Creates the artifact.</td>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#asTarget">asTarget</a></code></td>
-    <td>Provides a <code><a href="pythonbuilder.Target.html">Target</a></code> which can be used to fetch the artifact and place it into the file system.</td>
+    <td><code><a href="#asTarget" class="internal-link" title="mavenrepo.MavenArtifact.asTarget">as<wbr></wbr>Target</a></code></td>
+    <td>Provides a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code> which can be used to fetch the artifact and place it into the file system.</td>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#filename">filename</a></code></td>
+    <td><code><a href="#filename" class="internal-link" title="mavenrepo.MavenArtifact.filename">filename</a></code></td>
     <td>Provides the filename of the artifact.</td>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#repoUrl">repoUrl</a></code></td>
-    <td>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used to fetch the target if prefixed by a repository URL.</td>
+    <td><code><a href="#repoUrl" class="internal-link" title="mavenrepo.MavenArtifact.repoUrl">repo<wbr></wbr>Url</a></code></td>
+    <td>Creates the relative URL part, including <code><a href="mavenrepo.MavenArtifact.html#filename" class="internal-link" title="mavenrepo.MavenArtifact.filename">filename()</a></code>, which can be used to fetch the target if prefixed by a repository URL.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#classifier">classifier</a></code></td>
+    <td><code><a href="#classifier" class="internal-link" title="mavenrepo.MavenArtifact.classifier">classifier</a></code></td>
     <td>artifact classifier</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#group">group</a></code></td>
+    <td><code><a href="#group" class="internal-link" title="mavenrepo.MavenArtifact.group">group</a></code></td>
     <td>group of the artifact</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#name">name</a></code></td>
+    <td><code><a href="#name" class="internal-link" title="mavenrepo.MavenArtifact.name">name</a></code></td>
     <td>name of the artifact</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#type">type</a></code></td>
+    <td><code><a href="#type" class="internal-link" title="mavenrepo.MavenArtifact.type">type</a></code></td>
     <td>artifact type, typically a file extension like "jar"</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#version">version</a></code></td>
+    <td><code><a href="#version" class="internal-link" title="mavenrepo.MavenArtifact.version">version</a></code></td>
     <td>artifact version</td>
   </tr>
 </table>
-        
-
           
-      </div>
 
-      <div id="childList">
+            
+        </div>
 
-        <div class="basestaticmethod">
+        <div id="childList">
+          <div class="basestaticmethod">
   
   
   <a name="mavenrepo.MavenArtifact.fromGradleShort">
@@ -150,16 +426,21 @@ repository.</p>
     
   </a>
   <div class="functionHeader">
-    @staticmethod<br />
-    <span class="py-keyword">def</span> <span class="py-defname">fromGradleShort</span>(groupNameVersionClassifier, type):
     
+    <div><span class="decorator">@staticmethod<br /></span></div>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">fromGradleShort</span><span class="function-signature">(<span class="rst-sig-param">groupNameVersionClassifier: <code>str</code>, </span><span class="rst-sig-param">type: <code>str</code></span>) -&gt; <code><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="mavenrepo.MavenArtifact">MavenArtifact</a></code>:</span>
+    
+    <a class="headerLink" href="#fromGradleShort" title="mavenrepo.MavenArtifact.fromGradleShort">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Create an <code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code> from a Gradle short form like
-<tt class="rst-docutils literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given
-too.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">groupNameVersionClassifier:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="mavenrepo.MavenArtifact.html">MavenArtifact</a></code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+    <div><p>Create an <code><a href="mavenrepo.MavenArtifact.html" class="internal-link" title="mavenrepo.MavenArtifact">MavenArtifact</a></code> from a Gradle short form like
+<tt class="rst-docutils rst-literal">"org.json:json:20250107"</tt> A forth element, the classifier, may be given
+too.</p></div>
   </div>
 </div><div class="basemethod">
   
@@ -172,13 +453,18 @@ too.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colsp
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, group, name, version, classifier, type):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">group: <code>str</code>, </span><span class="rst-sig-param">name: <code>str</code>, </span><span class="rst-sig-param">version: <code>str</code>, </span><span class="rst-sig-param">classifier: <code>str | None</code>, </span><span class="rst-sig-param">type: <code>str</code></span>):</span>
+    
+    <a class="headerLink" href="#__init__" title="mavenrepo.MavenArtifact.__init__">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Creates the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">group:</span><code>str</code></td><td class="fieldArgDesc">typically something like <tt class="rst-docutils literal">"org.json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like <tt class="rst-docutils literal">"json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">version:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like "1.2.3"</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">classifier:</span><code>str|None</code></td><td class="fieldArgDesc">of the artifact, like "runtime", may be <tt class="rst-docutils literal">None</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc">ends up as the file extension, like <tt class="rst-docutils literal">"jar"</tt></td></tr></table></div>
+    <div><p>Creates the artifact.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">group:</span><code>str</code></td><td class="fieldArgDesc">typically something like <tt class="rst-docutils rst-literal">"org.json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like <tt class="rst-docutils rst-literal">"json"</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">version:</span><code>str</code></td><td class="fieldArgDesc">of the artifact, like "1.2.3"</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">classifier:</span><code>str | None</code></td><td class="fieldArgDesc">of the artifact, like "runtime", may be <tt class="rst-docutils rst-literal">None</tt></td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">type:</span><code>str</code></td><td class="fieldArgDesc">ends up as the file extension, like <tt class="rst-docutils rst-literal">"jar"</tt></td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -191,18 +477,23 @@ too.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colsp
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">asTarget</span>(self, dir, mavenRepoUrl=None, name=None):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">asTarget</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">dir: <code>str</code>, </span><span class="rst-sig-param">mavenRepoUrl: <code>str | None</code> = None, </span><span class="rst-sig-param">name: <code>str | None</code> = None</span>) -&gt; <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Path]</code>:</span>
+    
+    <a class="headerLink" href="#asTarget" title="mavenrepo.MavenArtifact.asTarget">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Provides a <code><a href="pythonbuilder.Target.html">Target</a></code> which can be used to fetch the artifact and place it into
-the file system.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">dir:</span><code>str</code></td><td class="fieldArgDesc">directory to copy the artifact to, also the name of the
-<code><a href="pythonbuilder.Target.html">Target</a></code> returned.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">mavenRepoUrl:</span><code>str|None</code></td><td class="fieldArgDesc">The URL to fetch the artifact from. If this is not
-provided we assume we have a local repository in <tt class="rst-docutils literal"><span class="pre">~/.m2</span></tt>. The string
-must end with '/' otherwise the resulting URL is likely wrong.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str|None</code></td><td class="fieldArgDesc">optional name for the target being created, defaults to the name
-of the artifact</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">the target</td></tr></table></div>
+    <div><p>Provides a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code> which can be used to fetch the artifact and place it into
+the file system.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">dir:</span><code>str</code></td><td class="fieldArgDesc">directory to copy the artifact to, also the name of the
+<code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code> returned.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">maven<wbr></wbr>Repo<wbr></wbr>Url:</span><code>str | None</code></td><td class="fieldArgDesc">The URL to fetch the artifact from. If this is not
+provided we assume we have a local repository in <tt class="rst-docutils rst-literal"><span class="pre">~/.m2</span></tt>. The string
+must end with '/' otherwise the resulting URL is likely wrong.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str | None</code></td><td class="fieldArgDesc">optional name for the target being created, defaults to the name
+of the artifact</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">the target</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -215,13 +506,18 @@ of the artifact</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">filename</span>(self):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">filename</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>str</code>:</span>
+    
+    <a class="headerLink" href="#filename" title="mavenrepo.MavenArtifact.filename">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Provides the filename of the artifact.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">file name of the form "name-version-classifier.type" where
+    <div><p>Provides the filename of the artifact.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">file name of the form "name-version-classifier.type" where
 -classifier only provided if defined in the constructor..</td></tr></table></div>
   </div>
 </div><div class="basemethod">
@@ -235,14 +531,19 @@ of the artifact</td></tr><tr class="fieldStart"><td class="fieldName" colspan="2
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">repoUrl</span>(self):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">repoUrl</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>str</code>:</span>
+    
+    <a class="headerLink" href="#repoUrl" title="mavenrepo.MavenArtifact.repoUrl">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Creates the relative URL part, including <code><a href="#filename">filename()</a></code>, which can be used
-to fetch the target if prefixed by a repository URL.<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">URL of the form "g1/g2/.../name/version/filename" where g1,... are
+    <div><p>Creates the relative URL part, including <code><a href="#filename" class="internal-link" title="mavenrepo.MavenArtifact.filename">filename()</a></code>, which can be used
+to fetch the target if prefixed by a repository URL.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">URL of the form "g1/g2/.../name/version/filename" where g1,... are
 the dot-separated parts of the group name</td></tr></table></div>
   </div>
 </div><div class="baseinstancevariable">
@@ -258,11 +559,15 @@ the dot-separated parts of the group name</td></tr></table></div>
     
     <span class="py-defname">classifier</span> =
     
+    <a class="headerLink" href="#classifier" title="mavenrepo.MavenArtifact.classifier">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>artifact classifier</div>
+    <div><p>artifact classifier</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -278,11 +583,15 @@ the dot-separated parts of the group name</td></tr></table></div>
     
     <span class="py-defname">group</span> =
     
+    <a class="headerLink" href="#group" title="mavenrepo.MavenArtifact.group">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>group of the artifact</div>
+    <div><p>group of the artifact</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -298,11 +607,15 @@ the dot-separated parts of the group name</td></tr></table></div>
     
     <span class="py-defname">name</span> =
     
+    <a class="headerLink" href="#name" title="mavenrepo.MavenArtifact.name">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>name of the artifact</div>
+    <div><p>name of the artifact</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -318,11 +631,15 @@ the dot-separated parts of the group name</td></tr></table></div>
     
     <span class="py-defname">type</span> =
     
+    <a class="headerLink" href="#type" title="mavenrepo.MavenArtifact.type">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>artifact type, typically a file extension like "jar"</div>
+    <div><p>artifact type, typically a file extension like "jar"</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -338,15 +655,20 @@ the dot-separated parts of the group name</td></tr></table></div>
     
     <span class="py-defname">version</span> =
     
+    <a class="headerLink" href="#version" title="mavenrepo.MavenArtifact.version">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>artifact version</div>
+    <div><p>artifact version</p></div>
     
   </div>
 </div>
-
+        </div>
+      
       </div>
     </div>
 
@@ -356,8 +678,15 @@ the dot-separated parts of the group name</td></tr></table></div>
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
   </div>
-</footer>
 
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+   <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
     <script src="pydoctor.js" type="text/javascript"></script>
 
   </body>

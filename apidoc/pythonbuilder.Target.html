@@ -7,138 +7,700 @@
   <head>
     
     <title>pythonbuilder.Target</title>
-    <meta name="generator" content="pydoctor 21.12.1"> 
+    <meta name="generator" content="pydoctor 25.4.0"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
 
     
 
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default mainnavbar">
+      
   
-  <div class="container">
+  <div class="container-fluid">
+
 
     <div class="navbar-header">
       
       <div class="navlinks">
-          <span class="navbar-brand">
-            <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
-          </span>
+        <span class="navbar-brand">
+          <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        </span>
 
-          <a href="moduleIndex.html">
-            Modules
-          </a>
+        <a href="moduleIndex.html">
+          Modules
+        </a>
 
-          <a href="classIndex.html">
-            Classes
-          </a>
+        <a href="classIndex.html">
+          Classes
+        </a>
 
-          <a href="nameIndex.html">
-            Names
-          </a>
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
       </div>
 
-    </div>
-  </div>
-</nav>
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
+          </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
 
-    
+        <div id="search-status"> </div>
 
-    <div class="container">
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
 
-      <div class="page-header">
-        <h1 class="class"><code><code><a href="pythonbuilder.html">pythonbuilder</a></code><wbr></wbr>.<code><a href="pythonbuilder.Target.html">Target</a></code></code></h1>
-        <div id="showPrivate">
-          <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
         </div>
       </div>
 
-      <div class="categoryHeader">
-        class documentation
+    </div>
+
+
+  </div>
+</nav>
+    
+    <div class="container-fluid">
+
+      <!-- Side navigation -->
+      <div class="sidebarcontainer" style="display: none;">
+        
+        <div class="sidebar"><nav class="sidebar">
+  
+
+  <div>
+
+      <div class="thingTitle">
+        <span>Class</span>
+        <code class="thisobject"><a href="pythonbuilder.Target.html" class="internal-link" title="This class"><wbr></wbr>Target</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        
+        
+
+        <div class="childrenKindTitle">Methods</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__init__" class="internal-link" title="pythonbuilder.Target.__init__">__init__</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#__str__" class="internal-link" title="pythonbuilder.Target.__str__">__str__</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Attributes</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#cmd" class="internal-link" title="pythonbuilder.Target.cmd">cmd</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#dependencies" class="internal-link" title="pythonbuilder.Target.dependencies">dependencies</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#generateState" class="internal-link" title="pythonbuilder.Target.generateState">generate<wbr></wbr>State</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#item" class="internal-link" title="pythonbuilder.Target.item">item</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#name" class="internal-link" title="pythonbuilder.Target.name">name</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#recreated" class="internal-link" title="pythonbuilder.Target.recreated">recreated</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#started" class="internal-link" title="pythonbuilder.Target.started">started</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#updated" class="internal-link" title="pythonbuilder.Target.updated">updated</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div><div>
+
+      <div class="thingTitle">
+        <span>Module</span>
+        <code><a href="pythonbuilder.html" class="internal-link" title="The parent of this class">pythonbuilder</a></code> 
+      </div>
+      
+      <div>
+        
+
+        
+         
+
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class=" thisobject">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target"><wbr></wbr>Target</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.BuildException.html" class="internal-link" title="pythonbuilder.BuildException"><wbr></wbr>Build<wbr></wbr>Exception</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder._StateStore.html" class="internal-link" title="pythonbuilder._StateStore">_<wbr></wbr>State<wbr></wbr>Store</a></code>
+            </div>
+        
+
+    </li>
+</ul>
+
+        <div class="childrenKindTitle">Functions</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#ansiGreen" class="internal-link" title="pythonbuilder.ansiGreen">ansi<wbr></wbr>Green</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#ansiRed" class="internal-link" title="pythonbuilder.ansiRed">ansi<wbr></wbr>Red</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#findTarget" class="internal-link" title="pythonbuilder.findTarget">find<wbr></wbr>Target</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#flatten" class="internal-link" title="pythonbuilder.flatten">flatten</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#graphToDot" class="internal-link" title="pythonbuilder.graphToDot">graph<wbr></wbr>To<wbr></wbr>Dot</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#logcmd" class="internal-link" title="pythonbuilder.logcmd">logcmd</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#pbexec" class="internal-link" title="pythonbuilder.pbexec">pbexec</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#rawUpdateTargets" class="internal-link" title="pythonbuilder.rawUpdateTargets">raw<wbr></wbr>Update<wbr></wbr>Targets</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#registerDependencyGraphTarget" class="internal-link" title="pythonbuilder.registerDependencyGraphTarget">register<wbr></wbr>Dependency<wbr></wbr>Graph<wbr></wbr>Target</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#resetTraversalState" class="internal-link" title="pythonbuilder.resetTraversalState">reset<wbr></wbr>Traversal<wbr></wbr>State</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateDirContent" class="internal-link" title="pythonbuilder.stateDirContent">state<wbr></wbr>Dir<wbr></wbr>Content</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateFileContent" class="internal-link" title="pythonbuilder.stateFileContent">state<wbr></wbr>File<wbr></wbr>Content</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateFileIteratorContent" class="internal-link" title="pythonbuilder.stateFileIteratorContent">state<wbr></wbr>File<wbr></wbr>Iterator<wbr></wbr>Content</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateFixed" class="internal-link" title="pythonbuilder.stateFixed">state<wbr></wbr>Fixed</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateNew" class="internal-link" title="pythonbuilder.stateNew">state<wbr></wbr>New</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#stateValue" class="internal-link" title="pythonbuilder.stateValue">state<wbr></wbr>Value</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#toGraphviz" class="internal-link" title="pythonbuilder.toGraphviz">to<wbr></wbr>Graphviz</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">update<wbr></wbr>Targets</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_escdq" class="internal-link" title="pythonbuilder._escdq">_escdq</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_formatNanoDelta" class="internal-link" title="pythonbuilder._formatNanoDelta">_format<wbr></wbr>Nano<wbr></wbr>Delta</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_isStateGenerator" class="internal-link" title="pythonbuilder._isStateGenerator">_is<wbr></wbr>State<wbr></wbr>Generator</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_targetToGraphviz" class="internal-link" title="pythonbuilder._targetToGraphviz">_target<wbr></wbr>To<wbr></wbr>Graphviz</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_updateTarget" class="internal-link" title="pythonbuilder._updateTarget">_update<wbr></wbr>Target</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#LOG" class="internal-link" title="pythonbuilder.LOG">LOG</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#STATEFILE" class="internal-link" title="pythonbuilder.STATEFILE">STATEFILE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#VERBOSE" class="internal-link" title="pythonbuilder.VERBOSE">VERBOSE</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_TARGETS" class="internal-link" title="pythonbuilder._TARGETS">_TARGETS</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pythonbuilder.html#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
+
+        
+         
+        
+      </div>
+  </div>
+
+</nav>
+        </div>
+        <div id="collapseSideBar">
+          <a class="btn btn-link" onclick="toggleSideBarCollapse()" title="Toggle Sidebar Collapse">
+          </a>
+        </div> 
+        <script src="sidebartoggle.js" type="text/javascript"></script>
+       
       </div>
 
-      <div class="extrasDocstring">
-        <p><code><span class="py-keyword">class</span> <span class="py-defname">Target</span>(<span title="Generic[T]">Generic[T]</span>):</code></p>
-        <p><a href="classIndex.html#pythonbuilder.Target">View In Hierarchy</a></p>
-      </div>
+      <div id="main" class="">
+        
 
-      <div class="moduleDocstring">
-        <div>Represents a target with an item to create, its dependencies, how to
+        
+
+        <div class="page-header">
+          <h1 class="class"><code><code><a href="pythonbuilder.html" class="internal-link">pythonbuilder</a></code><wbr></wbr>.<code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code></code></h1>
+          <div id="showPrivate">
+            <button class="btn btn-link" onclick="togglePrivate()">Toggle Private API</button>
+          </div>
+        </div>
+
+        <div class="categoryHeader">
+          class documentation
+        </div>
+
+        <div class="extrasDocstring">
+          <p class="class-signature"><code><span class="py-keyword">class</span> <span class="py-defname">Target</span>(Generic[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>]):</code></p><p>Constructor: <code><a href="#__init__" class="internal-link" title="pythonbuilder.Target.__init__">Target(item, *dependencies, state, name, cmd)</a></code></p>
+          <p><a href="classIndex.html#pythonbuilder.Target">View In Hierarchy</a></p>
+        </div>
+
+        <div class="moduleDocstring">
+          <div><p>Represents a target with an item to create, its dependencies, how to
 compute its state (hashed content, fingerprint), how to (re-)create it and an
-optional nice name.</div>
-      </div>
+optional nice name.</p></div>
+        </div>
 
-      <div id="splitTables">
-        <table class="children sortable" id="id3">
+        <div id="splitTables">
+          <table class="children sortable" id="id9">
   
   
   <tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#__init__">__init__</a></code></td>
+    <td><code><a href="#__init__" class="internal-link" title="pythonbuilder.Target.__init__">__init__</a></code></td>
     <td>Creates a new Target.</td>
   </tr><tr class="method">
     
     <td>Method</td>
-    <td><code><a href="#__str__">__str__</a></code></td>
-    <td>Readable short form for a <tt class="rst-docutils literal">Target</tt></td>
+    <td><code><a href="#__str__" class="internal-link" title="pythonbuilder.Target.__str__">__str__</a></code></td>
+    <td>Readable short form for a <tt class="rst-docutils rst-literal">Target</tt></td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#cmd">cmd</a></code></td>
+    <td><code><a href="#cmd" class="internal-link" title="pythonbuilder.Target.cmd">cmd</a></code></td>
     <td>Function to (re-)create the target.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#dependencies">dependencies</a></code></td>
+    <td><code><a href="#dependencies" class="internal-link" title="pythonbuilder.Target.dependencies">dependencies</a></code></td>
     <td>The target's dependencies.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#generateState">generateState</a></code></td>
+    <td><code><a href="#generateState" class="internal-link" title="pythonbuilder.Target.generateState">generate<wbr></wbr>State</a></code></td>
     <td>Function to generate the state for the target.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#item">item</a></code></td>
+    <td><code><a href="#item" class="internal-link" title="pythonbuilder.Target.item">item</a></code></td>
     <td>The item of the target, often a file or directory path.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#name">name</a></code></td>
-    <td>The target's name, defaulting to <tt class="rst-docutils literal">str(item)</tt>.</td>
+    <td><code><a href="#name" class="internal-link" title="pythonbuilder.Target.name">name</a></code></td>
+    <td>The target's name, defaulting to <tt class="rst-docutils rst-literal">str(item)</tt>.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#recreated">recreated</a></code></td>
-    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its command was run.</td>
+    <td><code><a href="#recreated" class="internal-link" title="pythonbuilder.Target.recreated">recreated</a></code></td>
+    <td>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> if this target was out-of-date and its command was run.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#started">started</a></code></td>
-    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as this target is considered for updating.</td>
+    <td><code><a href="#started" class="internal-link" title="pythonbuilder.Target.started">started</a></code></td>
+    <td>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> as soon as this target is considered for updating.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
-    <td><code><a href="#updated">updated</a></code></td>
-    <td>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</td>
+    <td><code><a href="#updated" class="internal-link" title="pythonbuilder.Target.updated">updated</a></code></td>
+    <td>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> as soon as all dependencies are done.</td>
   </tr>
 </table>
-        
-
           
-      </div>
 
-      <div id="childList">
+            
+        </div>
 
-        <div class="basemethod">
+        <div id="childList">
+          <div class="basemethod">
   
   
   <a name="pythonbuilder.Target.__init__">
@@ -149,26 +711,31 @@ optional nice name.</div>
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__init__</span>(self, item, *dependencies, state=None, name=None, cmd=None):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">item: <code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code>, </span><span class="rst-sig-param">*dependencies: <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code>, </span><span class="rst-sig-param">state: <code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | None</code> = None, </span><span class="rst-sig-param">name: <code>str | None</code> = None, </span><span class="rst-sig-param">cmd: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code> = None</span>):</span>
+    
+    <a class="headerLink" href="#__init__" title="pythonbuilder.Target.__init__">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
-    
     
     <div><p>Creates a new Target.</p>
 <p>An "input target", for example a source code directory, may be created with
 just an item, as it has no dependencies, the state generator is derived
 automatically, because it is an existing directory, and nothing needs to be
 done, so it has no command.</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T">T</a></code></td><td class="fieldArgDesc">represents the item to keep up-to-date, like a file or
-directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies:</span><code><a href="pythonbuilder.Target.html">Target</a>[<wbr></wbr>Any]</code></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>(str|Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>], <wbr></wbr>str])|None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint) for
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code></td><td class="fieldArgDesc">represents the item to keep up-to-date, like a file or
+directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies:</span><code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint) for
 this target's item. The function must generate a small fingerprint.
-If not provided, the <code><a href="#item">item</a></code> must denote an <strong>existing</strong> file
+If not provided, the <code><a href="#item" class="internal-link" title="pythonbuilder.Target.item">item</a></code> must denote an <strong>existing</strong> file
 or directory. If given as a string, it must be "dir", "file", "new",
-"fixed" or "value" for <code><a href="pythonbuilder.html#stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew">stateNew</a></code>,
-<code><a href="pythonbuilder.html#stateFixed">stateFixed</a></code> or <code><a href="pythonbuilder.html#stateValue">stateValue</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str|None</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
-line. The default is name is <tt class="rst-docutils literal">str(item)</tt>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None]|None</code></td><td class="fieldArgDesc">the command to run to (re-)create the target. Its parameters will
-be the target's <tt class="rst-docutils literal">item</tt> as well as the items of all dependencies.</td></tr></table></div>
+"fixed" or "value" for <code><a href="pythonbuilder.html#stateDirContent" class="internal-link" title="pythonbuilder.stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent" class="internal-link" title="pythonbuilder.stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew" class="internal-link" title="pythonbuilder.stateNew">stateNew</a></code>,
+<code><a href="pythonbuilder.html#stateFixed" class="internal-link" title="pythonbuilder.stateFixed">stateFixed</a></code> or <code><a href="pythonbuilder.html#stateValue" class="internal-link" title="pythonbuilder.stateValue">stateValue</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str | None</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
+line. The default is name is <tt class="rst-docutils rst-literal">str(item)</tt>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code></td><td class="fieldArgDesc">the command to run to (re-)create the target. Its parameters will
+be the target's <tt class="rst-docutils rst-literal">item</tt> as well as the items of all dependencies.</td></tr></table></div>
   </div>
 </div><div class="basemethod">
   
@@ -181,13 +748,18 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
   </a>
   <div class="functionHeader">
     
-    <span class="py-keyword">def</span> <span class="py-defname">__str__</span>(self):
     
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__str__</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>str</code>:</span>
+    
+    <a class="headerLink" href="#__str__" title="pythonbuilder.Target.__str__">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="docstring functionBody">
     
-    
-    <div>Readable short form for a <tt class="rst-docutils literal">Target</tt><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc"><span class="undocumented">Undocumented</span></td></tr></table></div>
+    <div><p>Readable short form for a <tt class="rst-docutils rst-literal">Target</tt></p></div>
   </div>
 </div><div class="baseinstancevariable">
   
@@ -200,13 +772,17 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None]|None</code> =
+    <span class="py-defname">cmd</span>: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code> =
     
+    <a class="headerLink" href="#cmd" title="pythonbuilder.Target.cmd">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>Function to (re-)create the target.</div>
+    <div><p>Function to (re-)create the target.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -222,11 +798,15 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
     
     <span class="py-defname">dependencies</span> =
     
+    <a class="headerLink" href="#dependencies" title="pythonbuilder.Target.dependencies">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>The target's dependencies.</div>
+    <div><p>The target's dependencies.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -240,13 +820,17 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T">T</a>], <wbr></wbr>str]</code> =
+    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str]</code> =
     
+    <a class="headerLink" href="#generateState" title="pythonbuilder.Target.generateState">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>Function to generate the state for the target.</div>
+    <div><p>Function to generate the state for the target.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -260,13 +844,17 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">item</span>: <code><a href="pythonbuilder.html#T">T</a></code> =
+    <span class="py-defname">item</span>: <code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code> =
     
+    <a class="headerLink" href="#item" title="pythonbuilder.Target.item">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>The item of the target, often a file or directory path.</div>
+    <div><p>The item of the target, often a file or directory path.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -282,12 +870,16 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
     
     <span class="py-defname">name</span>: <code>str</code> =
     
+    <a class="headerLink" href="#name" title="pythonbuilder.Target.name">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div><p>The target's name, defaulting to <tt class="rst-docutils literal">str(item)</tt>.</p>
-<p>It can be used as parameter for <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code>.</p>
+    <div><p>The target's name, defaulting to <tt class="rst-docutils rst-literal">str(item)</tt>.</p>
+<p>It can be used as parameter for <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code>.</p>
 </div>
     
   </div>
@@ -304,14 +896,18 @@ be the target's <tt class="rst-docutils literal">item</tt> as well as the items 
     
     <span class="py-defname">recreated</span>: <code>bool</code> =
     
+    <a class="headerLink" href="#recreated" title="pythonbuilder.Target.recreated">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> if this target was out-of-date and its
+    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> if this target was out-of-date and its
 command was run.</p>
 <p>This does not say whether the target was actually changed by running its
-<tt class="rst-docutils literal">cmd</tt>.</p>
+<tt class="rst-docutils rst-literal">cmd</tt>.</p>
 </div>
     
   </div>
@@ -328,12 +924,16 @@ command was run.</p>
     
     <span class="py-defname">started</span>: <code>bool</code> =
     
+    <a class="headerLink" href="#started" title="pythonbuilder.Target.started">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as this target is considered for
-updating.</div>
+    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> as soon as this target is considered for
+updating.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
@@ -349,17 +949,22 @@ updating.</div>
     
     <span class="py-defname">updated</span>: <code>bool</code> =
     
+    <a class="headerLink" href="#updated" title="pythonbuilder.Target.updated">
+      
+      
+      ¶
+    </a>
   </div>
   <div class="functionBody">
     
-    
-    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets">updateTargets</a></code> as soon as all dependencies are done.</p>
+    <div><p>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> as soon as all dependencies are done.</p>
 <p>The target's command may or may not be run subsequently.</p>
 </div>
     
   </div>
 </div>
-
+        </div>
+      
       </div>
     </div>
 
@@ -369,8 +974,15 @@ updating.</div>
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
   </div>
-</footer>
 
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+   <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
+</footer>
+  
     <script src="pydoctor.js" type="text/javascript"></script>
 
   </body>

@@ -7,49 +7,98 @@
   <head>
     
     <title>Class Hierarchy</title>
-    <meta name="generator" content="pydoctor 21.12.1"> 
+    <meta name="generator" content="pydoctor 25.4.0"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
 
     
 
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default mainnavbar">
+      
   
-  <div class="container">
+  <div class="container-fluid">
+
 
     <div class="navbar-header">
       
       <div class="navlinks">
-          <span class="navbar-brand">
-            <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        <span class="navbar-brand">
+          <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
           </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
 
-          <a href="moduleIndex.html">
-            Modules
-          </a>
+        <div id="search-status"> </div>
 
-          <a href="classIndex.html">
-            Classes
-          </a>
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
 
-          <a href="nameIndex.html">
-            Names
-          </a>
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
       </div>
 
     </div>
+
+
   </div>
 </nav>
 
-    <div class="container">
+    <div class="container-fluid">
 
       <div class="page-header">
         <h1>Class Hierarchy</h1>
@@ -59,7 +108,7 @@
       </div>
 
       <ul id="summaryTree">
-      <li><code>Exception</code><ul><li><a name="pythonbuilder.BuildException"></a><code><a href="pythonbuilder.BuildException.html">pythonbuilder.BuildException</a></code> - Raised on failures detected by pythonbuilder.</li></ul></li><li><code>Generic[T]</code><ul><li><a name="pythonbuilder.Target"></a><code><a href="pythonbuilder.Target.html">pythonbuilder.Target</a></code> - Represents a target with an item to create, its dependencies, how to compute its state (hashed content, fingerprint), how to (re-)create it and an optional nice name.</li></ul></li><li class="private"><a name="mavenrepo._Fetcher"></a><code><a href="mavenrepo._Fetcher.html">mavenrepo._Fetcher</a></code> - <span class="undocumented">Undocumented</span><ul><li class="private"><a name="mavenrepo._MavenArtifactLocal"></a><code><a href="mavenrepo._MavenArtifactLocal.html">mavenrepo._MavenArtifactLocal</a></code> - <span class="undocumented">No class docstring; 0/1 instance variable, 1/2 method documented</span></li><li class="private"><a name="mavenrepo._MavenArtifactRemote"></a><code><a href="mavenrepo._MavenArtifactRemote.html">mavenrepo._MavenArtifactRemote</a></code> - <span class="undocumented">No class docstring; 0/2 instance variable, 1/2 method documented</span></li></ul></li><li><a name="mavenrepo.MavenArtifact"></a><code><a href="mavenrepo.MavenArtifact.html">mavenrepo.MavenArtifact</a></code> - Encapsulates group, name, version and type (file extension) of an artifact as provided, for example, by a maven repository.</li><li class="private"><a name="pythonbuilder._StateStore"></a><code><a href="pythonbuilder._StateStore.html">pythonbuilder._StateStore</a></code> - <span class="undocumented">Undocumented</span></li></ul>
+      <li><code>Exception</code><ul><li><a name="pythonbuilder.BuildException"></a><div><code><a href="pythonbuilder.BuildException.html" class="internal-link">pythonbuilder.BuildException</a></code> - Raised on failures detected by pythonbuilder.</div></li></ul></li><li class="private"><a name="mavenrepo._Fetcher"></a><div><code><a href="mavenrepo._Fetcher.html" class="internal-link">mavenrepo._Fetcher</a></code> - <span class="rst-undocumented">Undocumented</span></div><ul><li class="private"><a name="mavenrepo._MavenArtifactLocal"></a><div><code><a href="mavenrepo._MavenArtifactLocal.html" class="internal-link">mavenrepo._MavenArtifactLocal</a></code> - <span class="rst-undocumented">No class docstring; 0/1 instance variable, 1/2 method documented</span></div></li><li class="private"><a name="mavenrepo._MavenArtifactRemote"></a><div><code><a href="mavenrepo._MavenArtifactRemote.html" class="internal-link">mavenrepo._MavenArtifactRemote</a></code> - <span class="rst-undocumented">No class docstring; 0/2 instance variable, 1/2 method documented</span></div></li></ul></li><li><a name="mavenrepo.MavenArtifact"></a><div><code><a href="mavenrepo.MavenArtifact.html" class="internal-link">mavenrepo.MavenArtifact</a></code> - Encapsulates group, name, version and type (file extension) of an artifact as provided, for example, by a maven repository.</div></li><li class="private"><a name="pythonbuilder._StateStore"></a><div><code><a href="pythonbuilder._StateStore.html" class="internal-link">pythonbuilder._StateStore</a></code> - <span class="rst-undocumented">Undocumented</span></div></li><li><code>typing.Generic</code><ul><li><a name="pythonbuilder.Target"></a><div><code><a href="pythonbuilder.Target.html" class="internal-link">pythonbuilder.Target</a></code> - Represents a target with an item to create, its dependencies, how to compute its state (hashed content, fingerprint), how to (re-)create it and an optional nice name.</div></li></ul></li></ul>
 
     </div>
 
@@ -69,6 +118,13 @@
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
   </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+   <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
 </footer>
 
     <script src="pydoctor.js" type="text/javascript"></script>

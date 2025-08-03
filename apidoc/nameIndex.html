@@ -7,49 +7,98 @@
   <head>
     
     <title>Index of Names</title>
-    <meta name="generator" content="pydoctor 21.12.1"> 
+    <meta name="generator" content="pydoctor 25.4.0"> 
         
     </meta>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=0.75" />
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1" />
     <link rel="stylesheet" type="text/css" href="bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="apidocs.css" />
     <link rel="stylesheet" type="text/css" href="extra.css" />
+    
 </head>
 
   <body>
 
     
 
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default mainnavbar">
+      
   
-  <div class="container">
+  <div class="container-fluid">
+
 
     <div class="navbar-header">
       
       <div class="navlinks">
-          <span class="navbar-brand">
-            <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        <span class="navbar-brand">
+          <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a> <a href="index.html">API Documentation</a>
+        </span>
+
+        <a href="moduleIndex.html">
+          Modules
+        </a>
+
+        <a href="classIndex.html">
+          Classes
+        </a>
+
+        <a href="nameIndex.html">
+          Names
+        </a>
+
+        <div id="search-box-container">
+          <div class="input-group">
+            <input id="search-box" type="search" name="search-query" placeholder="Search..." aria-label="Search" minlength="2" class="form-control" autocomplete="off" />
+            
+            <span class="input-group-btn">
+              <a style="display: none;" class="btn btn-default" id="search-clear-button" title="Clear" onclick="clearSearch()"><img src="fonts/x-circle.svg" alt="Clear" /></a>
+              <a class="btn btn-default" id="apidocs-help-button" title="Help" href="apidocs-help.html"><img src="fonts/info.svg" alt="Help" /></a>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="search-results-container" style="display: none;">
+        
+        <div id="search-buttons">
+          <span class="label label-default" id="search-docstrings-button">
+          <label class="checkbox-inline">
+            <input type="checkbox" id="toggle-search-in-docstrings-checkbox" value="false" onclick="toggleSearchInDocstrings()">
+              search in docstrings
+            </input>
+          </label>
           </span>
+          
+        </div>
+        
+        <noscript>
+            <h1>Cannot search: JavaScript is not supported/enabled in your browser.</h1>
+        </noscript>
 
-          <a href="moduleIndex.html">
-            Modules
-          </a>
+        <div id="search-status"> </div>
 
-          <a href="classIndex.html">
-            Classes
-          </a>
+        <div class="warning" id="search-warn-box" style="display: none;">
+          <p class="rst-last"><span id="search-warn"></span></p>
+        </div>
 
-          <a href="nameIndex.html">
-            Names
-          </a>
+        <table id="search-results">
+          <!-- Filled dynamically by JS -->
+        </table>
+        
+        <div style="margin-top: 10px;">
+          <p>For more information on the search, visit the <a href="apidocs-help.html#rst-search">help page</a>.</p>
+        </div>
       </div>
 
     </div>
+
+
   </div>
 </nav>
 
-    <div class="container">
+    <div class="container-fluid">
 
       <div class="page-header">
         <h1>Index of Names</h1>
@@ -65,7 +114,7 @@
         <h2>A</h2>
         <p class="letterlinks">A - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>ansiGreen - <code data-type="Function"><a href="pythonbuilder.html#ansiGreen">pythonbuilder.ansiGreen</a></code></li><li>ansiRed - <code data-type="Function"><a href="pythonbuilder.html#ansiRed">pythonbuilder.ansiRed</a></code></li><li class="private">artifact<ul><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactLocal.html#artifact">mavenrepo._MavenArtifactLocal.artifact</a></code></li><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactRemote.html#artifact">mavenrepo._MavenArtifactRemote.artifact</a></code></li></ul></li><li>asTarget - <code data-type="Method"><a href="mavenrepo.MavenArtifact.html#asTarget">mavenrepo.MavenArtifact.asTarget</a></code></li>
+          <li>ansiGreen - <code data-type="Function"><a href="pythonbuilder.html#ansiGreen" class="internal-link">pythonbuilder.ansiGreen</a></code></li><li>ansiRed - <code data-type="Function"><a href="pythonbuilder.html#ansiRed" class="internal-link">pythonbuilder.ansiRed</a></code></li><li class="private">artifact<ul><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactLocal.html#artifact" class="internal-link">mavenrepo._MavenArtifactLocal.artifact</a></code></li><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactRemote.html#artifact" class="internal-link">mavenrepo._MavenArtifactRemote.artifact</a></code></li></ul></li><li>asTarget - <code data-type="Method"><a href="mavenrepo.MavenArtifact.html#asTarget" class="internal-link">mavenrepo.MavenArtifact.asTarget</a></code></li>
         </ul>
       
         <a name="B">
@@ -74,7 +123,7 @@
         <h2>B</h2>
         <p class="letterlinks"><a href="#A">A</a> - B - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>BuildException - <code data-type="Class"><a href="pythonbuilder.BuildException.html">pythonbuilder.BuildException</a></code></li>
+          <li>BuildException - <code data-type="Exception"><a href="pythonbuilder.BuildException.html" class="internal-link">pythonbuilder.BuildException</a></code></li>
         </ul>
       
         <a name="C">
@@ -83,7 +132,7 @@
         <h2>C</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - C - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>classForPath - <code data-type="Function"><a href="java.html#classForPath">java.classForPath</a></code></li><li>classifier - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#classifier">mavenrepo.MavenArtifact.classifier</a></code></li><li>cmd - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#cmd">pythonbuilder.Target.cmd</a></code></li><li>compileJava - <code data-type="Function"><a href="java.html#compileJava">java.compileJava</a></code></li>
+          <li>classForPath - <code data-type="Function"><a href="java.html#classForPath" class="internal-link">java.classForPath</a></code></li><li>classifier - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#classifier" class="internal-link">mavenrepo.MavenArtifact.classifier</a></code></li><li>cmd - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#cmd" class="internal-link">pythonbuilder.Target.cmd</a></code></li><li>compileJava - <code data-type="Function"><a href="java.html#compileJava" class="internal-link">java.compileJava</a></code></li>
         </ul>
       
         <a name="D">
@@ -92,7 +141,7 @@
         <h2>D</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - D - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>dependencies - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#dependencies">pythonbuilder.Target.dependencies</a></code></li>
+          <li>dependencies - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#dependencies" class="internal-link">pythonbuilder.Target.dependencies</a></code></li><li>doMypy - <code data-type="Function"><a href="pbpython.html#doMypy" class="internal-link">pbpython.doMypy</a></code></li><li>doRuffCheck - <code data-type="Function"><a href="pbpython.html#doRuffCheck" class="internal-link">pbpython.doRuffCheck</a></code></li><li>doRuffFormat - <code data-type="Function"><a href="pbpython.html#doRuffFormat" class="internal-link">pbpython.doRuffFormat</a></code></li>
         </ul>
       
         <a name="F">
@@ -101,7 +150,7 @@
         <h2>F</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - F - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li class="private">fetch<ul><li class="private"><code data-type="Method"><a href="mavenrepo._Fetcher.html#fetch">mavenrepo._Fetcher.fetch</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactLocal.html#fetch">mavenrepo._MavenArtifactLocal.fetch</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactRemote.html#fetch">mavenrepo._MavenArtifactRemote.fetch</a></code></li></ul></li><li>filename - <code data-type="Method"><a href="mavenrepo.MavenArtifact.html#filename">mavenrepo.MavenArtifact.filename</a></code></li><li>findTarget - <code data-type="Function"><a href="pythonbuilder.html#findTarget">pythonbuilder.findTarget</a></code></li><li>flatten - <code data-type="Function"><a href="pythonbuilder.html#flatten">pythonbuilder.flatten</a></code></li><li>fromGradleShort - <code data-type="Static Method"><a href="mavenrepo.MavenArtifact.html#fromGradleShort">mavenrepo.MavenArtifact.fromGradleShort</a></code></li>
+          <li class="private">fetch<ul><li class="private"><code data-type="Method"><a href="mavenrepo._Fetcher.html#fetch" class="internal-link">mavenrepo._Fetcher.fetch</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactLocal.html#fetch" class="internal-link">mavenrepo._MavenArtifactLocal.fetch</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactRemote.html#fetch" class="internal-link">mavenrepo._MavenArtifactRemote.fetch</a></code></li></ul></li><li>filename - <code data-type="Method"><a href="mavenrepo.MavenArtifact.html#filename" class="internal-link">mavenrepo.MavenArtifact.filename</a></code></li><li>findTarget - <code data-type="Function"><a href="pythonbuilder.html#findTarget" class="internal-link">pythonbuilder.findTarget</a></code></li><li>flatten - <code data-type="Function"><a href="pythonbuilder.html#flatten" class="internal-link">pythonbuilder.flatten</a></code></li><li>fromGradleShort - <code data-type="Static Method"><a href="mavenrepo.MavenArtifact.html#fromGradleShort" class="internal-link">mavenrepo.MavenArtifact.fromGradleShort</a></code></li>
         </ul>
       
         <a name="G">
@@ -110,7 +159,7 @@
         <h2>G</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - G - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>generateState - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#generateState">pythonbuilder.Target.generateState</a></code></li><li class="private">get - <code data-type="Method"><a href="pythonbuilder._StateStore.html#get">pythonbuilder._StateStore.get</a></code></li><li class="private">getDepsHash - <code data-type="Method"><a href="pythonbuilder._StateStore.html#getDepsHash">pythonbuilder._StateStore.getDepsHash</a></code></li><li class="private">getOwnHash - <code data-type="Method"><a href="pythonbuilder._StateStore.html#getOwnHash">pythonbuilder._StateStore.getOwnHash</a></code></li><li>graphToDot - <code data-type="Function"><a href="pythonbuilder.html#graphToDot">pythonbuilder.graphToDot</a></code></li><li>group - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#group">mavenrepo.MavenArtifact.group</a></code></li>
+          <li>generateState - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#generateState" class="internal-link">pythonbuilder.Target.generateState</a></code></li><li class="private">get - <code data-type="Method"><a href="pythonbuilder._StateStore.html#get" class="internal-link">pythonbuilder._StateStore.get</a></code></li><li class="private">getDepsHash - <code data-type="Method"><a href="pythonbuilder._StateStore.html#getDepsHash" class="internal-link">pythonbuilder._StateStore.getDepsHash</a></code></li><li class="private">getOwnHash - <code data-type="Method"><a href="pythonbuilder._StateStore.html#getOwnHash" class="internal-link">pythonbuilder._StateStore.getOwnHash</a></code></li><li>graphToDot - <code data-type="Function"><a href="pythonbuilder.html#graphToDot" class="internal-link">pythonbuilder.graphToDot</a></code></li><li>group - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#group" class="internal-link">mavenrepo.MavenArtifact.group</a></code></li>
         </ul>
       
         <a name="H">
@@ -119,7 +168,7 @@
         <h2>H</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - H - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li class="private">hashes - <code data-type="Instance Variable"><a href="pythonbuilder._StateStore.html#hashes">pythonbuilder._StateStore.hashes</a></code></li>
+          <li class="private">hashes - <code data-type="Instance Variable"><a href="pythonbuilder._StateStore.html#hashes" class="internal-link">pythonbuilder._StateStore.hashes</a></code></li>
         </ul>
       
         <a name="I">
@@ -128,7 +177,7 @@
         <h2>I</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - I - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>item - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#item">pythonbuilder.Target.item</a></code></li>
+          <li>item - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#item" class="internal-link">pythonbuilder.Target.item</a></code></li>
         </ul>
       
         <a name="J">
@@ -137,7 +186,7 @@
         <h2>J</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - J - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>jacocoReport - <code data-type="Function"><a href="java.html#jacocoReport">java.jacocoReport</a></code></li><li>jacocoRunJunit4 - <code data-type="Function"><a href="java.html#jacocoRunJunit4">java.jacocoRunJunit4</a></code></li><li>java - <code data-type="Module"><a href="java.html">java</a></code></li>
+          <li>jacocoReport - <code data-type="Function"><a href="java.html#jacocoReport" class="internal-link">java.jacocoReport</a></code></li><li>jacocoRunJunit4 - <code data-type="Function"><a href="java.html#jacocoRunJunit4" class="internal-link">java.jacocoRunJunit4</a></code></li><li>java - <code data-type="Module"><a href="java.html" class="internal-link">java</a></code></li>
         </ul>
       
         <a name="L">
@@ -146,7 +195,7 @@
         <h2>L</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - L - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>LOG - <code data-type="Constant"><a href="pythonbuilder.html#LOG">pythonbuilder.LOG</a></code></li><li>logcmd - <code data-type="Function"><a href="pythonbuilder.html#logcmd">pythonbuilder.logcmd</a></code></li>
+          <li>LOG - <code data-type="Constant"><a href="pythonbuilder.html#LOG" class="internal-link">pythonbuilder.LOG</a></code></li><li>logcmd - <code data-type="Function"><a href="pythonbuilder.html#logcmd" class="internal-link">pythonbuilder.logcmd</a></code></li>
         </ul>
       
         <a name="M">
@@ -155,7 +204,7 @@
         <h2>M</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - M - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>MavenArtifact - <code data-type="Class"><a href="mavenrepo.MavenArtifact.html">mavenrepo.MavenArtifact</a></code></li><li>mavenrepo - <code data-type="Module"><a href="mavenrepo.html">mavenrepo</a></code></li><li>message - <code data-type="Instance Variable"><a href="pythonbuilder.BuildException.html#message">pythonbuilder.BuildException.message</a></code></li>
+          <li>MavenArtifact - <code data-type="Class"><a href="mavenrepo.MavenArtifact.html" class="internal-link">mavenrepo.MavenArtifact</a></code></li><li>mavenrepo - <code data-type="Module"><a href="mavenrepo.html" class="internal-link">mavenrepo</a></code></li><li>message - <code data-type="Instance Variable"><a href="pythonbuilder.BuildException.html#message" class="internal-link">pythonbuilder.BuildException.message</a></code></li>
         </ul>
       
         <a name="N">
@@ -164,7 +213,7 @@
         <h2>N</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - N - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>name<ul><li><code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#name">mavenrepo.MavenArtifact.name</a></code></li><li><code data-type="Instance Variable"><a href="pythonbuilder.Target.html#name">pythonbuilder.Target.name</a></code></li></ul></li>
+          <li>name<ul><li><code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#name" class="internal-link">mavenrepo.MavenArtifact.name</a></code></li><li><code data-type="Instance Variable"><a href="pythonbuilder.Target.html#name" class="internal-link">pythonbuilder.Target.name</a></code></li></ul></li>
         </ul>
       
         <a name="P">
@@ -173,7 +222,7 @@
         <h2>P</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - P - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>pbexec - <code data-type="Function"><a href="pythonbuilder.html#pbexec">pythonbuilder.pbexec</a></code></li><li>pbutil - <code data-type="Module"><a href="pbutil.html">pbutil</a></code></li><li>pythonbuilder - <code data-type="Module"><a href="pythonbuilder.html">pythonbuilder</a></code></li>
+          <li>pbexec - <code data-type="Function"><a href="pythonbuilder.html#pbexec" class="internal-link">pythonbuilder.pbexec</a></code></li><li>pbpython - <code data-type="Module"><a href="pbpython.html" class="internal-link">pbpython</a></code></li><li>pbutil - <code data-type="Module"><a href="pbutil.html" class="internal-link">pbutil</a></code></li><li>pythonbuilder - <code data-type="Module"><a href="pythonbuilder.html" class="internal-link">pythonbuilder</a></code></li>
         </ul>
       
         <a name="R">
@@ -182,7 +231,7 @@
         <h2>R</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - R - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>rawUpdateTargets - <code data-type="Function"><a href="pythonbuilder.html#rawUpdateTargets">pythonbuilder.rawUpdateTargets</a></code></li><li>recreated - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#recreated">pythonbuilder.Target.recreated</a></code></li><li>registerDependencyGraphTarget - <code data-type="Function"><a href="pythonbuilder.html#registerDependencyGraphTarget">pythonbuilder.registerDependencyGraphTarget</a></code></li><li>repoUrl<ul><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactRemote.html#repoUrl">mavenrepo._MavenArtifactRemote.repoUrl</a></code></li><li><code data-type="Method"><a href="mavenrepo.MavenArtifact.html#repoUrl">mavenrepo.MavenArtifact.repoUrl</a></code></li></ul></li><li>resetTraversalState - <code data-type="Function"><a href="pythonbuilder.html#resetTraversalState">pythonbuilder.resetTraversalState</a></code></li>
+          <li>rawUpdateTargets - <code data-type="Function"><a href="pythonbuilder.html#rawUpdateTargets" class="internal-link">pythonbuilder.rawUpdateTargets</a></code></li><li>recreated - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#recreated" class="internal-link">pythonbuilder.Target.recreated</a></code></li><li>registerDependencyGraphTarget - <code data-type="Function"><a href="pythonbuilder.html#registerDependencyGraphTarget" class="internal-link">pythonbuilder.registerDependencyGraphTarget</a></code></li><li>repoUrl<ul><li class="private"><code data-type="Instance Variable"><a href="mavenrepo._MavenArtifactRemote.html#repoUrl" class="internal-link">mavenrepo._MavenArtifactRemote.repoUrl</a></code></li><li><code data-type="Method"><a href="mavenrepo.MavenArtifact.html#repoUrl" class="internal-link">mavenrepo.MavenArtifact.repoUrl</a></code></li></ul></li><li>resetTraversalState - <code data-type="Function"><a href="pythonbuilder.html#resetTraversalState" class="internal-link">pythonbuilder.resetTraversalState</a></code></li>
         </ul>
       
         <a name="S">
@@ -191,7 +240,7 @@
         <h2>S</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - S - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li class="private">save - <code data-type="Method"><a href="pythonbuilder._StateStore.html#save">pythonbuilder._StateStore.save</a></code></li><li class="private">setHashes - <code data-type="Method"><a href="pythonbuilder._StateStore.html#setHashes">pythonbuilder._StateStore.setHashes</a></code></li><li>started - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#started">pythonbuilder.Target.started</a></code></li><li>stateDirContent - <code data-type="Function"><a href="pythonbuilder.html#stateDirContent">pythonbuilder.stateDirContent</a></code></li><li>STATEFILE - <code data-type="Constant"><a href="pythonbuilder.html#STATEFILE">pythonbuilder.STATEFILE</a></code></li><li class="private">stateFile - <code data-type="Instance Variable"><a href="pythonbuilder._StateStore.html#stateFile">pythonbuilder._StateStore.stateFile</a></code></li><li>stateFileContent - <code data-type="Function"><a href="pythonbuilder.html#stateFileContent">pythonbuilder.stateFileContent</a></code></li><li>stateFileIteratorContent - <code data-type="Function"><a href="pythonbuilder.html#stateFileIteratorContent">pythonbuilder.stateFileIteratorContent</a></code></li><li>stateFixed - <code data-type="Function"><a href="pythonbuilder.html#stateFixed">pythonbuilder.stateFixed</a></code></li><li>stateNew - <code data-type="Function"><a href="pythonbuilder.html#stateNew">pythonbuilder.stateNew</a></code></li><li>stateValue - <code data-type="Function"><a href="pythonbuilder.html#stateValue">pythonbuilder.stateValue</a></code></li>
+          <li class="private">save - <code data-type="Method"><a href="pythonbuilder._StateStore.html#save" class="internal-link">pythonbuilder._StateStore.save</a></code></li><li class="private">setHashes - <code data-type="Method"><a href="pythonbuilder._StateStore.html#setHashes" class="internal-link">pythonbuilder._StateStore.setHashes</a></code></li><li>started - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#started" class="internal-link">pythonbuilder.Target.started</a></code></li><li>stateDirContent - <code data-type="Function"><a href="pythonbuilder.html#stateDirContent" class="internal-link">pythonbuilder.stateDirContent</a></code></li><li>STATEFILE - <code data-type="Constant"><a href="pythonbuilder.html#STATEFILE" class="internal-link">pythonbuilder.STATEFILE</a></code></li><li class="private">stateFile - <code data-type="Instance Variable"><a href="pythonbuilder._StateStore.html#stateFile" class="internal-link">pythonbuilder._StateStore.stateFile</a></code></li><li>stateFileContent - <code data-type="Function"><a href="pythonbuilder.html#stateFileContent" class="internal-link">pythonbuilder.stateFileContent</a></code></li><li>stateFileIteratorContent - <code data-type="Function"><a href="pythonbuilder.html#stateFileIteratorContent" class="internal-link">pythonbuilder.stateFileIteratorContent</a></code></li><li>stateFixed - <code data-type="Function"><a href="pythonbuilder.html#stateFixed" class="internal-link">pythonbuilder.stateFixed</a></code></li><li>stateNew - <code data-type="Function"><a href="pythonbuilder.html#stateNew" class="internal-link">pythonbuilder.stateNew</a></code></li><li>stateValue - <code data-type="Function"><a href="pythonbuilder.html#stateValue" class="internal-link">pythonbuilder.stateValue</a></code></li>
         </ul>
       
         <a name="T">
@@ -200,7 +249,7 @@
         <h2>T</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - T - <a href="#U">U</a> - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>T - <code data-type="Constant"><a href="pythonbuilder.html#T">pythonbuilder.T</a></code></li><li>Target - <code data-type="Class"><a href="pythonbuilder.Target.html">pythonbuilder.Target</a></code></li><li>toGraphviz - <code data-type="Function"><a href="pythonbuilder.html#toGraphviz">pythonbuilder.toGraphviz</a></code></li><li>touch - <code data-type="Function"><a href="pbutil.html#touch">pbutil.touch</a></code></li><li>type - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#type">mavenrepo.MavenArtifact.type</a></code></li>
+          <li>T - <code data-type="Type Variable"><a href="pythonbuilder.html#T" class="internal-link">pythonbuilder.T</a></code></li><li>Target - <code data-type="Class"><a href="pythonbuilder.Target.html" class="internal-link">pythonbuilder.Target</a></code></li><li>toGraphviz - <code data-type="Function"><a href="pythonbuilder.html#toGraphviz" class="internal-link">pythonbuilder.toGraphviz</a></code></li><li>touch - <code data-type="Function"><a href="pbutil.html#touch" class="internal-link">pbutil.touch</a></code></li><li>type - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#type" class="internal-link">mavenrepo.MavenArtifact.type</a></code></li>
         </ul>
       
         <a name="U">
@@ -209,7 +258,7 @@
         <h2>U</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - U - <a href="#V">V</a> - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>updated - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#updated">pythonbuilder.Target.updated</a></code></li><li>updateTargets - <code data-type="Function"><a href="pythonbuilder.html#updateTargets">pythonbuilder.updateTargets</a></code></li>
+          <li>updated - <code data-type="Instance Variable"><a href="pythonbuilder.Target.html#updated" class="internal-link">pythonbuilder.Target.updated</a></code></li><li>updateTargets - <code data-type="Function"><a href="pythonbuilder.html#updateTargets" class="internal-link">pythonbuilder.updateTargets</a></code></li>
         </ul>
       
         <a name="V">
@@ -218,7 +267,7 @@
         <h2>V</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - V - <a href="#_">_</a></p>
         <ul id="summaryTree">
-          <li>VERBOSE - <code data-type="Constant"><a href="pythonbuilder.html#VERBOSE">pythonbuilder.VERBOSE</a></code></li><li>version - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#version">mavenrepo.MavenArtifact.version</a></code></li>
+          <li>VERBOSE - <code data-type="Constant"><a href="pythonbuilder.html#VERBOSE" class="internal-link">pythonbuilder.VERBOSE</a></code></li><li>version - <code data-type="Instance Variable"><a href="mavenrepo.MavenArtifact.html#version" class="internal-link">mavenrepo.MavenArtifact.version</a></code></li>
         </ul>
       
         <a name="_">
@@ -227,7 +276,7 @@
         <h2>_</h2>
         <p class="letterlinks"><a href="#A">A</a> - <a href="#B">B</a> - <a href="#C">C</a> - <a href="#D">D</a> - <a href="#F">F</a> - <a href="#G">G</a> - <a href="#H">H</a> - <a href="#I">I</a> - <a href="#J">J</a> - <a href="#L">L</a> - <a href="#M">M</a> - <a href="#N">N</a> - <a href="#P">P</a> - <a href="#R">R</a> - <a href="#S">S</a> - <a href="#T">T</a> - <a href="#U">U</a> - <a href="#V">V</a> - _</p>
         <ul id="summaryTree">
-          <li>__init__<ul><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactLocal.html#__init__">mavenrepo._MavenArtifactLocal.__init__</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactRemote.html#__init__">mavenrepo._MavenArtifactRemote.__init__</a></code></li><li><code data-type="Method"><a href="mavenrepo.MavenArtifact.html#__init__">mavenrepo.MavenArtifact.__init__</a></code></li><li class="private"><code data-type="Method"><a href="pythonbuilder._StateStore.html#__init__">pythonbuilder._StateStore.__init__</a></code></li><li><code data-type="Method"><a href="pythonbuilder.BuildException.html#__init__">pythonbuilder.BuildException.__init__</a></code></li><li><code data-type="Method"><a href="pythonbuilder.Target.html#__init__">pythonbuilder.Target.__init__</a></code></li></ul></li><li class="private">__repr__ - <code data-type="Method"><a href="pythonbuilder._StateStore.html#__repr__">pythonbuilder._StateStore.__repr__</a></code></li><li>__str__ - <code data-type="Method"><a href="pythonbuilder.Target.html#__str__">pythonbuilder.Target.__str__</a></code></li><li class="private">_escdq - <code data-type="Function"><a href="pythonbuilder.html#_escdq">pythonbuilder._escdq</a></code></li><li class="private">_Fetcher - <code data-type="Class"><a href="mavenrepo._Fetcher.html">mavenrepo._Fetcher</a></code></li><li class="private">_formatNanoDelta - <code data-type="Function"><a href="pythonbuilder.html#_formatNanoDelta">pythonbuilder._formatNanoDelta</a></code></li><li class="private">_isStateGenerator - <code data-type="Function"><a href="pythonbuilder.html#_isStateGenerator">pythonbuilder._isStateGenerator</a></code></li><li class="private">_MavenArtifactLocal - <code data-type="Class"><a href="mavenrepo._MavenArtifactLocal.html">mavenrepo._MavenArtifactLocal</a></code></li><li class="private">_MavenArtifactRemote - <code data-type="Class"><a href="mavenrepo._MavenArtifactRemote.html">mavenrepo._MavenArtifactRemote</a></code></li><li class="private">_PATHSEP - <code data-type="Constant"><a href="java.html#_PATHSEP">java._PATHSEP</a></code></li><li class="private">_StateStore - <code data-type="Class"><a href="pythonbuilder._StateStore.html">pythonbuilder._StateStore</a></code></li><li class="private">_TARGETS - <code data-type="Constant"><a href="pythonbuilder.html#_TARGETS">pythonbuilder._TARGETS</a></code></li><li class="private">_targetToGraphviz - <code data-type="Function"><a href="pythonbuilder.html#_targetToGraphviz">pythonbuilder._targetToGraphviz</a></code></li><li class="private">_UNITS - <code data-type="Constant"><a href="pythonbuilder.html#_UNITS">pythonbuilder._UNITS</a></code></li><li class="private">_updateTarget - <code data-type="Function"><a href="pythonbuilder.html#_updateTarget">pythonbuilder._updateTarget</a></code></li>
+          <li>__init__<ul><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactLocal.html#__init__" class="internal-link">mavenrepo._MavenArtifactLocal.__init__</a></code></li><li class="private"><code data-type="Method"><a href="mavenrepo._MavenArtifactRemote.html#__init__" class="internal-link">mavenrepo._MavenArtifactRemote.__init__</a></code></li><li><code data-type="Method"><a href="mavenrepo.MavenArtifact.html#__init__" class="internal-link">mavenrepo.MavenArtifact.__init__</a></code></li><li class="private"><code data-type="Method"><a href="pythonbuilder._StateStore.html#__init__" class="internal-link">pythonbuilder._StateStore.__init__</a></code></li><li><code data-type="Method"><a href="pythonbuilder.BuildException.html#__init__" class="internal-link">pythonbuilder.BuildException.__init__</a></code></li><li><code data-type="Method"><a href="pythonbuilder.Target.html#__init__" class="internal-link">pythonbuilder.Target.__init__</a></code></li></ul></li><li class="private">__repr__ - <code data-type="Method"><a href="pythonbuilder._StateStore.html#__repr__" class="internal-link">pythonbuilder._StateStore.__repr__</a></code></li><li>__str__ - <code data-type="Method"><a href="pythonbuilder.Target.html#__str__" class="internal-link">pythonbuilder.Target.__str__</a></code></li><li class="private">_escdq - <code data-type="Function"><a href="pythonbuilder.html#_escdq" class="internal-link">pythonbuilder._escdq</a></code></li><li class="private">_Fetcher - <code data-type="Class"><a href="mavenrepo._Fetcher.html" class="internal-link">mavenrepo._Fetcher</a></code></li><li class="private">_formatNanoDelta - <code data-type="Function"><a href="pythonbuilder.html#_formatNanoDelta" class="internal-link">pythonbuilder._formatNanoDelta</a></code></li><li class="private">_isStateGenerator - <code data-type="Function"><a href="pythonbuilder.html#_isStateGenerator" class="internal-link">pythonbuilder._isStateGenerator</a></code></li><li class="private">_MavenArtifactLocal - <code data-type="Class"><a href="mavenrepo._MavenArtifactLocal.html" class="internal-link">mavenrepo._MavenArtifactLocal</a></code></li><li class="private">_MavenArtifactRemote - <code data-type="Class"><a href="mavenrepo._MavenArtifactRemote.html" class="internal-link">mavenrepo._MavenArtifactRemote</a></code></li><li class="private">_PATHSEP - <code data-type="Constant"><a href="java.html#_PATHSEP" class="internal-link">java._PATHSEP</a></code></li><li class="private">_StateStore - <code data-type="Class"><a href="pythonbuilder._StateStore.html" class="internal-link">pythonbuilder._StateStore</a></code></li><li class="private">_TARGETS - <code data-type="Constant"><a href="pythonbuilder.html#_TARGETS" class="internal-link">pythonbuilder._TARGETS</a></code></li><li class="private">_targetToGraphviz - <code data-type="Function"><a href="pythonbuilder.html#_targetToGraphviz" class="internal-link">pythonbuilder._targetToGraphviz</a></code></li><li class="private">_UNITS - <code data-type="Constant"><a href="pythonbuilder.html#_UNITS" class="internal-link">pythonbuilder._UNITS</a></code></li><li class="private">_updateTarget - <code data-type="Function"><a href="pythonbuilder.html#_updateTarget" class="internal-link">pythonbuilder._updateTarget</a></code></li>
         </ul>
       
 
@@ -239,6 +288,13 @@
     <a href="index.html">API Documentation</a> for <a href="https://codeberg.org/harald/pythonbuilder" class="projecthome">pythonbuilder</a>,
   generated by <a href="https://github.com/twisted/pydoctor/">pydoctor</a>
   </div>
+
+  <!-- Search related scripts needs to be loaded at the end of HTML 
+    parsing not to introduce overhead and display HTML data asap -->
+   <script src="ajax.js" type="text/javascript"></script>
+  <script src="searchlib.js" type="text/javascript"></script>
+  <script src="search.js" type="text/javascript"></script>
+
 </footer>
     
     <script src="pydoctor.js" type="text/javascript"></script>
