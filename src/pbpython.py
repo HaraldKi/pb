@@ -35,6 +35,7 @@ def doRuffCheck(target: Path, tomlFile: Path, *filesAndDirs: Path) -> None:
   pbexec("ruff", "--config", tomlFile, "check", filesAndDirs)
   touch(target)
 
+
 def doRuffFormat(target: Path, tomlFile: Path, *filesAndDirs: Path) -> None:
   """Runs `ruff format <https://docs.astral.sh/ruff/configuration/#full-command-line-interface>`_
 
@@ -48,7 +49,7 @@ def doRuffFormat(target: Path, tomlFile: Path, *filesAndDirs: Path) -> None:
     **NOTE:** Use with care. If auto-formatting your code for the first time, be sure
     to commit any pending functional changes first to not mix them with mere
     formatting changes in one commit.
-  
+
   :param target: stamp file recording the fact when this function was actually invoked
   :param tomlFile: ``ruff`` configuration file
   :param filesAndDirs: to be formatted by ``ruff``

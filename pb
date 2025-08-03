@@ -16,6 +16,7 @@ from pythonbuilder import (
 
 LOG.setLevel("INFO")
 srcDir = Path("src")
+testsDir = Path("tests")
 buildDir = Path("build")
 
 # pythonbuilder = Target(srcDir / "pythonbuilder.py")
@@ -24,8 +25,8 @@ buildDir = Path("build")
 # pbutil = Target(srcDir / "pbutil.py")
 
 pb = Target(Path("pb"))
-pySources = Target(Path("src"))
-testSources = Target(Path("tests"))
+pySources = Target(srcDir)
+testSources = Target(testsDir)
 
 ############################################################
 
@@ -90,7 +91,14 @@ test = Target(
 
 ############################################################
 def coverageReport(coverageOut: Path, _coverageFile: Path) -> None:
-  pbexec("python3-coverage", "html", "-d", coverageOut)
+  pbexec(
+    "python3-coverage",
+    "html",
+    "-d",
+    coverageOut,
+    srcDir.glob("*.py"),
+    testsDir.glob("*.py"),
+  )
 
 
 coverage = Target(

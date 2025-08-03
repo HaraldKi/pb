@@ -38,5 +38,4 @@ def touch(targetPath: Path, *deps: Any) -> None:
   me = "touch" if frame is None else frame.f_code.co_name
   pb.logcmd([me, str(targetPath)])
   targetPath.write_text(datetime.datetime.now().isoformat() + "\n")
-#}
 
