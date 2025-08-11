@@ -110,7 +110,7 @@ class TestStateComputation(unittest.TestCase):
   def test_iterator(self):
     file = _TMPDIR / "thefile"
     writeToFile("hallo", file)
-    hex = stateFileIteratorContent(lambda: [file])
+    hex = stateFileIteratorContent([file])
     digest = hashlib.sha256()
     digest.update(str(file).encode())
     digest.update("hallo".encode())

@@ -292,7 +292,7 @@ def stateDirContent(targetPath: Path) -> str:
   """
   if targetPath.is_file():
     raise BuildException("'%s' is a file but expected a directory" % targetPath)
-  return stateFileIteratorContent(lambda: targetPath.rglob("*"))
+  return stateFileIteratorContent(targetPath.rglob("*"))
 
 
 def stateFileContent(targetPath: Path) -> str:
@@ -305,7 +305,7 @@ def stateFileContent(targetPath: Path) -> str:
   """
   if targetPath.is_dir():
     raise BuildException("'%s' is a directory but expected a file" % targetPath)
-  return stateFileIteratorContent(lambda: [targetPath])
+  return stateFileIteratorContent([targetPath])
 
 
 def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
@@ -321,10 +321,10 @@ def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
   return True
 
 
-def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
+def stateFileIteratorContent(iter: Iterable[Path]) -> str:
   """Creates a combined state over files.
 
-  If a path string from the iterator exists in the file system, its content is
+  If a path string from the iterable exists in the file system, its content is
   fed into the checksum, otherwise a `stateNew` is fed in. If the path string
   denotes a directory, it is ignored. This is a convenience to be able
   to use this with ``Path.rglob()`` without extra directory name filter.
@@ -332,18 +332,33 @@ def stateFileIteratorContent(itGen: Callable[[], Iterable[Path]]) -> str:
   To make a difference between sets of non existing files, all file names are
   also hashed.
 
-  Example: ``stateFileIteratorContent(lambda: Path("src").rglob("*.py"))`` will
-  run all python files recursively found in ``src`` through a hash function
-  and return the result
+  **NOTE:** When using this as the ``state`` parameter of a `Target`, the iterable
+  wrapped in the target should typically be lazily computed, that is, only when this
+  function is actually called. Using a constant list like
 
-  :param itGen: a supplier providing an iterator over path names of files
-    which may or may not exist.
+  .. code-block:: python
+
+    files: list[Path] = generateVoodooFileList()
+    voodoo = Target(files, name="voodoo", state=stateFileIteratorContent)
+  
+  the list is created way before the ``Target`` is actually considered. This may
+  miss files which are only created by processing the dependencies of the
+  target. An additional minor quirk is that the list is even computed if the
+  ``voodoo`` target is never considered in the build.
+
+  Example: ``stateFileIteratorContent(Path("src").rglob("*.py"))`` will
+  run all python files recursively found in ``src`` through a hash function
+  and return the result.
+
+  :param iter: an iterable (or iterator or generator) over path names of files which may
+    or may not exist. 
   :return: a hash of all file names and file contents. If the iterator is empty,
     or contains only empty directories, `stateNew()` is returned.
+
   """
   digest = hashlib.sha256()
   found = False
-  for path in itGen():
+  for path in iter:
     if path.is_dir():
       continue
     found = True

@@ -1014,7 +1014,7 @@ returns the result.</p><table class="fieldTable"><tr class="fieldStart"><td clas
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span>&#160;<span class="py-defname">stateFileIteratorContent</span><span class="function-signature">(<span class="rst-sig-param">itGen: <code>Callable[<wbr></wbr>[], <wbr></wbr>Iterable[<wbr></wbr>Path]]</code></span>) -&gt; <code>str</code>:</span>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">stateFileIteratorContent</span><span class="function-signature">(<span class="rst-sig-param">iter: <code>Iterable[<wbr></wbr>Path]</code></span>) -&gt; <code>str</code>:</span>
     
     <a class="headerLink" href="#stateFileIteratorContent" title="pythonbuilder.stateFileIteratorContent">
       
@@ -1025,17 +1025,26 @@ returns the result.</p><table class="fieldTable"><tr class="fieldStart"><td clas
   <div class="docstring functionBody">
     
     <div><p>Creates a combined state over files.</p>
-<p>If a path string from the iterator exists in the file system, its content is
+<p>If a path string from the iterable exists in the file system, its content is
 fed into the checksum, otherwise a <code><a href="#stateNew" class="internal-link" title="pythonbuilder.stateNew">stateNew</a></code> is fed in. If the path string
 denotes a directory, it is ignored. This is a convenience to be able
 to use this with <tt class="rst-docutils rst-literal">Path.rglob()</tt> without extra directory name filter.</p>
 <p>To make a difference between sets of non existing files, all file names are
 also hashed.</p>
-<p>Example: <tt class="rst-docutils rst-literal">stateFileIteratorContent(lambda: <span class="pre">Path("src").rglob("*.py"))</span></tt> will
+<p><strong>NOTE:</strong> When using this as the <tt class="rst-docutils rst-literal">state</tt> parameter of a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code>, the iterable
+wrapped in the target should typically be lazily computed, that is, only when this
+function is actually called. Using a constant list like</p>
+<pre class="py-doctest">
+files: <span class="py-builtin">list</span>[Path] = generateVoodooFileList()
+voodoo = Target(files, name=<span class="py-string">"voodoo"</span>, state=stateFileIteratorContent)</pre><p>the list is created way before the <tt class="rst-docutils rst-literal">Target</tt> is actually considered. This may
+miss files which are only created by processing the dependencies of the
+target. An additional minor quirk is that the list is even computed if the
+<tt class="rst-docutils rst-literal">voodoo</tt> target is never considered in the build.</p>
+<p>Example: <tt class="rst-docutils rst-literal"><span class="pre">stateFileIteratorContent(Path("src").rglob("*.py"))</span></tt> will
 run all python files recursively found in <tt class="rst-docutils rst-literal">src</tt> through a hash function
-and return the result</p>
-<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">it<wbr></wbr>Gen:</span><code>Callable[<wbr></wbr>[], <wbr></wbr>Iterable[<wbr></wbr>Path]]</code></td><td class="fieldArgDesc">a supplier providing an iterator over path names of files
-which may or may not exist.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash of all file names and file contents. If the iterator is empty,
+and return the result.</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">iter:</span><code>Iterable[<wbr></wbr>Path]</code></td><td class="fieldArgDesc">an iterable (or iterator or generator) over path names of files which may
+or may not exist.</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>str</code></td><td class="fieldArgDesc">a hash of all file names and file contents. If the iterator is empty,
 or contains only empty directories, <code><a href="#stateNew" class="internal-link" title="pythonbuilder.stateNew">stateNew()</a></code> is returned.</td></tr></table></div>
   </div>
 </div><div class="basefunction">
