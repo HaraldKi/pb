@@ -139,6 +139,13 @@ class TestStateComputation(unittest.TestCase):
       digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
 
+  def _stateFromIdentity(self, t: Target[str]) -> str:
+    return t.item
+
+  def test_stateWantsTarget(self) -> None:
+    target = Target("walla", state=self._stateFromIdentity)
+    state = target._computeState()
+    self.assertEqual("walla", state)
 
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()

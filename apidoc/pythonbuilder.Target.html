@@ -145,6 +145,16 @@
             </div>
         
 
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_computeState" class="internal-link" title="pythonbuilder.Target._computeState">_compute<wbr></wbr>State</a></code>
+            </div>
+        
+
     </li>
 </ul> 
 
@@ -692,6 +702,11 @@ optional nice name.</p></div>
     <td>Instance Variable</td>
     <td><code><a href="#updated" class="internal-link" title="pythonbuilder.Target.updated">updated</a></code></td>
     <td>Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> as soon as all dependencies are done.</td>
+  </tr><tr class="method private">
+    
+    <td>Method</td>
+    <td><code><a href="#_computeState" class="internal-link" title="pythonbuilder.Target._computeState">_compute<wbr></wbr>State</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
   </tr>
 </table>
           
@@ -712,7 +727,7 @@ optional nice name.</p></div>
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">item: <code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code>, </span><span class="rst-sig-param">*dependencies: <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code>, </span><span class="rst-sig-param">state: <code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | None</code> = None, </span><span class="rst-sig-param">name: <code>str | None</code> = None, </span><span class="rst-sig-param">cmd: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code> = None</span>):</span>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">__init__</span><span class="function-signature long-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span>, </span><span class="rst-sig-param">item: <code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code>, </span><span class="rst-sig-param">*dependencies: <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code>, </span><span class="rst-sig-param">state: <code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>]], <wbr></wbr>str] | None</code> = None, </span><span class="rst-sig-param">name: <code>str | None</code> = None, </span><span class="rst-sig-param">cmd: <code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code> = None</span>):</span>
     
     <a class="headerLink" href="#__init__" title="pythonbuilder.Target.__init__">
       
@@ -728,12 +743,19 @@ just an item, as it has no dependencies, the state generator is derived
 automatically, because it is an existing directory, and nothing needs to be
 done, so it has no command.</p>
 <table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">item:</span><code><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a></code></td><td class="fieldArgDesc">represents the item to keep up-to-date, like a file or
-directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies:</span><code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | None</code></td><td class="fieldArgDesc">describes how to generate a state (checksum, fingerprint) for
-this target's item. The function must generate a small fingerprint.
-If not provided, the <code><a href="#item" class="internal-link" title="pythonbuilder.Target.item">item</a></code> must denote an <strong>existing</strong> file
-or directory. If given as a string, it must be "dir", "file", "new",
+directory name</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*dependencies:</span><code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr>Any]</code></td><td class="fieldArgDesc">the dependencies of this target</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">state:</span><code>str | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>]], <wbr></wbr>str] | None</code></td><td class="fieldArgDesc"><p>describes how to generate a state (checksum, fingerprint) for
+this target item. The function must generate a small fingerprint string
+from the target's item.</p>
+<p>If <tt class="rst-docutils rst-literal">state</tt> is not provided, the <code><a href="#item" class="internal-link" title="pythonbuilder.Target.item">item</a></code> must denote an <strong>existing</strong> file
+or directory.</p>
+<p>If given as a string, it must be "dir", "file", "new",
 "fixed" or "value" for <code><a href="pythonbuilder.html#stateDirContent" class="internal-link" title="pythonbuilder.stateDirContent">stateDirContent</a></code>, <code><a href="pythonbuilder.html#stateFileContent" class="internal-link" title="pythonbuilder.stateFileContent">stateFileContent</a></code>, <code><a href="pythonbuilder.html#stateNew" class="internal-link" title="pythonbuilder.stateNew">stateNew</a></code>,
-<code><a href="pythonbuilder.html#stateFixed" class="internal-link" title="pythonbuilder.stateFixed">stateFixed</a></code> or <code><a href="pythonbuilder.html#stateValue" class="internal-link" title="pythonbuilder.stateValue">stateValue</a></code> respectively.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str | None</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
+<code><a href="pythonbuilder.html#stateFixed" class="internal-link" title="pythonbuilder.stateFixed">stateFixed</a></code> or <code><a href="pythonbuilder.html#stateValue" class="internal-link" title="pythonbuilder.stateValue">stateValue</a></code> respectively.</p>
+<p>Otherwise, the function's parameter may be either a <tt class="rst-docutils rst-literal">Target[T]</tt> or a <tt class="rst-docutils rst-literal">T</tt> and
+it will be called accordingly. The typical case should be <tt class="rst-docutils rst-literal">T</tt>. Only if the state
+generator needs access to the dependencies, a parameter of type <tt class="rst-docutils rst-literal">Target[T]</tt>
+should be necessary.</p>
+</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">name:</span><code>str | None</code></td><td class="fieldArgDesc">A nice name for the target to use, for example, on the command
 line. The default is name is <tt class="rst-docutils rst-literal">str(item)</tt>.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">cmd:</span><code>Callable[<wbr></wbr>Concatenate[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>, <wbr></wbr><span class="rst-variable-ellipsis">...</span>], <wbr></wbr>None] | None</code></td><td class="fieldArgDesc">the command to run to (re-)create the target. Its parameters will
 be the target's <tt class="rst-docutils rst-literal">item</tt> as well as the items of all dependencies.</td></tr></table></div>
   </div>
@@ -820,7 +842,7 @@ be the target's <tt class="rst-docutils rst-literal">item</tt> as well as the it
   </a>
   <div class="functionHeader">
     
-    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str]</code> =
+    <span class="py-defname">generateState</span>: <code>Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>], <wbr></wbr>str] | Callable[<wbr></wbr>[<wbr></wbr><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a>[<wbr></wbr><a href="pythonbuilder.html#T" class="internal-link" title="pythonbuilder.T">T</a>]], <wbr></wbr>str]</code> =
     
     <a class="headerLink" href="#generateState" title="pythonbuilder.Target.generateState">
       
@@ -961,6 +983,30 @@ updating.</p></div>
 <p>The target's command may or may not be run subsequently.</p>
 </div>
     
+  </div>
+</div><div class="basemethod private">
+  
+  
+  <a name="pythonbuilder.Target._computeState">
+    
+  </a>
+  <a name="_computeState">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_computeState</span><span class="function-signature">(<span class="rst-sig-param"><span class="rst-undocumented">self</span></span>) -&gt; <code>str</code>:</span>
+    
+    <a class="headerLink" href="#_computeState" title="pythonbuilder.Target._computeState">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
   </div>
 </div>
         </div>

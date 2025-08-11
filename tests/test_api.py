@@ -9,6 +9,7 @@ sys.path += [str(Path.cwd() / "src")]
 from pythonbuilder import (
   LOG,
   Target,
+  flatten,
   stateFileContent,
 )
 
@@ -22,7 +23,7 @@ def writeToFile(text, fname):
     outfile.write(text.encode())
 
 
-class TestTargetApi(unittest.TestCase):
+class TestPythonBuilderApi(unittest.TestCase):
   """Test various functions provided by python builder, mainly taken out of core
   to have smaller files.
   """
@@ -48,6 +49,18 @@ class TestTargetApi(unittest.TestCase):
     hash2 = stateFileContent(t.item)
     self.assertEqual(hash1, hash2)
 
+  def test_flatten(self):
+    result = []
+    flatten(result, [[], []])
+    self.assertEquals([], result)
+
+    flatten(result, "bla")
+    self.assertEquals(["bla"], result)
+    result = []
+
+    flatten(result, ["x", ["a", 1]])
+    self.assertEquals(["x", "a", "1"], result)
+    result = []
 
 if __name__ == "__main__":
   LOG.setLevel("ERROR")

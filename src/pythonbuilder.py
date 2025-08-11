@@ -18,7 +18,16 @@ import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Concatenate, Generic, Hashable, TypeGuard, TypeVar, cast
+from typing import (
+  Any,
+  Concatenate,
+  Generic,
+  Hashable,
+  TypeGuard,
+  TypeVar,
+  cast,
+  get_origin,
+)
 
 logging.basicConfig(format="%(message)s (%(levelname)s)")
 VERBOSE = logging.INFO - 5
@@ -87,7 +96,7 @@ class Target(Generic[T]):  # {
     self,
     item: T,
     *dependencies: Target[Any],
-    state: str | Callable[[T], str] | None = None,
+    state: str | Callable[[T], str] | Callable[[Target[T]], str] | None = None,
     name: str | None = None,
     cmd: Callable[Concatenate[T, ...], None] | None = None,
   ):  # {
@@ -102,11 +111,21 @@ class Target(Generic[T]):  # {
       directory name
     :param dependencies: the dependencies of this target
     :param state: describes how to generate a state (checksum, fingerprint) for
-      this target's item. The function must generate a small fingerprint.
-      If not provided, the `item` must denote an **existing** file
-      or directory. If given as a string, it must be "dir", "file", "new",
+      this target item. The function must generate a small fingerprint string
+      from the target's item.
+
+      If ``state`` is not provided, the `item` must denote an **existing** file
+      or directory.
+
+      If given as a string, it must be "dir", "file", "new",
       "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
       `stateFixed` or `stateValue` respectively.
+
+      Otherwise, the function's parameter may be either a ``Target[T]`` or a ``T`` and
+      it will be called accordingly. The typical case should be ``T``. Only if the state
+      generator needs access to the dependencies, a parameter of type ``Target[T]``
+      should be necessary.
+
     :param name: A nice name for the target to use, for example, on the command
       line. The default is name is ``str(item)``.
     :param cmd: the command to run to (re-)create the target. Its parameters will
@@ -153,11 +172,15 @@ class Target(Generic[T]):  # {
     It can be used as parameter for `updateTargets`.
     """
 
-    self.generateState: Callable[[T], str] = stateGenerator
+    self.generateState: Callable[[T], str] | Callable[[Target[T]], str] = stateGenerator
     """Function to generate the state for the target."""
 
     self.cmd: Callable[Concatenate[T, ...], None] | None = cmd
     """Function to (re-)create the target."""
+
+    for d in dependencies:
+      if not isinstance(d, Target):
+        raise BuildException("dependency is not of type Target but is %s: %s" % (type(d), d))
 
     self.dependencies = dependencies
     """The target's dependencies."""
@@ -194,8 +217,15 @@ class Target(Generic[T]):  # {
     c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
     return f"Target({self.name}, {deps}, name={self.name}," + f" state={s}{c})"
 
-
-# }
+  def _computeState(self) -> str:
+    ## determine whether to call with t or with t.item
+    parameters = inspect.signature(self.generateState).parameters.values()
+    param = next(iter(parameters))
+    anno = param.annotation
+    if get_origin(anno) == Target:
+      return cast(Callable[[Target[T]],str], self.generateState)(self)
+    else:
+      return cast(Callable[[T],str], self.generateState)(self.item)
 
 ## FIXME: get rid of global variables and encapsulate in a Builder class
 ## or so.
@@ -475,7 +505,7 @@ def _updateTarget(
 
   target.updated = True
 
-  targetStateBefore = target.generateState(target.item)
+  targetStateBefore = target._computeState()
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -504,9 +534,8 @@ def _updateTarget(
     )
 
   target.recreated = True
-  targetStateAfter = target.generateState(target.item)
+  targetStateAfter = target._computeState()
   states.setHashes(target, targetStateAfter, depsState)
-
 
 def _escdq(s: str) -> str:
   return s.replace('"', '\\"')
