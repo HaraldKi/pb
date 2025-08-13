@@ -52,15 +52,16 @@ class TestPythonBuilderApi(unittest.TestCase):
   def test_flatten(self):
     result = []
     flatten(result, [[], []])
-    self.assertEquals([], result)
+    self.assertEqual([], result)
 
     flatten(result, "bla")
-    self.assertEquals(["bla"], result)
+    self.assertEqual(["bla"], result)
     result = []
 
     flatten(result, ["x", ["a", 1]])
-    self.assertEquals(["x", "a", "1"], result)
+    self.assertEqual(["x", "a", "1"], result)
     result = []
+
 
 if __name__ == "__main__":
   LOG.setLevel("ERROR")

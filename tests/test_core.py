@@ -147,6 +147,7 @@ class TestStateComputation(unittest.TestCase):
     state = target._computeState()
     self.assertEqual("walla", state)
 
+
 class TestUpdateTargets(unittest.TestCase):
   values: dict[str, str] = dict()
 

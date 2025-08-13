@@ -180,7 +180,9 @@ class Target(Generic[T]):  # {
 
     for d in dependencies:
       if not isinstance(d, Target):
-        raise BuildException("dependency is not of type Target but is %s: %s" % (type(d), d))
+        raise BuildException(
+          "dependency is not of type Target but is %s: %s" % (type(d), d)
+        )
 
     self.dependencies = dependencies
     """The target's dependencies."""
@@ -223,9 +225,10 @@ class Target(Generic[T]):  # {
     param = next(iter(parameters))
     anno = param.annotation
     if get_origin(anno) == Target:
-      return cast(Callable[[Target[T]],str], self.generateState)(self)
+      return cast(Callable[[Target[T]], str], self.generateState)(self)
     else:
-      return cast(Callable[[T],str], self.generateState)(self.item)
+      return cast(Callable[[T], str], self.generateState)(self.item)
+
 
 ## FIXME: get rid of global variables and encapsulate in a Builder class
 ## or so.
@@ -332,7 +335,10 @@ def stateFileIteratorContent(iter: Iterable[Path]) -> str:
   To make a difference between sets of non existing files, all file names are
   also hashed.
 
-  **NOTE:** When using this as the ``state`` parameter of a `Target`, the iterable
+  **NOTE 1:** This state function is best used together with a target wrapping
+  a `pbutil.Paths` item.
+
+  **NOTE 2:** When using this as the ``state`` parameter of a `Target`, the iterable
   wrapped in the target should typically be lazily computed, that is, only when this
   function is actually called. Using a constant list like
 
@@ -340,7 +346,7 @@ def stateFileIteratorContent(iter: Iterable[Path]) -> str:
 
     files: list[Path] = generateVoodooFileList()
     voodoo = Target(files, name="voodoo", state=stateFileIteratorContent)
-  
+
   the list is created way before the ``Target`` is actually considered. This may
   miss files which are only created by processing the dependencies of the
   target. An additional minor quirk is that the list is even computed if the
@@ -351,7 +357,7 @@ def stateFileIteratorContent(iter: Iterable[Path]) -> str:
   and return the result.
 
   :param iter: an iterable (or iterator or generator) over path names of files which may
-    or may not exist. 
+    or may not exist.
   :return: a hash of all file names and file contents. If the iterator is empty,
     or contains only empty directories, `stateNew()` is returned.
 
@@ -551,6 +557,7 @@ def _updateTarget(
   target.recreated = True
   targetStateAfter = target._computeState()
   states.setHashes(target, targetStateAfter, depsState)
+
 
 def _escdq(s: str) -> str:
   return s.replace('"', '\\"')
