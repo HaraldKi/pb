@@ -8,13 +8,15 @@ Using this module is completely optional, obviously.
 
 import datetime
 import inspect
+import shutil
+from os import PathLike, fspath
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Callable, Iterable, Iterator
 
 import pythonbuilder as pb
 
 
-class Paths(Iterable[Path]):
+class Paths(Iterable[Path], PathLike):
   """An iterable on files, much like ``Path().glob()`` but keeps the path from
   which the iteration starts.
 
@@ -35,7 +37,10 @@ class Paths(Iterable[Path]):
   Objects of this class implement the ``Iterator[Path]`` protocol. The iterator
   basically replays the iterator provided to the constructor, except that it
   throws a `BuildException`, if an iterated path is not a sub-path of the root
-  parameter.
+  parameter. Further, this is a restartable iterator, i.e. it is possibly to
+  iterate more than once over the same instance.
+
+  When used as a ``PathLike``, the `root` is returned.
   """
 
   @staticmethod
@@ -43,40 +48,48 @@ class Paths(Iterable[Path]):
     """Creates a ``Paths`` object from a root path and an iterator derived straight from
     the ``glob`` pattern.
     """
-    p = Path(path)
-    return Paths(p, p.glob(pattern))
+    path = Path(path)
+    return Paths(path, lambda p: p.glob(pattern))
 
   @staticmethod
   def rglob(path: Path | str, pattern: str) -> "Paths":
     """Creates a ``Paths`` object from a root path and an iterator derived straight from
     the ``rglob`` pattern.
     """
-    p = Path(path)
-    return Paths(p, p.rglob(pattern))
+    path = Path(path)
+    return Paths(path, lambda p: p.rglob(pattern))
 
-  def __init__(self, root: Path | str, paths: Iterable[Path]):
+  def __init__(self, root: Path | str, itSupplier: Callable[[Path], Iterable[Path]]):
     """Creates the ``Paths`` object with a root and an iterable which must
     deliver sub-paths of ``root``. Iterating over the ``Paths`` object will replay the
     iterable, but will fail if a path is not a sub-path of ``root``.
 
     :param root: a common ancestor of paths of the iterable
-    :param paths: sub-paths of ``root``
+    :param itSupplier: sub-paths of ``root``
     """
     self.root: Path = Path(root)  # note: Path(path) works just fine
     """A common ancestor of the paths returned by iterating this object.
     """
-    self._paths = paths
+    self._paths = itSupplier
 
   def __iter__(self) -> Iterator[Path]:
     """Replays the iterator provided to the constructor, failing if it returns a
     path which is not a sub-path of `root`."""
-    for p in self._paths:
+    for p in self._paths(self.root):
       if not p.is_relative_to(self.root):
         raise pb.BuildException(
           "botched iterable in Paths does not provide subdirectory of"
           + f" {self.root} but {p}"
         )
       yield p
+
+  def __fspath__(self) -> str:
+    """Calls  ``os.fspath`` on `root`."""
+    return fspath(self.root)
+
+  def __str__(self) -> str:
+    """Readable short form for a ``Paths``"""
+    return f"Paths[{self.root}, {self._paths}]"
 
   def mappedTo(self, otherRoot: Path) -> "Paths":
     """Maps this object to a different common ancestor. All paths returned when
@@ -85,7 +98,7 @@ class Paths(Iterable[Path]):
     :param otherRoot: the new common ancestor of all paths
     :return: a ``Paths`` object with ``otherRoot`` as the `root`.
     """
-    return Paths(otherRoot, mappedPaths(otherRoot, self.root, self._paths))
+    return Paths(otherRoot, RootPathMapper(self.root, self._paths))
 
 
 def touch(targetPath: Path, *deps: Any) -> None:
@@ -114,37 +127,53 @@ def touch(targetPath: Path, *deps: Any) -> None:
   targetPath.write_text(datetime.datetime.now().isoformat() + "\n")
 
 
-def mappedPaths(
-  target: Path, commonPrefix: Path, paths: Iterable[Path]
-) -> Iterator[Path]:
-  """Provides an iterable replacing a ``commonPrefix`` in the given ``paths`` by
-  the ``target``. A `BuildException` is raised if a path does not have the common
-  prefix.
 
-  This functions can be used to create a `Target` which reflects exactly the files of
-  a source directory structure in another directory, the simplest example being a
-  file copy operation. Example:
-
-  .. code-block:: python
-
-    src = Target(Path("src").glob("*.py"), state=stateFileIteratorContent)
-    out = Target(Path("build"),
-                 state=lambda t: mappedPaths(t.item, Path("src"), t.dependencies[0].item))
-
-  :param target: new prefix of all paths
-  :param commonPrefix: to be replaced in the paths by `Target`
-  :param paths: to be mapped
-
-  :returns: a generator which yields one mapped path at a time
-
-  **Note:** you may rather want to use `Paths.mappedTo` instead of calling this
-  function directly.
+class RootPathMapper:
+  """A ``Callable[[Path], Iterator[Path]]`` which maps paths provided by another
+  iterator to a new prefix, think ``["src/a.py", "src/b.py"]`` mapped to
+  ``["dest/a.py", "dest/b.py"]``.
   """
-  for p in paths:
-    try:
-      tail = p.relative_to(commonPrefix)
-    except ValueError as _e:
-      raise pb.BuildException(
-        "cannot map %s as it does not have prefix %s" % (p, commonPrefix)
+  
+  def __init__(self, oldRoot: Path, itGen: Callable[[Path], Iterable[Path]]):
+    """Creates the mapper by its input.
+
+    The second parameter, ``itGen`` is not just an iterator but a function to provide
+    one so that our result can be iterated over more than once.
+
+    :param oldRoot: a path prefix of all paths provided by ``itGen``
+    :param itGen: given ``oldRoot``, must return an ``Iterator[Path]`` which
+      may on only have paths prefixed with ``oldRoot``, the canonical example being
+      ``lambda p: p.glob(...)``
+    """
+    self._oldRoot = oldRoot
+    self._itGen = itGen
+
+  def __call__(self, newRoot: Path) -> Iterator[Path]:
+    """Maps the paths defined in the constructor to have a the new prefix path
+    ``newRoot`` by replacing the ``oldRoot`` defined in the constructor.
+
+    :param newRoot: new path prefix of the paths defined in the constructor
+    :return: an iterator over the mapped paths, restartable
+    """
+    for p in self._itGen(self._oldRoot):
+      try:
+        tail = p.relative_to(self._oldRoot)
+      except ValueError as _e:
+        raise pb.BuildException(
+          "cannot map %s as it does not have prefix %s" % (p, self._oldRoot)
       )
-    yield target / tail
+      yield newRoot / tail
+
+
+def copyFiles(dest: Paths | Path, source: Paths) -> None:
+  """Copies files from ``source`` to dest preserving the path segments below
+  ``source.root``.
+
+  :param dest: where to copy files to using ``dest.root`` if it is a ``Paths`` object.
+  :param source: files to copy
+  """
+  if isinstance(dest, Paths):
+    dest = dest.root
+  for p in source:
+    tail = p.relative_to(source.root)
+    shutil.copyfile(p, dest / tail)

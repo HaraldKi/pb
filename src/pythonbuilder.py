@@ -527,6 +527,7 @@ def _updateTarget(
   target.updated = True
 
   targetStateBefore = target._computeState()
+  LOG.info("first state for %s: %s" % (target.name, targetStateBefore))
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -556,6 +557,7 @@ def _updateTarget(
 
   target.recreated = True
   targetStateAfter = target._computeState()
+  LOG.info("getting second state for %s: %s" % (target.name, targetStateAfter))
   states.setHashes(target, targetStateAfter, depsState)
 
 

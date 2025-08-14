@@ -11,7 +11,7 @@ from pythonbuilder import pbexec
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 
 
-def compileJava(targetPath: Path, srcPath: Path, *classpath: Path) -> None:
+def compileJava(targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path) -> None:
   """A default java compilation command. Kept simple. If you need a more
   elaborate setup, it is easy enough to write your own, rather than this
   function being extremely configurable and configure it.
@@ -20,13 +20,13 @@ def compileJava(targetPath: Path, srcPath: Path, *classpath: Path) -> None:
   :param srcPath: the source files directory
   :param classpath: classpath members
   """
-  files = map(str, srcPath.rglob("*.java"))
-  cp = os.pathsep.join(map(lambda d: str(d), classpath))
+  files = map(str, Path(srcPath).rglob("*.java"))
+  cp = os.pathsep.join(map(lambda d: os.fspath(d), classpath))
   pbexec(
     "javac",
     "-g",
     "-d",
-    str(targetPath),
+    os.fspath(targetPath),
     "-Xmaxerrs",
     "5",
     "-Xmaxwarns",

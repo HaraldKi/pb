@@ -1,14 +1,15 @@
 import unittest
+from os import PathLike
 from pathlib import Path
 
-from pbutil import Paths, mappedPaths
+from pbutil import Paths, RootPathMapper
 from pythonbuilder import BuildException, Target, stateFileIteratorContent
 
 
-class TestMappedPaths(unittest.TestCase):
+class TestRootPathMapper(unittest.TestCase):
   def test_empty(self) -> None:
-    it = mappedPaths(Path("a"), Path("b"), [])
-    result = next(it, None)
+    rpm = RootPathMapper(Path("b"), lambda p: [])(Path("a"))
+    result = next(rpm, None)
     self.assertEqual(None, result)
 
   def test_mapping(self) -> None:
@@ -17,7 +18,7 @@ class TestMappedPaths(unittest.TestCase):
     oldPaths = [oldP / p for p in paths]
     newP = Path("b")
     newPaths = [newP / p for p in paths]
-    mapped = [p for p in mappedPaths(newP, oldP, oldPaths)]
+    mapped = [p for p in RootPathMapper(oldP, lambda p: oldPaths)(newP)]
     self.assertEqual(newPaths, mapped)
 
   def test_mappingFail(self) -> None:
@@ -25,23 +26,23 @@ class TestMappedPaths(unittest.TestCase):
       BuildException,
       "cannot map \\w+ as it does not have",
       next,
-      mappedPaths(Path("a"), Path("b"), [Path("a")]),
+      RootPathMapper(Path("b"), lambda p: [Path("a")])(Path("a"))
     )
 
 
 class TestPaths(unittest.TestCase):
   def testFixed(self) -> None:
-    pg = Paths(Path("a"), [Path("a") / p for p in [Path("x"), Path("t/z")]])
+    pg = Paths(Path("a"), lambda root: [root / p for p in [Path("x"), Path("t/z")]])
     self.assertEqual([Path("a/x"), Path("a/t/z")], [*pg])
 
   def testFixedMapped(self) -> None:
-    pg = Paths(Path("a"), [Path("a") / p for p in [Path("x"), Path("t/z")]])
+    pg = Paths(Path("a"), lambda root: [root / p for p in [Path("x"), Path("t/z")]])
     mapped = pg.mappedTo(Path("XX"))
     self.assertEqual([Path("XX/x"), Path("XX/t/z")], [*mapped])
 
   def testGlob(self) -> None:
     # Assumes we are running in the project's root directory with subdir ./src
-    pg = Paths(Path("src"), Path("src").glob("*.py"))
+    pg = Paths(Path("src"), lambda root: root.glob("*.py"))
     self.assertEqual([*Path("src").glob("*.py")], [*pg])
 
     ## This will fail in the future if pydoctor changes what it generates
@@ -57,16 +58,30 @@ class TestPaths(unittest.TestCase):
     )
 
   def testPathFromStr(self) -> None:
-    pg = Paths("dodo", [Path("dodo/x"), Path("dodo/y")])
+    pg = Paths("dodo", lambda p: [ p / "x", p / "y"])
     self.assertEqual([Path("dodo/x"), Path("dodo/y")], [*pg])
+
+  def testPathLikeness(self) -> None:
+    pg = Paths("blabla", lambda p: [])
+    self.assertTrue(isinstance(pg, PathLike))
+    other = Path(pg)
+    self.assertEqual(Path("blabla"), other)
 
   def testBotchedIterator(self) -> None:
     self.assertRaisesRegex(
       BuildException,
       "botched iterable in Paths",
       list,
-      Paths(Path("src"), [Path("src/bla"), Path("not-src/bla")]),
+      Paths(Path("src"), lambda p: [p / "bla", Path("not-src/bla")])
     )
+
+  def testGlobCanRestart(self) -> None:
+    pg = Paths.glob("src", "*.py")
+    l1 = [*pg]
+    l2 = [*pg]
+    self.assertTrue(len(l1) > 0)
+    self.assertTrue(len(l2) > 0)
+    self.assertEqual(l1, l2)
 
   def testWithTarget(self) -> None:
     # assume we're running in the projects root directory
