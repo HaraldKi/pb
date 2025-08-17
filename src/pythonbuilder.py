@@ -13,6 +13,7 @@ import inspect
 import json
 import logging
 import os
+import re
 import subprocess
 import time
 from collections.abc import Callable, Iterable
@@ -460,10 +461,14 @@ def pbexec(*args: Any) -> None:
   subprocess.run(cmd).check_returncode()
 
 
-def updateTargets(*targets: str | Target) -> None:
+def updateTargets(*targets: str | Target) -> bool:
   """Wraps `rawUpdateTargets` to log times and trim any exception to
   just its message.
+
+  :return: False if the build failed with an exception, otherwise True. Use this
+    for a ``sys.exit(1)`` in the fail case.
   """
+
   buildStart = time.time_ns()
   ## Somewhat off as it excludes sleep times, found no way to get those.
   ## Do not use psutil.create_time() it can be off by 999ms.
@@ -474,9 +479,11 @@ def updateTargets(*targets: str | Target) -> None:
   LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
   resultState = ansiGreen("build ✔")
+  buildOK = True
   try:
     rawUpdateTargets(*targets)
   except Exception as e:
+    buildOK = False
     resultState = ansiRed("build ✘")
     if LOG.isEnabledFor(VERBOSE):
       logging.error(e, exc_info=True)
@@ -489,7 +496,7 @@ def updateTargets(*targets: str | Target) -> None:
     _formatNanoDelta(buildStart, buildEnd),
     _formatNanoDelta(startNanos, buildEnd),
   )
-
+  return buildOK
 
 def rawUpdateTargets(*targets: str | Target) -> None:
   """Updates all targets in turn without resetting the traversal state in
@@ -527,7 +534,6 @@ def _updateTarget(
   target.updated = True
 
   targetStateBefore = target._computeState()
-  LOG.info("first state for %s: %s" % (target.name, targetStateBefore))
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -557,23 +563,28 @@ def _updateTarget(
 
   target.recreated = True
   targetStateAfter = target._computeState()
-  LOG.info("getting second state for %s: %s" % (target.name, targetStateAfter))
   states.setHashes(target, targetStateAfter, depsState)
 
 
 def _escdq(s: str) -> str:
-  return s.replace('"', '\\"')
+  return s.replace("\"", "\\\"")
+
+_eschtmlMap = { "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;" }
+def _eschtml(s: str) -> str:
+  return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s) 
 
 
 def _targetToGraphviz(target: Target) -> str:
   result = ""
   for dep in target.dependencies:
-    result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"'
+    result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"\n'
 
   if target.name != str(target.item):
     result += (
-      f'"{_escdq(target.name)}"[label=<{_escdq(target.name)}'
-      + f'<BR/><FONT POINT-SIZE="10">{_escdq(str(target.item))}</FONT>>]'
+      f'  "{_escdq(target.name)}" [label=<{_eschtml(target.name)}'
+      + f'<BR/><FONT POINT-SIZE="10">{_eschtml(str(target.item))}</FONT>>]\n'
     )
   return result
 
@@ -588,12 +599,12 @@ def toGraphviz() -> str:
   :return: graph in dot format
 
   """
-  result = "digraph {"
+  result = "digraph {\n"
 
   for target in _TARGETS.values():
     result += _targetToGraphviz(target)
 
-  result += "}"
+  result += "}\n"
   return result
 
 
