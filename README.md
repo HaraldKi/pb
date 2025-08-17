@@ -1,4 +1,4 @@
-#  <img src="apidoc/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythononic project builder
+#  <img src="apidoc/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythonic project builder
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
@@ -27,10 +27,15 @@ import sys
 sys.path += ["pythonbuilder"]
 from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
 
-... multiple calls to the Target constructor
+def declareTarget() -> None:
+  ... multiple calls to the Target constructor ...
+
 ... definition of functions to create your targets ...
 
-updateTargets(*(sys.argv[1:]))
+declareTargets()
+if not updateTargets(*sys.argv[1:]):
+  sys.exit(1)
+
 ```
 
 Run `./pb target` to build the given target according to the recipe described in
@@ -41,7 +46,7 @@ A more extensive example, is the [our build script](./pb) or see
 
 ## Functional Overview
 A **target** is something you want to build. Usually it is a file or the
-contents of a whole directory. To build `target1` it may be necessary to build
+contents of a whole directory. To build `target1`, it may be necessary to build
 `targetA` and `targetB` first. Then those two are called **dependencies** of
 `target1`.
 
@@ -56,12 +61,14 @@ built is wrapped as the field `item` of `Target`.
 To create or recreate a target, it has an associated **command**. It is a Python
 function with N+1 parameters, the target's `item` as well as the `item` values
 of all dependencies. If `pythonbuilder` determines that it must (re-)create a
-target `target1` with its command `cmd1` it will call the command with one
-argument, namely the target.
+`target1` with its command `cmd1` it will call the command as:
 
 ```python
   cmd1(target1.item, targetA.item, targetB.item)
 ```
+
+If you use `mypy` or a similar type checker for Python, it helps you to match the
+item types of the dependencies to the command.
 
 When pythonbuilder analyzes a target to find out whether its command needs to be
 run, we say the it **updates** the target, independent of whether the command is
@@ -79,7 +86,7 @@ The latter makes sure that manual editing or even deletion of the target can be
 detected.
 
 If there is no previous recorded state, then the target is outdated by
-definition and must be updated.
+definition and must be re-created.
 
 If a dependency is created but its resulting state is the same as before, like
 after it was accidentally deleted, the target will not be created unnecessarily.
@@ -92,8 +99,9 @@ A minimal example, assumed to be stored in file `pb`:
 import subprocess
 import sys
 from pathlib import Path
+
 sys.path += ["pythonbuilder", "src"]
-from pythonbuilder import Target, updateTargets, LOG
+from pythonbuilder import LOG, Target, updateTargets
 
 LOG.setLevel("VERBOSE")
 
@@ -111,7 +119,7 @@ def declareTargets() -> None:
   )
 
 
-def runPandoc(targetPath: Path, readmeMd: Path):
+def runPandoc(targetPath: Path, readmeMd: Path) -> None:
   # The dependencies are in the order in which they are provided to Target below
   input = str(readmeMd)
   with open(targetPath, "w", encoding="utf-8") as outfile:
@@ -119,7 +127,9 @@ def runPandoc(targetPath: Path, readmeMd: Path):
 
 
 declareTargets()
-updateTargets(*sys.argv[1:])
+if not updateTargets(*sys.argv[1:]):
+  sys.exit(1)
+
 ```
 
 The default name of a `Target`, which has to be unique over the whole built, is
@@ -142,7 +152,7 @@ Try also the following:
 (default) or `WARNING` for more or less logging.
 - Experiment with
 [registerDependencyGraphTarget](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html#registerDependencyGraphTarget)
-to create a dependency graph for you build like the one shown for this project.
+to create a dependency graph for your build like the one shown for this project.
 
 See the [full
 api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html)
