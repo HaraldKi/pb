@@ -26,7 +26,7 @@ class TestRootPathMapper(unittest.TestCase):
       BuildException,
       "cannot map \\w+ as it does not have",
       next,
-      RootPathMapper(Path("b"), lambda p: [Path("a")])(Path("a"))
+      RootPathMapper(Path("b"), lambda p: [Path("a")])(Path("a")),
     )
 
 
@@ -58,7 +58,7 @@ class TestPaths(unittest.TestCase):
     )
 
   def testPathFromStr(self) -> None:
-    pg = Paths("dodo", lambda p: [ p / "x", p / "y"])
+    pg = Paths("dodo", lambda p: [p / "x", p / "y"])
     self.assertEqual([Path("dodo/x"), Path("dodo/y")], [*pg])
 
   def testPathLikeness(self) -> None:
@@ -72,7 +72,7 @@ class TestPaths(unittest.TestCase):
       BuildException,
       "botched iterable in Paths",
       list,
-      Paths(Path("src"), lambda p: [p / "bla", Path("not-src/bla")])
+      Paths(Path("src"), lambda p: [p / "bla", Path("not-src/bla")]),
     )
 
   def testGlobCanRestart(self) -> None:

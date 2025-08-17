@@ -498,6 +498,7 @@ def updateTargets(*targets: str | Target) -> bool:
   )
   return buildOK
 
+
 def rawUpdateTargets(*targets: str | Target) -> None:
   """Updates all targets in turn without resetting the traversal state in
   between, so if target T1 depends on target T0, in the call ``updateTargets(T1,
@@ -567,13 +568,14 @@ def _updateTarget(
 
 
 def _escdq(s: str) -> str:
-  return s.replace("\"", "\\\"")
+  return s.replace('"', '\\"')
 
-_eschtmlMap = { "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;" }
+
+_eschtmlMap = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
+
+
 def _eschtml(s: str) -> str:
-  return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s) 
+  return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s)
 
 
 def _targetToGraphviz(target: Target) -> str:

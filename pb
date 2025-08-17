@@ -27,6 +27,7 @@ buildDir = Path("build")
 pb = Target(Path("pb"))
 pySources = Target(srcDir)
 testSources = Target(testsDir)
+example = Target(Path("example"))
 
 ############################################################
 
@@ -36,6 +37,7 @@ mypy = Target(
   pb,
   pySources,
   testSources,
+  example,
   name="mypy",
   state="file",
   cmd=doMypy,
@@ -50,6 +52,7 @@ ruff = Target(
   pb,
   pySources,
   testSources,
+  example,
   name="ruff",
   state="file",
   cmd=doRuffCheck,
@@ -62,6 +65,7 @@ pyformat = Target(
   pb,
   pySources,
   testSources,
+  example,
   name="pyformat",
   state="file",
   cmd=doRuffFormat,
@@ -136,4 +140,7 @@ Target("full", coverage, apidoc, graph, state="new")
 
 ############################################################
 
-updateTargets(*(sys.argv[1:]))
+if __name__ == "__main__":
+  if not updateTargets(*(sys.argv[1:])):
+    sys.exit(1)
+

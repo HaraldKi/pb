@@ -49,7 +49,7 @@ class Paths(Iterable[Path], PathLike):
     the ``glob`` pattern.
     """
     path = Path(path)
-    return Paths(path, lambda p: p.glob(pattern),  pattern)
+    return Paths(path, lambda p: p.glob(pattern), pattern)
 
   @staticmethod
   def rglob(path: Path | str, pattern: str) -> "Paths":
@@ -57,9 +57,14 @@ class Paths(Iterable[Path], PathLike):
     the ``rglob`` pattern.
     """
     path = Path(path)
-    return Paths(path, lambda p: p.rglob(pattern), "r("+pattern+")")
+    return Paths(path, lambda p: p.rglob(pattern), "r(" + pattern + ")")
 
-  def __init__(self, root: Path | str, itSupplier: Callable[[Path], Iterable[Path]], itName: str | None = None):
+  def __init__(
+    self,
+    root: Path | str,
+    itSupplier: Callable[[Path], Iterable[Path]],
+    itName: str | None = None,
+  ):
     """Creates the ``Paths`` object with a root and an iterable which must
     deliver sub-paths of ``root``. Iterating over the ``Paths`` object will replay the
     iterable, but will fail if a path is not a sub-path of ``root``.
@@ -100,7 +105,11 @@ class Paths(Iterable[Path], PathLike):
     :param otherRoot: the new common ancestor of all paths
     :return: a ``Paths`` object with ``otherRoot`` as the `root`.
     """
-    return Paths(otherRoot, RootPathMapper(self.root, self._paths), "<-("+str(self.root)+","+self._itName+")")
+    return Paths(
+      otherRoot,
+      RootPathMapper(self.root, self._paths),
+      "<-(" + str(self.root) + "," + self._itName + ")",
+    )
 
 
 def touch(targetPath: Path, *deps: Any) -> None:
@@ -130,13 +139,12 @@ def touch(targetPath: Path, *deps: Any) -> None:
   targetPath.write_text(datetime.datetime.now().isoformat() + "\n")
 
 
-
 class RootPathMapper:
   """A ``Callable[[Path], Iterator[Path]]`` which maps paths provided by another
   iterator to a new prefix, think ``["src/a.py", "src/b.py"]`` mapped to
   ``["dest/a.py", "dest/b.py"]``.
   """
-  
+
   def __init__(self, oldRoot: Path, itGen: Callable[[Path], Iterable[Path]]):
     """Creates the mapper by its input.
 
@@ -164,7 +172,7 @@ class RootPathMapper:
       except ValueError as _e:
         raise pb.BuildException(
           "cannot map %s as it does not have prefix %s" % (p, self._oldRoot)
-      )
+        )
       yield newRoot / tail
 
 

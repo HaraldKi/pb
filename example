@@ -2,8 +2,9 @@
 import subprocess
 import sys
 from pathlib import Path
+
 sys.path += ["pythonbuilder", "src"]
-from pythonbuilder import Target, updateTargets, LOG
+from pythonbuilder import LOG, Target, updateTargets
 
 LOG.setLevel("VERBOSE")
 
@@ -21,7 +22,7 @@ def declareTargets() -> None:
   )
 
 
-def runPandoc(targetPath: Path, readmeMd: Path):
+def runPandoc(targetPath: Path, readmeMd: Path) -> None:
   # The dependencies are in the order in which they are provided to Target below
   input = str(readmeMd)
   with open(targetPath, "w", encoding="utf-8") as outfile:
@@ -29,4 +30,6 @@ def runPandoc(targetPath: Path, readmeMd: Path):
 
 
 declareTargets()
-updateTargets(*sys.argv[1:])
+if not updateTargets(*sys.argv[1:]):
+  sys.exit(1)
+

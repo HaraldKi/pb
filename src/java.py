@@ -11,7 +11,9 @@ from pythonbuilder import pbexec
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 
 
-def compileJava(targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path) -> None:
+def compileJava(
+  targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path
+) -> None:
   """A default java compilation command. Kept simple. If you need a more
   elaborate setup, it is easy enough to write your own, rather than this
   function being extremely configurable and configure it.
