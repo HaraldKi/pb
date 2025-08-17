@@ -49,7 +49,7 @@ class Paths(Iterable[Path], PathLike):
     the ``glob`` pattern.
     """
     path = Path(path)
-    return Paths(path, lambda p: p.glob(pattern))
+    return Paths(path, lambda p: p.glob(pattern),  pattern)
 
   @staticmethod
   def rglob(path: Path | str, pattern: str) -> "Paths":
@@ -57,20 +57,22 @@ class Paths(Iterable[Path], PathLike):
     the ``rglob`` pattern.
     """
     path = Path(path)
-    return Paths(path, lambda p: p.rglob(pattern))
+    return Paths(path, lambda p: p.rglob(pattern), "r("+pattern+")")
 
-  def __init__(self, root: Path | str, itSupplier: Callable[[Path], Iterable[Path]]):
+  def __init__(self, root: Path | str, itSupplier: Callable[[Path], Iterable[Path]], itName: str | None = None):
     """Creates the ``Paths`` object with a root and an iterable which must
     deliver sub-paths of ``root``. Iterating over the ``Paths`` object will replay the
     iterable, but will fail if a path is not a sub-path of ``root``.
 
     :param root: a common ancestor of paths of the iterable
     :param itSupplier: sub-paths of ``root``
+    :param itName: a nice name of the generated iterator to be used by ``__str__``
     """
     self.root: Path = Path(root)  # note: Path(path) works just fine
     """A common ancestor of the paths returned by iterating this object.
     """
     self._paths = itSupplier
+    self._itName = itName if itName is not None else str(itSupplier)
 
   def __iter__(self) -> Iterator[Path]:
     """Replays the iterator provided to the constructor, failing if it returns a
@@ -89,7 +91,7 @@ class Paths(Iterable[Path], PathLike):
 
   def __str__(self) -> str:
     """Readable short form for a ``Paths``"""
-    return f"Paths[{self.root}, {self._paths}]"
+    return f"Paths[{self.root},{self._itName}]"
 
   def mappedTo(self, otherRoot: Path) -> "Paths":
     """Maps this object to a different common ancestor. All paths returned when
@@ -98,7 +100,7 @@ class Paths(Iterable[Path], PathLike):
     :param otherRoot: the new common ancestor of all paths
     :return: a ``Paths`` object with ``otherRoot`` as the `root`.
     """
-    return Paths(otherRoot, RootPathMapper(self.root, self._paths))
+    return Paths(otherRoot, RootPathMapper(self.root, self._paths), "<-("+str(self.root)+","+self._itName+")")
 
 
 def touch(targetPath: Path, *deps: Any) -> None:
@@ -124,6 +126,7 @@ def touch(targetPath: Path, *deps: Any) -> None:
   frame = inspect.currentframe()
   me = "touch" if frame is None else frame.f_code.co_name
   pb.logcmd([me, str(targetPath)])
+  targetPath.parent.mkdir(parents=True, exist_ok=True)
   targetPath.write_text(datetime.datetime.now().isoformat() + "\n")
 
 
