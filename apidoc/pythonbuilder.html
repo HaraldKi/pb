@@ -354,6 +354,16 @@
         
 
         
+            <div class="itemName"><code><a href="#_eschtml" class="internal-link" title="pythonbuilder._eschtml">_eschtml</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
             <div class="itemName"><code><a href="#_formatNanoDelta" class="internal-link" title="pythonbuilder._formatNanoDelta">_format<wbr></wbr>Nano<wbr></wbr>Delta</a></code>
             </div>
         
@@ -454,6 +464,16 @@
 
         
             <div class="itemName"><code><a href="#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_eschtmlMap" class="internal-link" title="pythonbuilder._eschtmlMap">_eschtml<wbr></wbr>Map</a></code>
             </div>
         
 
@@ -641,6 +661,11 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
   </tr><tr class="function private">
     
     <td>Function</td>
+    <td><code><a href="#_eschtml" class="internal-link" title="pythonbuilder._eschtml">_eschtml</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
     <td><code><a href="#_formatNanoDelta" class="internal-link" title="pythonbuilder._formatNanoDelta">_format<wbr></wbr>Nano<wbr></wbr>Delta</a></code></td>
     <td><span class="rst-undocumented">Undocumented</span></td>
   </tr><tr class="function private">
@@ -667,6 +692,11 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
     
     <td>Constant</td>
     <td><code><a href="#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code></td>
+    <td><span class="rst-undocumented">Undocumented</span></td>
+  </tr><tr class="variable private">
+    
+    <td>Variable</td>
+    <td><code><a href="#_eschtmlMap" class="internal-link" title="pythonbuilder._eschtmlMap">_eschtml<wbr></wbr>Map</a></code></td>
     <td><span class="rst-undocumented">Undocumented</span></td>
   </tr>
 </table>
@@ -1031,7 +1061,9 @@ denotes a directory, it is ignored. This is a convenience to be able
 to use this with <tt class="rst-docutils rst-literal">Path.rglob()</tt> without extra directory name filter.</p>
 <p>To make a difference between sets of non existing files, all file names are
 also hashed.</p>
-<p><strong>NOTE:</strong> When using this as the <tt class="rst-docutils rst-literal">state</tt> parameter of a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code>, the iterable
+<p><strong>NOTE 1:</strong> This state function is best used together with a target wrapping
+a <code><a href="pbutil.Paths.html" class="internal-link">pbutil.Paths</a></code> item.</p>
+<p><strong>NOTE 2:</strong> When using this as the <tt class="rst-docutils rst-literal">state</tt> parameter of a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code>, the iterable
 wrapped in the target should typically be lazily computed, that is, only when this
 function is actually called. Using a constant list like</p>
 <pre class="py-doctest">
@@ -1165,7 +1197,7 @@ suggested use is to define a target and let it depend on the build script.</p>
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span>&#160;<span class="py-defname">updateTargets</span><span class="function-signature">(<span class="rst-sig-param">*targets: <code>str | <a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code></span>):</span>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">updateTargets</span><span class="function-signature">(<span class="rst-sig-param">*targets: <code>str | <a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code></span>) -&gt; <code>bool</code>:</span>
     
     <a class="headerLink" href="#updateTargets" title="pythonbuilder.updateTargets">
       
@@ -1176,7 +1208,8 @@ suggested use is to define a target and let it depend on the build script.</p>
   <div class="docstring functionBody">
     
     <div><p>Wraps <code><a href="#rawUpdateTargets" class="internal-link" title="pythonbuilder.rawUpdateTargets">rawUpdateTargets</a></code> to log times and trim any exception to
-just its message.</p></div>
+just its message.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>bool</code></td><td class="fieldArgDesc">False if the build failed with an exception, otherwise True. Use this
+for a <tt class="rst-docutils rst-literal">sys.exit(1)</tt> in the fail case.</td></tr></table></div>
   </div>
 </div><div class="baseconstant">
   
@@ -1306,6 +1339,30 @@ delete this file. (FIXME: provide proper api).</p>
     <span class="py-keyword">def</span>&#160;<span class="py-defname">_escdq</span><span class="function-signature">(<span class="rst-sig-param">s: <code>str</code></span>) -&gt; <code>str</code>:</span>
     
     <a class="headerLink" href="#_escdq" title="pythonbuilder._escdq">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="pythonbuilder._eschtml">
+    
+  </a>
+  <a name="_eschtml">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_eschtml</span><span class="function-signature">(<span class="rst-sig-param">s: <code>str</code></span>) -&gt; <code>str</code>:</span>
+    
+    <a class="headerLink" href="#_eschtml" title="pythonbuilder._eschtml">
       
       
       ¶
@@ -1458,6 +1515,30 @@ delete this file. (FIXME: provide proper api).</p>
     
     <div><p class="undocumented">Undocumented</p></div>
     <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>[<wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ns</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">µs</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ms</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">s</span><span class="rst-variable-quote">'</span>, <wbr></wbr>120, <wbr></wbr>60)]</code></pre></td></tr></table>
+  </div>
+</div><div class="basevariable private">
+  
+  
+  <a name="pythonbuilder._eschtmlMap">
+    
+  </a>
+  <a name="_eschtmlMap">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_eschtmlMap</span>: <code>dict[<wbr></wbr>str, <wbr></wbr>str]</code> =
+    
+    <a class="headerLink" href="#_eschtmlMap" title="pythonbuilder._eschtmlMap">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p class="undocumented">Undocumented</p></div>
+    
   </div>
 </div>
         </div>

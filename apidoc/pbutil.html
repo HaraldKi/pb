@@ -119,13 +119,46 @@
         
          
 
+        <div class="childrenKindTitle">Classes</div>
+        <ul>
+    
+    <li class="">
         
         
+        
+
+        
+            <div class="itemName"><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths"><wbr></wbr>Paths</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="pbutil.RootPathMapper.html" class="internal-link" title="pbutil.RootPathMapper"><wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper</a></code>
+            </div>
+        
+
+    </li>
+</ul>
 
         <div class="childrenKindTitle">Functions</div>
         <ul>
     
     <li class="">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#copyFiles" class="internal-link" title="pbutil.copyFiles">copy<wbr></wbr>Files</a></code>
+            </div>
+        
+
+    </li><li class="">
         
         
         
@@ -193,7 +226,22 @@ is a waste.</p>
           <table class="children sortable" id="id12">
   
   
-  <tr class="function">
+  <tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths"><wbr></wbr>Paths</a></code></td>
+    <td>An iterable on files, much like <tt class="rst-docutils rst-literal"><span class="pre">Path().glob()</span></tt> but keeps the path from which the iteration starts.</td>
+  </tr><tr class="class">
+    
+    <td>Class</td>
+    <td><code><a href="pbutil.RootPathMapper.html" class="internal-link" title="pbutil.RootPathMapper"><wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper</a></code></td>
+    <td>A <tt class="rst-docutils rst-literal"><span class="pre">Callable[[Path],</span> Iterator[Path]]</tt> which maps paths provided by another iterator to a new prefix, think <tt class="rst-docutils rst-literal">["src/a.py", "src/b.py"]</tt> mapped to <tt class="rst-docutils rst-literal">["dest/a.py", "dest/b.py"]</tt>.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
+    <td><code><a href="#copyFiles" class="internal-link" title="pbutil.copyFiles">copy<wbr></wbr>Files</a></code></td>
+    <td>Copies files from <tt class="rst-docutils rst-literal">source</tt> to dest preserving the path segments below <tt class="rst-docutils rst-literal">source.root</tt>.</td>
+  </tr><tr class="function">
     
     <td>Function</td>
     <td><code><a href="#touch" class="internal-link" title="pbutil.touch">touch</a></code></td>
@@ -207,6 +255,31 @@ is a waste.</p>
 
         <div id="childList">
           <div class="basefunction">
+  
+  
+  <a name="pbutil.copyFiles">
+    
+  </a>
+  <a name="copyFiles">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">copyFiles</span><span class="function-signature">(<span class="rst-sig-param">dest: <code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a> | Path</code>, </span><span class="rst-sig-param">source: <code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a></code></span>):</span>
+    
+    <a class="headerLink" href="#copyFiles" title="pbutil.copyFiles">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Copies files from <tt class="rst-docutils rst-literal">source</tt> to dest preserving the path segments below
+<tt class="rst-docutils rst-literal">source.root</tt>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">dest:</span><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a> | Path</code></td><td class="fieldArgDesc">where to copy files to using <tt class="rst-docutils rst-literal">dest.root</tt> if it is a <tt class="rst-docutils rst-literal">Paths</tt> object.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source:</span><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a></code></td><td class="fieldArgDesc">files to copy</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
   
   
   <a name="pbutil.touch">

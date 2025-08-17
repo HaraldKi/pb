@@ -445,6 +445,22 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
             <div class="kind">Function</div>
             <div class="privacy">PRIVATE</div>
             <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pythonbuilder._eschtmlMap">
+            
+            <div class="fullName">pythonbuilder<wbr></wbr>._eschtml<wbr></wbr>Map</div>
+            <div class="url">pythonbuilder.html#_eschtmlMap</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pythonbuilder._eschtml">
+            
+            <div class="fullName">pythonbuilder<wbr></wbr>._eschtml</div>
+            <div class="url">pythonbuilder.html#_eschtml</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
           </li><li id="pythonbuilder._targetToGraphviz">
             
             <div class="fullName">pythonbuilder<wbr></wbr>._target<wbr></wbr>To<wbr></wbr>Graphviz</div>
@@ -789,6 +805,94 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">Converts a path relative to root directory to a class name.</div>
+          </li><li id="pbutil.Paths">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths</div>
+            <div class="url">pbutil.Paths.html</div>
+            <div class="type">Class</div>
+            <div class="kind">Class</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">An iterable on files, much like <tt class="rst-docutils rst-literal"><span class="pre">Path().glob()</span></tt> but keeps the path from which the iteration starts.</div>
+          </li><li id="pbutil.Paths.glob">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.glob</div>
+            <div class="url">pbutil.Paths.html#glob</div>
+            <div class="type">Function</div>
+            <div class="kind">Static Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Creates a <tt class="rst-docutils rst-literal">Paths</tt> object from a root path and an iterator derived straight from the <tt class="rst-docutils rst-literal">glob</tt> pattern.</div>
+          </li><li id="pbutil.Paths.rglob">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.rglob</div>
+            <div class="url">pbutil.Paths.html#rglob</div>
+            <div class="type">Function</div>
+            <div class="kind">Static Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Creates a <tt class="rst-docutils rst-literal">Paths</tt> object from a root path and an iterator derived straight from the <tt class="rst-docutils rst-literal">rglob</tt> pattern.</div>
+          </li><li id="pbutil.Paths.__init__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.__init__</div>
+            <div class="url">pbutil.Paths.html#__init__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Creates the <tt class="rst-docutils rst-literal">Paths</tt> object with a root and an iterable which must deliver sub-paths of <tt class="rst-docutils rst-literal">root</tt>. Iterating over the <tt class="rst-docutils rst-literal">Paths</tt> object will replay the iterable, but will fail if a path is not a sub-path of <tt class="rst-docutils rst-literal">root</tt>.</div>
+          </li><li id="pbutil.Paths.root">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.root</div>
+            <div class="url">pbutil.Paths.html#root</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">A common ancestor of the paths returned by iterating this object.</div>
+          </li><li id="pbutil.Paths._paths">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>._paths</div>
+            <div class="url">pbutil.Paths.html#_paths</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pbutil.Paths._itName">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>._it<wbr></wbr>Name</div>
+            <div class="url">pbutil.Paths.html#_itName</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pbutil.Paths.__iter__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.__iter__</div>
+            <div class="url">pbutil.Paths.html#__iter__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Replays the iterator provided to the constructor, failing if it returns a path which is not a sub-path of <code><a href="pbutil.Paths.html#root" class="internal-link" title="pbutil.Paths.root">root</a></code>.</div>
+          </li><li id="pbutil.Paths.__fspath__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.__fspath__</div>
+            <div class="url">pbutil.Paths.html#__fspath__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Calls  <tt class="rst-docutils rst-literal">os.fspath</tt> on <code><a href="pbutil.Paths.html#root" class="internal-link" title="pbutil.Paths.root">root</a></code>.</div>
+          </li><li id="pbutil.Paths.__str__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.__str__</div>
+            <div class="url">pbutil.Paths.html#__str__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Readable short form for a <tt class="rst-docutils rst-literal">Paths</tt></div>
+          </li><li id="pbutil.Paths.mappedTo">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Paths<wbr></wbr>.mapped<wbr></wbr>To</div>
+            <div class="url">pbutil.Paths.html#mappedTo</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Maps this object to a different common ancestor. All paths returned when iterating the new object will have the <code><a href="pbutil.Paths.html#root" class="internal-link" title="pbutil.Paths.root">root</a></code> replaced by <tt class="rst-docutils rst-literal">otherRoot</tt>.</div>
           </li><li id="pbutil.touch">
             
             <div class="fullName">pbutil<wbr></wbr>.touch</div>
@@ -797,6 +901,54 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">A function intended to be used as the <tt class="rst-docutils rst-literal">cmd</tt> parameter of a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code> to write the current iso datetime into the <tt class="rst-docutils rst-literal">targetPath</tt>.</div>
+          </li><li id="pbutil.RootPathMapper">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper</div>
+            <div class="url">pbutil.RootPathMapper.html</div>
+            <div class="type">Class</div>
+            <div class="kind">Class</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">A <tt class="rst-docutils rst-literal"><span class="pre">Callable[[Path],</span> Iterator[Path]]</tt> which maps paths provided by another iterator to a new prefix, think <tt class="rst-docutils rst-literal">["src/a.py", "src/b.py"]</tt> mapped to <tt class="rst-docutils rst-literal">["dest/a.py", "dest/b.py"]</tt>.</div>
+          </li><li id="pbutil.RootPathMapper.__init__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper<wbr></wbr>.__init__</div>
+            <div class="url">pbutil.RootPathMapper.html#__init__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Creates the mapper by its input.</div>
+          </li><li id="pbutil.RootPathMapper._oldRoot">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper<wbr></wbr>._old<wbr></wbr>Root</div>
+            <div class="url">pbutil.RootPathMapper.html#_oldRoot</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pbutil.RootPathMapper._itGen">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper<wbr></wbr>._it<wbr></wbr>Gen</div>
+            <div class="url">pbutil.RootPathMapper.html#_itGen</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
+          </li><li id="pbutil.RootPathMapper.__call__">
+            
+            <div class="fullName">pbutil<wbr></wbr>.<wbr></wbr>Root<wbr></wbr>Path<wbr></wbr>Mapper<wbr></wbr>.__call__</div>
+            <div class="url">pbutil.RootPathMapper.html#__call__</div>
+            <div class="type">Function</div>
+            <div class="kind">Method</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Maps the paths defined in the constructor to have a the new prefix path <tt class="rst-docutils rst-literal">newRoot</tt> by replacing the <tt class="rst-docutils rst-literal">oldRoot</tt> defined in the constructor.</div>
+          </li><li id="pbutil.copyFiles">
+            
+            <div class="fullName">pbutil<wbr></wbr>.copy<wbr></wbr>Files</div>
+            <div class="url">pbutil.html#copyFiles</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Copies files from <tt class="rst-docutils rst-literal">source</tt> to dest preserving the path segments below <tt class="rst-docutils rst-literal">source.root</tt>.</div>
           </li><li id="pbpython.doRuffCheck">
             
             <div class="fullName">pbpython<wbr></wbr>.do<wbr></wbr>Ruff<wbr></wbr>Check</div>
