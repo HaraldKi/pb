@@ -1,4 +1,6 @@
 indent-width = 2
 
+cache-dir = "build/ruffcache"
+
 [lint]
 extend-select = ["I"]
