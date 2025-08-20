@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import (
   Any,
   Concatenate,
+  Final,
   Generic,
   Hashable,
   TypeGuard,
@@ -31,7 +32,7 @@ from typing import (
 )
 
 logging.basicConfig(format="%(message)s (%(levelname)s)")
-VERBOSE = logging.INFO - 5
+VERBOSE: Final = logging.INFO - 5
 """Additional logging level providing more information than ``INFO``."""
 
 logging.addLevelName(VERBOSE, "VERBOSE")
@@ -204,6 +205,12 @@ class Target(Generic[T]):  # {
 
     This does not say whether the target was actually changed by running its
     ``cmd``.
+    """
+
+    self.force: bool = False
+    """If set to ``True`` before the build starts, the target is assumed to be
+    out-of-date, independent of the computed state hash. This can be used to force
+    rebuilding a target.
     """
 
     if self.name in _TARGETS:
@@ -392,6 +399,7 @@ def resetTraversalState() -> None:
     target.started = False
     target.updated = False
     target.recreated = False
+    target.force = False
 
 
 _UNITS = [
@@ -519,6 +527,9 @@ def rawUpdateTargets(*targets: str | Target) -> None:
 def _updateTarget(
   states: "_StateStore", target: Target[T], onbehalf: list[Target]
 ) -> None:
+  if target.updated:
+    return
+
   if target.started:
     raise BuildException("dependency loop detected: '%s'<-'%s'" % (target, onbehalf))
   target.started = True
@@ -526,8 +537,7 @@ def _updateTarget(
   triggeringDeps = []
   depsDigest = hashlib.sha256()
   for dep in target.dependencies:
-    if not dep.updated:
-      _updateTarget(states, dep, [target] + onbehalf)
+    _updateTarget(states, dep, [target] + onbehalf)
     depsDigest.update(states.getOwnHash(dep).encode())
     if dep.recreated:
       triggeringDeps.append(dep.name)
@@ -544,8 +554,8 @@ def _updateTarget(
 
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
-  LOG.debug("  %s:\n  old %s\n  new %s", logTag, old, fresh)
-  if old == fresh:
+  LOG.debug("  %s:\n  old %s\n  new %s\n  force=%s", logTag, old, fresh, target.force)
+  if old == fresh and not target.force:
     LOG.log(VERBOSE, "- " + logTag)
     return
 
@@ -555,12 +565,18 @@ def _updateTarget(
     cmdName = target.cmd.__name__
     target.cmd(target.item, *map(lambda d: d.item, target.dependencies))
   took = _formatNanoDelta(startNanos, time.time_ns())
-  if len(triggeringDeps) == 0:
-    LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
-  else:
-    LOG.log(
-      VERBOSE, "+ %s(%s): <- %s, %s", cmdName, logTag, ", ".join(triggeringDeps), took
-    )
+
+  if LOG.isEnabledFor(VERBOSE):
+    if len(triggeringDeps) == 0:
+      if old[0] == fresh[0]:
+        ## must be forced, otherwise we wouldn't be here
+        LOG.log(VERBOSE, "+ %s(%s): forced to be outdated, %s", cmdName, logTag, took)
+      else:
+        LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
+    else:
+      LOG.log(
+        VERBOSE, "+ %s(%s): <- %s, %s", cmdName, logTag, ", ".join(triggeringDeps), took
+      )
 
   target.recreated = True
   targetStateAfter = target._computeState()

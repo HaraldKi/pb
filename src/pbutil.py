@@ -11,7 +11,7 @@ import inspect
 import shutil
 from os import PathLike, fspath
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator
+from typing import Any, Callable, Final, Iterable, Iterator
 
 import pythonbuilder as pb
 
@@ -188,3 +188,92 @@ def copyFiles(dest: Paths | Path, source: Paths) -> None:
   for p in source:
     tail = p.relative_to(source.root)
     shutil.copyfile(p, dest / tail)
+
+
+_loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
+"""FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()
+"""
+
+def main(*argv: str) -> bool:
+  """Simple wrapper around `pythonbuilder.updateTargets` to set the log level and/or
+  force targets to be re-created.
+
+  In your build script, after setting up all targets and defining all commands to build
+  them, use it in your ``main`` block like:
+
+  .. code-block:: python
+
+    if not pbmain.main(*(sys.argv[1:])):
+      sys.exit(1)
+
+  The arguments on the command line are used as follows:
+
+  ``ll=``\ *level* sets the log level, where level can be any string abbreviating one of
+  the lowercase loglevel keyswords, ``debug``, ``verbose``, ``info``, ``warning``,
+  ``error``, ``critical``. An example is ``ll=v`` to switch to ``VERBOSE`` logging.
+
+  ``force=``\ *targetlist* forces all targets in the comma separated list (no
+  whitespace) to be handled as if out-of-date. This is useful for debugging a build
+  step, for example ``doc``, which produces its output files but with wrong content. By
+  using ``force=doc`` the build step for ``doc`` can be re-run without other more
+  cumbersome ways of invalidating its state hash, like deleting an output file. More
+  than one target name can be provided like ``force=doc,coverage``. All ``force``
+  targets are also added to the list of targets to consider for building. So when
+  providing the command line arguments ``doc force=doc,apidoc``, the ``doc`` argument is
+  redundant and ``apidoc`` will be build even if ``doc`` does not depend on it.
+
+  Further command line arguments are assumed to be names of targets to be build, even
+  if they contain an equal sign. Put anothe way, only the prefixes ``ll=`` and
+  ``force=`` are interpreted as options.
+
+  **NOTE:** There is no ``--`` in front of the option names, following the only UNIX
+  command which does this right, namely `dd
+  <https://www.man7.org/linux/man-pages/man1/dd.1.html>`_ :-)
+
+  :param argv: should typically be just ``sys.argv`` or a trimmed version of it if you
+    have your own command line parsing
+  :return: the return value of `updateTargets`
+
+  """
+  targets: list[str] = []
+  for arg in argv:
+    parts = arg.split("=", 1)
+    if len(parts) != 2:
+      targets.append(arg)
+      continue
+
+    if parts[0] == "ll":
+      if not _setLogLevel(parts[1]):
+        return False
+      continue
+
+    if parts[0] == "force":
+      if not _forceTargets(targets, parts[1]):
+        return False
+      continue
+    targets.append(arg)
+
+  return pb.updateTargets(*targets)
+
+
+def _setLogLevel(shortcut: str) -> bool:
+  """Helper for `main`."""
+  matches = [level for level in _loglevels if level.startswith(shortcut)]
+  if len(matches) != 1:
+    pb.LOG.error("no log level starts with " + shortcut)
+    return False
+  pb.LOG.setLevel(matches[0].upper())
+  return True
+
+
+def _forceTargets(targetNamesOut: list[str], commaList: str) -> bool:
+  """Helper for `main`."""
+  targets = commaList.split(",")
+  for t in targets:
+    target = pb.findTarget(t)
+    if target is None:
+      pb.LOG.error("no target named '%s' defined" % t)
+      return False
+    target.force = True
+    targetNamesOut.append(t)
+  return True

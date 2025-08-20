@@ -255,7 +255,14 @@ class TestUpdateTargets(unittest.TestCase):
     self.assertTrue(other.recreated)
     self.assertEqual("116", self.values["other"])
 
+  def test_updatingAnUpdatedIsNoop(self) -> None:
+    Target("somevalue", name="t0", state="value")
+    # This failed in some version, because rawUpdateTargets was called twice for t0,
+    # because preventing a call for an already updated target was only done in the
+    # loop over the dependencies in _updateTarget, not in updateTargets()
+    self.assertTrue(updateTargets("t0", "t0"))
 
+    
 if __name__ == "__main__":
   LOG.setLevel("ERROR")
   # unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')

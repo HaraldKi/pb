@@ -5,24 +5,19 @@ from os import environ
 from pathlib import Path
 
 sys.path += ["src"]
+import pbutil
 from pbpython import doMypy, doRuffCheck, doRuffFormat
 from pythonbuilder import (
   LOG,
   Target,
   pbexec,
   registerDependencyGraphTarget,
-  updateTargets,
 )
 
 LOG.setLevel("INFO")
 srcDir = Path("src")
 testsDir = Path("tests")
 buildDir = Path("build")
-
-# pythonbuilder = Target(srcDir / "pythonbuilder.py")
-# mavenrepo = Target(srcDir / "mavenrepo.py")
-# java = Target(srcDir / "java.py")
-# pbutil = Target(srcDir / "pbutil.py")
 
 pb = Target(Path("pb"))
 pySources = Target(srcDir)
@@ -141,6 +136,5 @@ Target("full", coverage, apidoc, graph, state="new")
 ############################################################
 
 if __name__ == "__main__":
-  if not updateTargets(*(sys.argv[1:])):
+  if not pbutil.main(*(sys.argv[1:])):
     sys.exit(1)
-

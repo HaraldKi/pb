@@ -1,9 +1,17 @@
+import logging
 import unittest
 from os import PathLike
 from pathlib import Path
 
-from pbutil import Paths, RootPathMapper
-from pythonbuilder import BuildException, Target, stateFileIteratorContent
+from pbutil import Paths, RootPathMapper, _loglevels, main
+from pythonbuilder import (
+  LOG,
+  BuildException,
+  Target,
+  rawUpdateTargets,
+  resetTraversalState,
+  stateFileIteratorContent,
+)
 
 
 class TestRootPathMapper(unittest.TestCase):
@@ -89,3 +97,68 @@ class TestPaths(unittest.TestCase):
     pgState = pg._computeState()
     expected = stateFileIteratorContent(Path("src").glob("*.py"))
     self.assertEqual(expected, pgState)
+
+
+class TestMain(unittest.TestCase):
+
+  def testForceTarget(self) -> None:
+    bottom = Target("bottom", state="value")
+    mid = Target("mid", bottom, state="value")
+    top = Target("top", mid, state="value")
+
+    rawUpdateTargets(top)
+    self.assertTrue(bottom.recreated)
+    self.assertTrue(mid.recreated)
+    self.assertTrue(top.recreated)
+
+    resetTraversalState()
+    self.assertTrue(main("top"))
+    self.assertFalse(bottom.recreated)
+    self.assertFalse(mid.recreated)
+    self.assertFalse(top.recreated)
+
+    resetTraversalState()
+    self.assertTrue(main("force=mid"))
+    self.assertFalse(bottom.recreated)
+    self.assertTrue(mid.recreated)
+    # top is false again, because though mid was recreated, its value, so it state
+    # are unchanged
+    self.assertFalse(top.recreated)
+
+    resetTraversalState()
+    self.assertTrue(main("force=top,bottom"))
+    self.assertTrue(bottom.recreated)
+    self.assertFalse(mid.recreated)
+    self.assertTrue(top.recreated)
+
+  def testSetLoglevel(self) -> None:
+    keptLevel = LOG.level
+    for level in _loglevels:
+      ch = level[0]
+      main("ll="+ch)
+      self.assertEqual(level.upper(), logging.getLevelName(LOG.level))
+    LOG.setLevel(keptLevel)
+
+  def testFailWrongLevel(self) -> None:
+    self.assertFalse(main("ll=x"))
+
+  def testForceTargetThenFailLevel(self) -> None:
+    # we set force for a target immediately, even if pbmain then fails on ll
+    t0 = Target("some-target", name="some-target", state="value")
+    self.assertFalse(main("force=some-target", "ll=x"))
+    self.assertTrue(t0.force)
+
+  def testFailWrongTarget(self) -> None:
+    self.assertFalse(main("force=xxyy"))
+
+  def testForceTargetThenFailUnknownTarget(self) -> None:
+    t = Target("other-target", name="other-target", state="value")
+    self.assertFalse(main("force=other-target,ddxx"))
+    self.assertTrue(t.force)
+
+  def testTargetNameWithEqual(self) -> None:
+    # yes we somehow support this a long as the target does not start with
+    # ll= or force= (so far)
+    t = Target("x=y", name="x=y", state="value")
+    self.assertTrue(main("x=y"))
+    self.assertTrue(t.recreated)
