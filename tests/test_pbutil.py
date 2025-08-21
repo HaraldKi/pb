@@ -99,6 +99,19 @@ class TestPaths(support.CommonFixture):
     expected = stateFileIteratorContent(Path("src").glob("*.py"))
     self.assertEqual(expected, pgState)
 
+  def testWithFilter(self) -> None:
+    pg = Paths("root", lambda r: [r / p for p in ["bla", "di.png", "do.html"]], "files")
+    filtered = pg.withFilter(lambda rp: None if rp.suffix == ".html" else rp, "nohtml")
+    self.assertEqual([Path("root", "bla"), Path("root", "di.png")], [*filtered])
+    ## Verify that we have restartable iterables
+    self.assertEqual([Path("root", "bla"), Path("root", "di.png")], [*filtered])
+
+  def testWithFilterBotches(self) -> None:
+    pg = Paths("root", lambda r: [r / p for p in ["a", "b"]])
+    filtered = pg.withFilter(lambda rp: Path("/bla"), "botched")
+    with self.assertRaisesRegex(BuildException, "botched filter maps"):
+      [*filtered]
+
 
 class TestMain(support.CommonFixture):
   logfails: int = 0

@@ -7,6 +7,7 @@ Using this module is completely optional, obviously.
 """
 
 import datetime
+import functools
 import inspect
 import shutil
 from os import PathLike, fspath
@@ -110,6 +111,50 @@ class Paths(Iterable[Path], PathLike):
       RootPathMapper(self.root, self._paths),
       "<-(" + str(self.root) + "," + self._itName + ")",
     )
+
+  def withFilter(
+    self,
+    relativePathFilter: Callable[[Path], Path | None],
+    filterName: str | None = None,
+  ) -> "Paths":
+    """Returns an instance which maps and filters the relative paths of this object.
+
+    Example:
+
+    .. code-block:: python
+
+      allSrc = Paths.rglob(Path("src", "app"), "*")
+      nohtml = allSrc.withFilter(lambda p: None if p.suffix == ".html" else p, "nohtml")
+
+    :param relativePathFilter: a function to map paths relative to our root to a changed
+      path, the same path or ``None``. A returned path must be a relative path,
+      otherwise a `BuildException` is raised. If ``None`` is returned, the input
+      path is filtered out.
+
+    :param filterName: for a better ``str()`` output of the filter
+
+    """
+    name = filterName if filterName is not None else str(relativePathFilter)
+    return Paths(
+      self.root,
+      functools.partial(self._filter, relativePathFilter),
+      self._itName + "|" + name,
+    )
+
+  def _filter(
+    self, relativePathFilter: Callable[[Path], Path | None], root: Path
+  ) -> Iterable[Path]:
+    for p in self._paths(self.root):
+      relative = p.relative_to(self.root)
+      other = relativePathFilter(relative)
+      if other is None:
+        continue
+      if other.is_absolute():
+        raise pb.BuildException(
+          f"botched filter maps '{p}' to absolute path '{other}'"
+          + " but must return None or a relative path"
+        )
+      yield root / other
 
 
 def touch(targetPath: Path, *deps: Any) -> None:
