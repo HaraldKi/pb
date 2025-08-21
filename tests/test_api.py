@@ -1,13 +1,13 @@
 import shutil
 import sys
-import unittest
 from pathlib import Path
 
 ## The tests must be started from the project directory
 sys.path += [str(Path.cwd() / "src")]
 
+import support
+
 from pythonbuilder import (
-  LOG,
   Target,
   flatten,
   stateFileContent,
@@ -23,12 +23,13 @@ def writeToFile(text, fname):
     outfile.write(text.encode())
 
 
-class TestPythonBuilderApi(unittest.TestCase):
+class TestPythonBuilderApi(support.CommonFixture):
   """Test various functions provided by python builder, mainly taken out of core
   to have smaller files.
   """
 
   def setUp(self):
+    super().setUp()
     if _TMPDIR.is_dir():
       shutil.rmtree(_TMPDIR)
     _TMPDIR.mkdir(parents=True, exist_ok=True)
@@ -61,9 +62,3 @@ class TestPythonBuilderApi(unittest.TestCase):
     flatten(result, ["x", ["a", 1]])
     self.assertEqual(["x", "a", "1"], result)
     result = []
-
-
-if __name__ == "__main__":
-  LOG.setLevel("ERROR")
-  # unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
-  unittest.main(verbosity=2)

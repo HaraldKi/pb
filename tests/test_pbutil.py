@@ -1,7 +1,8 @@
 import logging
-import unittest
 from os import PathLike
 from pathlib import Path
+
+import support
 
 from pbutil import Paths, RootPathMapper, _loglevels, main
 from pythonbuilder import (
@@ -14,7 +15,7 @@ from pythonbuilder import (
 )
 
 
-class TestRootPathMapper(unittest.TestCase):
+class TestRootPathMapper(support.CommonFixture):
   def test_empty(self) -> None:
     rpm = RootPathMapper(Path("b"), lambda p: [])(Path("a"))
     result = next(rpm, None)
@@ -38,7 +39,7 @@ class TestRootPathMapper(unittest.TestCase):
     )
 
 
-class TestPaths(unittest.TestCase):
+class TestPaths(support.CommonFixture):
   def testFixed(self) -> None:
     pg = Paths(Path("a"), lambda root: [root / p for p in [Path("x"), Path("t/z")]])
     self.assertEqual([Path("a/x"), Path("a/t/z")], [*pg])
@@ -99,7 +100,29 @@ class TestPaths(unittest.TestCase):
     self.assertEqual(expected, pgState)
 
 
-class TestMain(unittest.TestCase):
+class TestMain(support.CommonFixture):
+  logfails: int = 0
+
+  def filter(self, record: logging.LogRecord) -> bool:
+    if record.levelno >= logging.WARNING:
+      self.logfails += 1
+    return False
+
+  def setUp(self) -> None:
+    super().setUp()
+    self.logfails = 0
+    LOG.addFilter(self.filter)
+
+  def tearDown(self) -> None:
+    super().tearDown()
+    LOG.removeFilter(self.filter)
+    self.assertEqual(0, self.logfails)
+
+  def assertLogFails(self, count: int) -> None:
+    lf = self.logfails
+    self.logfails = 0
+    self.assertEqual(count, lf)
+
   def testForceTarget(self) -> None:
     bottom = Target("bottom", state="value")
     mid = Target("mid", bottom, state="value")
@@ -140,20 +163,24 @@ class TestMain(unittest.TestCase):
 
   def testFailWrongLevel(self) -> None:
     self.assertFalse(main("ll=x"))
+    self.assertLogFails(1)
 
   def testForceTargetThenFailLevel(self) -> None:
     # we set force for a target immediately, even if pbmain then fails on ll
     t0 = Target("some-target", name="some-target", state="value")
     self.assertFalse(main("force=some-target", "ll=x"))
     self.assertTrue(t0.force)
+    self.assertLogFails(1)
 
   def testFailWrongTarget(self) -> None:
     self.assertFalse(main("force=xxyy"))
+    self.assertLogFails(1)
 
   def testForceTargetThenFailUnknownTarget(self) -> None:
     t = Target("other-target", name="other-target", state="value")
     self.assertFalse(main("force=other-target,ddxx"))
     self.assertTrue(t.force)
+    self.assertLogFails(1)
 
   def testTargetNameWithEqual(self) -> None:
     # yes we somehow support this a long as the target does not start with

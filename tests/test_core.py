@@ -1,17 +1,15 @@
 import hashlib
 import shutil
 import sys
-import unittest
 from pathlib import Path
 from typing import Any
 
 ## The tests must be started from the project directory
 sys.path += [str(Path.cwd() / "src")]
 
+import support
+
 from pythonbuilder import (
-  _TARGETS,
-  LOG,
-  STATEFILE,
   BuildException,
   Target,
   findTarget,
@@ -34,10 +32,7 @@ def noop(t: Any) -> None:
   return None
 
 
-class TestTargetCreation(unittest.TestCase):
-  def setUp(self):
-    _TARGETS.clear()
-
+class TestTargetCreation(support.CommonFixture):
   def test_basic(self):
     t = Target(Path("pb"))
     self.assertEqual(stateFileContent, t.generateState)
@@ -106,7 +101,7 @@ def writeToFile(text, fname):
     outfile.write(text.encode())
 
 
-class TestStateComputation(unittest.TestCase):
+class TestStateComputation(support.CommonFixture):
   def test_iterator(self):
     file = _TMPDIR / "thefile"
     writeToFile("hallo", file)
@@ -148,7 +143,7 @@ class TestStateComputation(unittest.TestCase):
     self.assertEqual("walla", state)
 
 
-class TestUpdateTargets(unittest.TestCase):
+class TestUpdateTargets(support.CommonFixture):
   values: dict[str, str] = dict()
 
   def simpleState(self, value: str) -> str:
@@ -158,9 +153,8 @@ class TestUpdateTargets(unittest.TestCase):
     self.values[key] = str(value)
 
   def setUp(self):
+    super().setUp()
     self.values.clear()
-    if STATEFILE.is_file():
-      STATEFILE.unlink()
 
   def test_singleTarget(self):
     self.values["blabla"] = "value of blabla"
@@ -261,9 +255,3 @@ class TestUpdateTargets(unittest.TestCase):
     # because preventing a call for an already updated target was only done in the
     # loop over the dependencies in _updateTarget, not in updateTargets()
     self.assertTrue(updateTargets("t0", "t0"))
-
-
-if __name__ == "__main__":
-  LOG.setLevel("ERROR")
-  # unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')
-  unittest.main(verbosity=2)

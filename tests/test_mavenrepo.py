@@ -5,8 +5,10 @@ import unittest
 
 ## The tests must be started from the project directory
 sys.path += [os.path.join(os.getcwd(), "src")]
+import support
+
 from mavenrepo import MavenArtifact
-from pythonbuilder import LOG, resetTraversalState, updateTargets
+from pythonbuilder import resetTraversalState, updateTargets
 
 TMPDIR = os.path.join("build", "testtmp")
 
@@ -17,8 +19,9 @@ TMPDIR = os.path.join("build", "testtmp")
   os.environ.get("TEST_MAVENREPO", "") == "TRUE",
   "run test with file download only on demand",
 )
-class TestMavenArtifact(unittest.TestCase):
+class TestMavenArtifact(support.CommonFixture):
   def setUp(self):
+    super().setUp()
     if os.path.isdir(TMPDIR):
       shutil.rmtree(TMPDIR)
     os.makedirs(TMPDIR)
@@ -38,9 +41,3 @@ class TestMavenArtifact(unittest.TestCase):
     updateTargets("lib")
     self.assertTrue(remoteTarget.updated)
     self.assertFalse(remoteTarget.recreated)
-
-
-if __name__ == "__main__":
-  LOG.setLevel("ERROR")
-  # unittest.main(defaultTest='TestUpdateTargets.test_buildFAilDoesNotUpdateStatefile')
-  unittest.main(verbosity=2)

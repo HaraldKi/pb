@@ -224,7 +224,7 @@ def main(*argv: str) -> bool:
   redundant and ``apidoc`` will be build even if ``doc`` does not depend on it.
 
   Further command line arguments are assumed to be names of targets to be build, even
-  if they contain an equal sign. Put anothe way, only the prefixes ``ll=`` and
+  if they contain an equal sign. Put another way, only the prefixes ``ll=`` and
   ``force=`` are interpreted as options.
 
   **NOTE:** There is no ``--`` in front of the option names, following the only UNIX
