@@ -25,7 +25,8 @@ structure:
 #!/usr/bin/env python3
 import sys
 sys.path += ["pythonbuilder"]
-from pythonbuilder import Target, updateTargets, LOG, pbexec, toGraphviz
+import pbutil
+from pythonbuilder import Target, LOG, pbexec, toGraphviz
 
 def declareTarget() -> None:
   ... multiple calls to the Target constructor ...
@@ -33,7 +34,7 @@ def declareTarget() -> None:
 ... definition of functions to create your targets ...
 
 declareTargets()
-if not updateTargets(*sys.argv[1:]):
+if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
 
 ```
@@ -101,9 +102,11 @@ import sys
 from pathlib import Path
 
 sys.path += ["pythonbuilder", "src"]
-from pythonbuilder import LOG, Target, updateTargets
+import pbutil
+from pythonbuilder import LOG, Target
 
 LOG.setLevel("VERBOSE")
+
 
 def declareTargets() -> None:
   ## Declare an initial target, assume it is an existing file in the project
@@ -111,11 +114,11 @@ def declareTargets() -> None:
 
   ## Declare README.html as file to be created by running runPandoc
   Target(
-    Path("README.html"), # target item, often file or directory name
-    rmd,                 # one dependency, could be more
-    name="readme",       # nicer name to use on the command line
-    state="file",        # how to compute a condensed state (fingerprint, checksum)
-    cmd=runPandoc        # how to create the target if it is out-of-date
+    Path("README.html"),  # target item, often file or directory name
+    rmd,  # one dependency, could be more
+    name="readme",  # nicer name to use on the command line
+    state="file",  # how to compute a condensed state (fingerprint, checksum)
+    cmd=runPandoc,  # how to create the target if it is out-of-date
   )
 
 
@@ -127,7 +130,7 @@ def runPandoc(targetPath: Path, readmeMd: Path) -> None:
 
 
 declareTargets()
-if not updateTargets(*sys.argv[1:]):
+if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
 
 ```
