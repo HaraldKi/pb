@@ -194,6 +194,7 @@ _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 """FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()
 """
 
+
 def main(*argv: str) -> bool:
   """Simple wrapper around `pythonbuilder.updateTargets` to set the log level and/or
   force targets to be re-created.

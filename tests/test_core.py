@@ -262,7 +262,7 @@ class TestUpdateTargets(unittest.TestCase):
     # loop over the dependencies in _updateTarget, not in updateTargets()
     self.assertTrue(updateTargets("t0", "t0"))
 
-    
+
 if __name__ == "__main__":
   LOG.setLevel("ERROR")
   # unittest.main(defaultTest='TestUpdateTargets.test_buildFailDoesNotUpdateStatefile')

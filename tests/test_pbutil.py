@@ -100,7 +100,6 @@ class TestPaths(unittest.TestCase):
 
 
 class TestMain(unittest.TestCase):
-
   def testForceTarget(self) -> None:
     bottom = Target("bottom", state="value")
     mid = Target("mid", bottom, state="value")
@@ -135,7 +134,7 @@ class TestMain(unittest.TestCase):
     keptLevel = LOG.level
     for level in _loglevels:
       ch = level[0]
-      main("ll="+ch)
+      main("ll=" + ch)
       self.assertEqual(level.upper(), logging.getLevelName(LOG.level))
     LOG.setLevel(keptLevel)
 
