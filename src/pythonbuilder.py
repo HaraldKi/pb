@@ -402,15 +402,17 @@ def resetTraversalState() -> None:
     target.force = False
 
 
-_UNITS = [
-  ("ns", 10000, 1000),
-  ("µs", 10000, 1000),
-  ("ms", 10000, 1000),
-  ("s", 120, 60),
-]
-
-
-def _formatNanoDelta(start: int, now: int) -> str:
+# HINT: the UNITS param avoids having it as a global variable. Is there a better way?
+def _formatNanoDelta(
+  start: int,
+  now: int,
+  _UNITS: list[tuple[str, int, int]] = [
+    ("ns", 10000, 1000),
+    ("µs", 10000, 1000),
+    ("ms", 10000, 1000),
+    ("s", 120, 60),
+  ],
+) -> str:
   delta = now - start
   for i in range(0, len(_UNITS)):
     if delta < _UNITS[i][1]:
@@ -587,10 +589,10 @@ def _escdq(s: str) -> str:
   return s.replace('"', '\\"')
 
 
-_eschtmlMap = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
-
-
-def _eschtml(s: str) -> str:
+# HINT: the UNITS param avoids having it as a global variable. Is there a better way?
+def _eschtml(
+  s: str, _eschtmlMap: dict[str, str] = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
+) -> str:
   return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s)
 
 
