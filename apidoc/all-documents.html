@@ -276,6 +276,14 @@
             <div class="kind">Instance Variable</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">Set during <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code> if this target was out-of-date and its command was run.</div>
+          </li><li id="pythonbuilder.Target.force">
+            
+            <div class="fullName">pythonbuilder<wbr></wbr>.<wbr></wbr>Target<wbr></wbr>.force</div>
+            <div class="url">pythonbuilder.Target.html#force</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Instance Variable</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">If set to <tt class="rst-docutils rst-literal">True</tt> before the build starts, the target is assumed to be out-of-date, independent of the computed state hash. This can be used to force rebuilding a target.</div>
           </li><li id="pythonbuilder.Target.__str__">
             
             <div class="fullName">pythonbuilder<wbr></wbr>.<wbr></wbr>Target<wbr></wbr>.__str__</div>
@@ -372,14 +380,6 @@
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">Resets the traversal state in all targets.</div>
-          </li><li id="pythonbuilder._UNITS">
-            
-            <div class="fullName">pythonbuilder<wbr></wbr>._UNITS</div>
-            <div class="url">pythonbuilder.html#_UNITS</div>
-            <div class="type">Attribute</div>
-            <div class="kind">Constant</div>
-            <div class="privacy">PRIVATE</div>
-            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
           </li><li id="pythonbuilder._formatNanoDelta">
             
             <div class="fullName">pythonbuilder<wbr></wbr>._format<wbr></wbr>Nano<wbr></wbr>Delta</div>
@@ -443,14 +443,6 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
             <div class="url">pythonbuilder.html#_escdq</div>
             <div class="type">Function</div>
             <div class="kind">Function</div>
-            <div class="privacy">PRIVATE</div>
-            <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
-          </li><li id="pythonbuilder._eschtmlMap">
-            
-            <div class="fullName">pythonbuilder<wbr></wbr>._eschtml<wbr></wbr>Map</div>
-            <div class="url">pythonbuilder.html#_eschtmlMap</div>
-            <div class="type">Attribute</div>
-            <div class="kind">Variable</div>
             <div class="privacy">PRIVATE</div>
             <div class="summary"><span class="rst-undocumented">Undocumented</span></div>
           </li><li id="pythonbuilder._eschtml">
@@ -949,6 +941,38 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
             <div class="kind">Function</div>
             <div class="privacy">PUBLIC</div>
             <div class="summary">Copies files from <tt class="rst-docutils rst-literal">source</tt> to dest preserving the path segments below <tt class="rst-docutils rst-literal">source.root</tt>.</div>
+          </li><li id="pbutil._loglevels">
+            
+            <div class="fullName">pbutil<wbr></wbr>._loglevels</div>
+            <div class="url">pbutil.html#_loglevels</div>
+            <div class="type">Attribute</div>
+            <div class="kind">Constant</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()</div>
+          </li><li id="pbutil.main">
+            
+            <div class="fullName">pbutil<wbr></wbr>.main</div>
+            <div class="url">pbutil.html#main</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PUBLIC</div>
+            <div class="summary">Simple wrapper around <code><a href="pythonbuilder.html#updateTargets" class="internal-link">pythonbuilder.updateTargets</a></code> to set the log level and/or force targets to be re-created.</div>
+          </li><li id="pbutil._setLogLevel">
+            
+            <div class="fullName">pbutil<wbr></wbr>._set<wbr></wbr>Log<wbr></wbr>Level</div>
+            <div class="url">pbutil.html#_setLogLevel</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Helper for <code><a href="pbutil.html#main" class="internal-link" title="pbutil.main">main</a></code>.</div>
+          </li><li id="pbutil._forceTargets">
+            
+            <div class="fullName">pbutil<wbr></wbr>._force<wbr></wbr>Targets</div>
+            <div class="url">pbutil.html#_forceTargets</div>
+            <div class="type">Function</div>
+            <div class="kind">Function</div>
+            <div class="privacy">PRIVATE</div>
+            <div class="summary">Helper for <code><a href="pbutil.html#main" class="internal-link" title="pbutil.main">main</a></code>.</div>
           </li><li id="pbpython.doRuffCheck">
             
             <div class="fullName">pbpython<wbr></wbr>.do<wbr></wbr>Ruff<wbr></wbr>Check</div>

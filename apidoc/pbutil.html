@@ -164,7 +164,37 @@
         
 
         
+            <div class="itemName"><code><a href="#main" class="internal-link" title="pbutil.main">main</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
             <div class="itemName"><code><a href="#touch" class="internal-link" title="pbutil.touch">touch</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_forceTargets" class="internal-link" title="pbutil._forceTargets">_force<wbr></wbr>Targets</a></code>
+            </div>
+        
+
+    </li><li class="private">
+        
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_setLogLevel" class="internal-link" title="pbutil._setLogLevel">_set<wbr></wbr>Log<wbr></wbr>Level</a></code>
             </div>
         
 
@@ -174,8 +204,21 @@
         
          
 
+        <div class="childrenKindTitle">Variables</div>
+        <ul>
+    
+    <li class="private">
         
-         
+        
+        
+
+        
+            <div class="itemName"><code><a href="#_loglevels" class="internal-link" title="pbutil._loglevels">_loglevels</a></code>
+            </div>
+        
+
+    </li>
+</ul> 
 
         
          
@@ -244,8 +287,28 @@ is a waste.</p>
   </tr><tr class="function">
     
     <td>Function</td>
+    <td><code><a href="#main" class="internal-link" title="pbutil.main">main</a></code></td>
+    <td>Simple wrapper around <code><a href="pythonbuilder.html#updateTargets" class="internal-link">pythonbuilder.updateTargets</a></code> to set the log level and/or force targets to be re-created.</td>
+  </tr><tr class="function">
+    
+    <td>Function</td>
     <td><code><a href="#touch" class="internal-link" title="pbutil.touch">touch</a></code></td>
     <td>A function intended to be used as the <tt class="rst-docutils rst-literal">cmd</tt> parameter of a <code><a href="pythonbuilder.Target.html" class="internal-link" title="pythonbuilder.Target">Target</a></code> to write the current iso datetime into the <tt class="rst-docutils rst-literal">targetPath</tt>.</td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_forceTargets" class="internal-link" title="pbutil._forceTargets">_force<wbr></wbr>Targets</a></code></td>
+    <td>Helper for <code><a href="pbutil.html#main" class="internal-link" title="pbutil.main">main</a></code>.</td>
+  </tr><tr class="function private">
+    
+    <td>Function</td>
+    <td><code><a href="#_setLogLevel" class="internal-link" title="pbutil._setLogLevel">_set<wbr></wbr>Log<wbr></wbr>Level</a></code></td>
+    <td>Helper for <code><a href="pbutil.html#main" class="internal-link" title="pbutil.main">main</a></code>.</td>
+  </tr><tr class="constant private">
+    
+    <td>Constant</td>
+    <td><code><a href="#_loglevels" class="internal-link" title="pbutil._loglevels">_loglevels</a></code></td>
+    <td>FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()</td>
   </tr>
 </table>
           
@@ -278,6 +341,55 @@ is a waste.</p>
     
     <div><p>Copies files from <tt class="rst-docutils rst-literal">source</tt> to dest preserving the path segments below
 <tt class="rst-docutils rst-literal">source.root</tt>.</p><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">dest:</span><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a> | Path</code></td><td class="fieldArgDesc">where to copy files to using <tt class="rst-docutils rst-literal">dest.root</tt> if it is a <tt class="rst-docutils rst-literal">Paths</tt> object.</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">source:</span><code><a href="pbutil.Paths.html" class="internal-link" title="pbutil.Paths">Paths</a></code></td><td class="fieldArgDesc">files to copy</td></tr></table></div>
+  </div>
+</div><div class="basefunction">
+  
+  
+  <a name="pbutil.main">
+    
+  </a>
+  <a name="main">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">main</span><span class="function-signature">(<span class="rst-sig-param">*argv: <code>str</code></span>) -&gt; <code>bool</code>:</span>
+    
+    <a class="headerLink" href="#main" title="pbutil.main">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Simple wrapper around <code><a href="pythonbuilder.html#updateTargets" class="internal-link">pythonbuilder.updateTargets</a></code> to set the log level and/or
+force targets to be re-created.</p>
+<p>In your build script, after setting up all targets and defining all commands to build
+them, use it in your <tt class="rst-docutils rst-literal">main</tt> block like:</p>
+<pre class="py-doctest">
+<span class="py-keyword">if</span> <span class="py-keyword">not</span> pbmain.main(*(sys.argv[1:])):
+  sys.exit(1)</pre><p>The arguments on the command line are used as follows:</p>
+<p><tt class="rst-docutils rst-literal">ll=</tt><em>level</em> sets the log level, where level can be any string abbreviating one of
+the lowercase loglevel keyswords, <tt class="rst-docutils rst-literal">debug</tt>, <tt class="rst-docutils rst-literal">verbose</tt>, <tt class="rst-docutils rst-literal">info</tt>, <tt class="rst-docutils rst-literal">warning</tt>,
+<tt class="rst-docutils rst-literal">error</tt>, <tt class="rst-docutils rst-literal">critical</tt>. An example is <tt class="rst-docutils rst-literal">ll=v</tt> to switch to <tt class="rst-docutils rst-literal">VERBOSE</tt> logging.</p>
+<p><tt class="rst-docutils rst-literal">force=</tt><em>targetlist</em> forces all targets in the comma separated list (no
+whitespace) to be handled as if out-of-date. This is useful for debugging a build
+step, for example <tt class="rst-docutils rst-literal">doc</tt>, which produces its output files but with wrong content. By
+using <tt class="rst-docutils rst-literal">force=doc</tt> the build step for <tt class="rst-docutils rst-literal">doc</tt> can be re-run without other more
+cumbersome ways of invalidating its state hash, like deleting an output file. More
+than one target name can be provided like <tt class="rst-docutils rst-literal">force=doc,coverage</tt>. All <tt class="rst-docutils rst-literal">force</tt>
+targets are also added to the list of targets to consider for building. So when
+providing the command line arguments <tt class="rst-docutils rst-literal">doc force=doc,apidoc</tt>, the <tt class="rst-docutils rst-literal">doc</tt> argument is
+redundant and <tt class="rst-docutils rst-literal">apidoc</tt> will be build even if <tt class="rst-docutils rst-literal">doc</tt> does not depend on it.</p>
+<p>Further command line arguments are assumed to be names of targets to be build, even
+if they contain an equal sign. Put another way, only the prefixes <tt class="rst-docutils rst-literal">ll=</tt> and
+<tt class="rst-docutils rst-literal">force=</tt> are interpreted as options.</p>
+<p><strong>NOTE:</strong> There is no <tt class="rst-docutils rst-literal"><span class="pre">--</span></tt> in front of the option names, following the only UNIX
+command which does this right, namely <a class="rst-external rst-reference" href="https://www.man7.org/linux/man-pages/man1/dd.1.html" target="_top">dd</a> :-)</p>
+<table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*argv:</span><code>str</code></td><td class="fieldArgDesc">should typically be just <tt class="rst-docutils rst-literal">sys.argv</tt> or a trimmed version of it if you
+have your own command line parsing</td></tr></table><table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Returns</td></tr><tr><td class="fieldArgContainer"><code>bool</code></td><td class="fieldArgDesc">the return value of <code><a href="pythonbuilder.html#updateTargets" class="internal-link" title="pythonbuilder.updateTargets">updateTargets</a></code></td></tr></table></div>
   </div>
 </div><div class="basefunction">
   
@@ -316,6 +428,78 @@ if and only if any of the dependencies was re-created (or the file itself
 does not exist, of course), so it should be a file in the build output, say
 <tt class="rst-docutils rst-literal">BUILD / "allLibs.done"</tt> where <tt class="rst-docutils rst-literal">BUILD</tt> is your build output directory.</p>
 <table class="fieldTable"><tr class="fieldStart"><td class="fieldName" colspan="2">Parameters</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">target<wbr></wbr>Path:</span><code>Path</code></td><td class="fieldArgDesc">to write the current iso date/time into</td></tr><tr><td class="fieldArgContainer"><span class="fieldArg">*deps:</span><code>Any</code></td><td class="fieldArgDesc">the dependencies are ignored</td></tr></table></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="pbutil._forceTargets">
+    
+  </a>
+  <a name="_forceTargets">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_forceTargets</span><span class="function-signature">(<span class="rst-sig-param">targetNamesOut: <code>list[<wbr></wbr>str]</code>, </span><span class="rst-sig-param">commaList: <code>str</code></span>) -&gt; <code>bool</code>:</span>
+    
+    <a class="headerLink" href="#_forceTargets" title="pbutil._forceTargets">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Helper for <code><a href="#main" class="internal-link" title="pbutil.main">main</a></code>.</p></div>
+  </div>
+</div><div class="basefunction private">
+  
+  
+  <a name="pbutil._setLogLevel">
+    
+  </a>
+  <a name="_setLogLevel">
+    
+  </a>
+  <div class="functionHeader">
+    
+    
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_setLogLevel</span><span class="function-signature">(<span class="rst-sig-param">shortcut: <code>str</code></span>) -&gt; <code>bool</code>:</span>
+    
+    <a class="headerLink" href="#_setLogLevel" title="pbutil._setLogLevel">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="docstring functionBody">
+    
+    <div><p>Helper for <code><a href="#main" class="internal-link" title="pbutil.main">main</a></code>.</p></div>
+  </div>
+</div><div class="baseconstant private">
+  
+  
+  <a name="pbutil._loglevels">
+    
+  </a>
+  <a name="_loglevels">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">_loglevels</span>: <code>list[<wbr></wbr>str]</code> =
+    
+    <a class="headerLink" href="#_loglevels" title="pbutil._loglevels">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p>FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()</p></div>
+    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>[<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">debug</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">verbose</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">info</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">warning</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">error</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">critical</span><span class="rst-variable-quote">'</span>]</code></pre></td></tr></table>
   </div>
 </div>
         </div>

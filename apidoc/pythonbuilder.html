@@ -457,26 +457,6 @@
             </div>
         
 
-    </li><li class="private">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code>
-            </div>
-        
-
-    </li><li class="private">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="#_eschtmlMap" class="internal-link" title="pythonbuilder._eschtmlMap">_eschtml<wbr></wbr>Map</a></code>
-            </div>
-        
-
     </li>
 </ul> 
 
@@ -687,16 +667,6 @@ T0)</tt>, then T0 is redundant, because it will be updated already when doing T1
     
     <td>Constant</td>
     <td><code><a href="#_TARGETS" class="internal-link" title="pythonbuilder._TARGETS">_TARGETS</a></code></td>
-    <td><span class="rst-undocumented">Undocumented</span></td>
-  </tr><tr class="constant private">
-    
-    <td>Constant</td>
-    <td><code><a href="#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code></td>
-    <td><span class="rst-undocumented">Undocumented</span></td>
-  </tr><tr class="variable private">
-    
-    <td>Variable</td>
-    <td><code><a href="#_eschtmlMap" class="internal-link" title="pythonbuilder._eschtmlMap">_eschtml<wbr></wbr>Map</a></code></td>
     <td><span class="rst-undocumented">Undocumented</span></td>
   </tr>
 </table>
@@ -1360,7 +1330,7 @@ delete this file. (FIXME: provide proper api).</p>
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span>&#160;<span class="py-defname">_eschtml</span><span class="function-signature">(<span class="rst-sig-param">s: <code>str</code></span>) -&gt; <code>str</code>:</span>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_eschtml</span><span class="function-signature long-signature">(<span class="rst-sig-param">s: <code>str</code>, </span><span class="rst-sig-param">_eschtmlMap: <code>dict[<wbr></wbr>str, <wbr></wbr>str]</code> = {<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">&amp;</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">&amp;amp;</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">&lt;</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">&amp;lt;</span><span class="rst-variable-quote">'</span>, <wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">&gt;</span><span class="rst-variable-quote">'</span>: <span class="rst-variable-quote">'</span><span class="rst-variable-string">&amp;gt;</span><span class="rst-variable-quote">'</span>}</span>) -&gt; <code>str</code>:</span>
     
     <a class="headerLink" href="#_eschtml" title="pythonbuilder._eschtml">
       
@@ -1384,7 +1354,7 @@ delete this file. (FIXME: provide proper api).</p>
   <div class="functionHeader">
     
     
-    <span class="py-keyword">def</span>&#160;<span class="py-defname">_formatNanoDelta</span><span class="function-signature">(<span class="rst-sig-param">start: <code>int</code>, </span><span class="rst-sig-param">now: <code>int</code></span>) -&gt; <code>str</code>:</span>
+    <span class="py-keyword">def</span>&#160;<span class="py-defname">_formatNanoDelta</span><span class="function-signature long-signature">(<span class="rst-sig-param">start: <code>int</code>, </span><span class="rst-sig-param">now: <code>int</code>, </span><span class="rst-sig-param">_UNITS: <code>list[<wbr></wbr>tuple[<wbr></wbr>str, <wbr></wbr>int, <wbr></wbr>int]]</code> = [<wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ns</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">µs</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ms</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">s</span><span class="rst-variable-quote">'</span>, <wbr></wbr>120, <wbr></wbr>60)]</span>) -&gt; <code>str</code>:</span>
     
     <a class="headerLink" href="#_formatNanoDelta" title="pythonbuilder._formatNanoDelta">
       
@@ -1491,54 +1461,6 @@ delete this file. (FIXME: provide proper api).</p>
     
     <div><p class="undocumented">Undocumented</p></div>
     <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>dict()</code></pre></td></tr></table>
-  </div>
-</div><div class="baseconstant private">
-  
-  
-  <a name="pythonbuilder._UNITS">
-    
-  </a>
-  <a name="_UNITS">
-    
-  </a>
-  <div class="functionHeader">
-    
-    <span class="py-defname">_UNITS</span>: <code>list[<wbr></wbr>tuple]</code> =
-    
-    <a class="headerLink" href="#_UNITS" title="pythonbuilder._UNITS">
-      
-      
-      ¶
-    </a>
-  </div>
-  <div class="functionBody">
-    
-    <div><p class="undocumented">Undocumented</p></div>
-    <table class="valueTable"><tr class="fieldStart"><td class="fieldName">Value</td></tr><tr><td><pre class="constant-value"><code>[<wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ns</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">µs</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">ms</span><span class="rst-variable-quote">'</span>, <wbr></wbr>10000, <wbr></wbr>1000), <wbr></wbr>(<wbr></wbr><span class="rst-variable-quote">'</span><span class="rst-variable-string">s</span><span class="rst-variable-quote">'</span>, <wbr></wbr>120, <wbr></wbr>60)]</code></pre></td></tr></table>
-  </div>
-</div><div class="basevariable private">
-  
-  
-  <a name="pythonbuilder._eschtmlMap">
-    
-  </a>
-  <a name="_eschtmlMap">
-    
-  </a>
-  <div class="functionHeader">
-    
-    <span class="py-defname">_eschtmlMap</span>: <code>dict[<wbr></wbr>str, <wbr></wbr>str]</code> =
-    
-    <a class="headerLink" href="#_eschtmlMap" title="pythonbuilder._eschtmlMap">
-      
-      
-      ¶
-    </a>
-  </div>
-  <div class="functionBody">
-    
-    <div><p class="undocumented">Undocumented</p></div>
-    
   </div>
 </div>
         </div>

@@ -190,6 +190,16 @@
         
 
         
+            <div class="itemName"><code><a href="#force" class="internal-link" title="pythonbuilder.Target.force">force</a></code>
+            </div>
+        
+
+    </li><li class="">
+        
+        
+        
+
+        
             <div class="itemName"><code><a href="#generateState" class="internal-link" title="pythonbuilder.Target.generateState">generate<wbr></wbr>State</a></code>
             </div>
         
@@ -602,26 +612,6 @@
             </div>
         
 
-    </li><li class="private">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="pythonbuilder.html#_UNITS" class="internal-link" title="pythonbuilder._UNITS">_UNITS</a></code>
-            </div>
-        
-
-    </li><li class="private">
-        
-        
-        
-
-        
-            <div class="itemName"><code><a href="pythonbuilder.html#_eschtmlMap" class="internal-link" title="pythonbuilder._eschtmlMap">_eschtml<wbr></wbr>Map</a></code>
-            </div>
-        
-
     </li>
 </ul> 
 
@@ -692,6 +682,11 @@ optional nice name.</p></div>
     <td>Instance Variable</td>
     <td><code><a href="#dependencies" class="internal-link" title="pythonbuilder.Target.dependencies">dependencies</a></code></td>
     <td>The target's dependencies.</td>
+  </tr><tr class="instancevariable">
+    
+    <td>Instance Variable</td>
+    <td><code><a href="#force" class="internal-link" title="pythonbuilder.Target.force">force</a></code></td>
+    <td>If set to <tt class="rst-docutils rst-literal">True</tt> before the build starts, the target is assumed to be out-of-date, independent of the computed state hash. This can be used to force rebuilding a target.</td>
   </tr><tr class="instancevariable">
     
     <td>Instance Variable</td>
@@ -849,6 +844,32 @@ be the target's <tt class="rst-docutils rst-literal">item</tt> as well as the it
   <div class="functionBody">
     
     <div><p>The target's dependencies.</p></div>
+    
+  </div>
+</div><div class="baseinstancevariable">
+  
+  
+  <a name="pythonbuilder.Target.force">
+    
+  </a>
+  <a name="force">
+    
+  </a>
+  <div class="functionHeader">
+    
+    <span class="py-defname">force</span>: <code>bool</code> =
+    
+    <a class="headerLink" href="#force" title="pythonbuilder.Target.force">
+      
+      
+      ¶
+    </a>
+  </div>
+  <div class="functionBody">
+    
+    <div><p>If set to <tt class="rst-docutils rst-literal">True</tt> before the build starts, the target is assumed to be
+out-of-date, independent of the computed state hash. This can be used to force
+rebuilding a target.</p></div>
     
   </div>
 </div><div class="baseinstancevariable">
