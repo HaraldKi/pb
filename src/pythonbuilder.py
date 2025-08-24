@@ -589,7 +589,7 @@ def _escdq(s: str) -> str:
   return s.replace('"', '\\"')
 
 
-# HINT: the UNITS param avoids having it as a global variable. Is there a better way?
+# HINT: the map param avoids having it as a global variable. Is there a better way?
 def _eschtml(
   s: str, _eschtmlMap: dict[str, str] = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
 ) -> str:
@@ -601,10 +601,19 @@ def _targetToGraphviz(target: Target) -> str:
   for dep in target.dependencies:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"\n'
 
-  if target.name != str(target.item):
+  text = str(target.item)
+  if target.name != text:
+    if len(text) > 33:
+      abbrev = text[:30] + "..."
+      tooltip = f' tooltip="{_escdq(text)}"'
+    else:
+      abbrev = text
+      tooltip = ""
+
     result += (
       f'  "{_escdq(target.name)}" [label=<{_eschtml(target.name)}'
-      + f'<BR/><FONT POINT-SIZE="10">{_eschtml(str(target.item))}</FONT>>]\n'
+      + f'<BR/><FONT POINT-SIZE="10">{_eschtml(abbrev)}</FONT>>'
+      + f"{tooltip}]\n"
     )
   return result
 
