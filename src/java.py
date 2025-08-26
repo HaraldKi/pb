@@ -3,6 +3,7 @@ Helpers to compile Java and run unit tests with  coverage.
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -40,22 +41,43 @@ def compileJava(
 
 
 def jacocoRunJunit4(
-  targetPath: Path, jacocoJar: Path, testClassesPath: Path, *classpath: Path
+  targetPath: Path,
+  testClassesPath: Path,
+  testClassRe: str | re.Pattern,
+  jacocoJar: Path,
+  *classpath: Path,
 ) -> None:
   """Runs junit4 tests with the default ``JunitCore`` class.
 
   :param targetPath: the path of the coverage data to produce by running with
     jacoco
+
+  :param testClassesPath: a ``Path`` representing a classpath entry for test
+     classes
+
+  :param testClassRe: a regular expression or compiled pattern which has to be matched
+    by ``*.class`` files on the `testClassPath` to be included as a test class. Classes
+    with a ``$`` in the name are always excluded. If there are no helper classses on the
+    classpath, just use ``.``, otherwise, depending on your convention, ``^Test.*`` or
+    ``.*Test[.]class$`` may be what you need. Only the file name, without any leading
+    path name, will be searched with the pattern.
+
   :param jacocoJar: the jar ``org.jacoco.agent...jar``, not going on the class
     path
-  :param testClassesPath: a ``Path`` representing a classpath entry for test
-     classes, all files matching ``Test*.class`` are used as test classes.
+
   :param classpath: further classpath entries, i.e. classes, junit jar, etc.
+
   """
+
+  if isinstance(testClassRe, str):
+    testClassRe = re.compile(testClassRe)
 
   testclasses = map(
     lambda p: classForPath(testClassesPath, p),
-    filter(lambda p: p.name.find("$") < 0, testClassesPath.rglob("Test*.class")),
+    filter(
+      lambda p: p.name.find("$") < 0 and testClassRe.search(p.name),
+      testClassesPath.rglob("*.class"),
+    ),
   )
   cp = _PATHSEP.join(map(lambda d: str(d), [testClassesPath] + list(classpath)))
   pbexec(
