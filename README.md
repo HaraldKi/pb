@@ -1,4 +1,4 @@
-#  <img src="doc-templates/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythonic project builder
+#  <img src="config/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythonic project builder
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
