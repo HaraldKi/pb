@@ -1,4 +1,4 @@
-#  <img src="apidoc/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythonic project builder
+#  <img src="doc-templates/pythonbuilder-logo.png" width="60"> pythonbuilder &mdash; pythonic project builder
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
@@ -9,7 +9,7 @@
 
 <!-- markdown-toc end -->
 
-Quick link: [api documentation](https://harald.codeberg.page/pythonbuilder/@main/apidoc/index.html).
+Quick link: [api documentation](https://harald.codeberg.page/docs/@main/pythonbuilder/index.html).
 
 See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 [bashbuilder](https://codeberg.org/harald/bashbuilder)
@@ -154,17 +154,17 @@ Try also the following:
 - Set the environment variable PBLOGLEVEL to `DEBUG`, `VERBOSE`, `INFO`
 (default) or `WARNING` for more or less logging.
 - Experiment with
-[registerDependencyGraphTarget](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html#registerDependencyGraphTarget)
+[registerDependencyGraphTarget](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html#registerDependencyGraphTarget)
 to create a dependency graph for your build like the one shown for this project.
 
 See the [full
-api](https://harald.codeberg.page/pythonbuilder/@main/apidoc/pythonbuilder.html)
+api](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html)
 for more information.
 
 If you use this in a Java project, then
-[mavenrepo.MavenArtifact](https://harald.codeberg.page/pythonbuilder/@main/apidoc/mavenrepo.MavenArtifact.html)
+[mavenrepo.MavenArtifact](https://harald.codeberg.page/docs/@main/pythonbuilder/mavenrepo.MavenArtifact.html)
 and module
-[java](https://harald.codeberg.page/pythonbuilder/@main/apidoc/java.html)
+[java](https://harald.codeberg.page/docs/@main/pythonbuilder/java.html)
 might be interesting too.
 
 ## Dependency Graph of pythonbuilder's build

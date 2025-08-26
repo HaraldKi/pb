@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from os import environ
+from os import environ, getenv
 from pathlib import Path
 
 sys.path += ["src"]
@@ -13,6 +13,8 @@ from pythonbuilder import (
   pbexec,
   registerDependencyGraphTarget,
 )
+
+OURNAME = "pythonbuilder"
 
 LOG.setLevel("INFO")
 srcDir = Path("src")
@@ -120,8 +122,11 @@ def doApidoc(docPath: Path, docTemplates: Path, pypath: Path) -> None:
 
 
 docTemplates = Target(Path("doc-templates"), name="docTemplates")
+docout = getenv("DOCUMENTATION_OUT")
+APIDOC_OUT = Path(docout, OURNAME) if docout is not None else Path("apidoc")
+
 apidoc = Target(
-  Path("apidoc"), docTemplates, pySources, state="dir", name="apidoc", cmd=doApidoc
+  APIDOC_OUT, docTemplates, pySources, state="dir", name="apidoc", cmd=doApidoc
 )
 
 ############################################################
