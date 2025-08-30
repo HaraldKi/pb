@@ -270,7 +270,8 @@ def main(*argv: str) -> bool:
 
   Further command line arguments are assumed to be names of targets to be build, even
   if they contain an equal sign. Put another way, only the prefixes ``ll=`` and
-  ``force=`` are interpreted as options.
+  ``force=`` are interpreted as options. If, in the end, there is no target specified,
+  all target names are listed on the console.
 
   **NOTE:** There is no ``--`` in front of the option names, following the only UNIX
   command which does this right, namely `dd
@@ -278,7 +279,7 @@ def main(*argv: str) -> bool:
 
   :param argv: should typically be just ``sys.argv`` or a trimmed version of it if you
     have your own command line parsing
-  :return: the return value of `updateTargets`
+  :return: the return value of `updateTargets` or ``True`` if no targets are given
 
   """
   targets: list[str] = []
@@ -299,8 +300,32 @@ def main(*argv: str) -> bool:
       continue
     targets.append(arg)
 
-  return pb.updateTargets(*targets)
+  if targets:
+    return pb.updateTargets(*targets)
 
+  printTargets()
+  print("Specify one or more of the above targets to built it.")
+  return True
+
+def printTargets(
+  targets: Iterable[pb.Target[Any]] = pb._TARGETS.values(), seen: set[str] = set()
+) -> None:
+  depths = [(_targetDepth(t), t) for t in targets]
+
+  for pair in sorted(depths, key=lambda pair: (pair[0], pair[1].name)):
+    t = pair[1]
+    if t.name in seen:
+      continue
+    printTargets(t.dependencies, seen)
+    print(f"{'.' * pair[0]}•", t.name)
+    seen.add(t.name)
+
+## Note: Could benefit from memoization, but for builds with
+## a typical number of targets, that would be overkill
+def _targetDepth(target: pb.Target) -> int:
+  if not target.dependencies:
+    return 0
+  return 1 + max([_targetDepth(dep) for dep in target.dependencies])
 
 def _setLogLevel(shortcut: str) -> bool:
   """Helper for `main`."""

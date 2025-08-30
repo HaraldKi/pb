@@ -1,4 +1,7 @@
+import io
 import logging
+import re
+import sys
 from os import PathLike
 from pathlib import Path
 
@@ -54,16 +57,10 @@ class TestPaths(support.CommonFixture):
     pg = Paths(Path("src"), lambda root: root.glob("*.py"))
     self.assertEqual([*Path("src").glob("*.py")], [*pg])
 
-    ## This will fail in the future if pydoctor changes what it generates
-    ## Just check and adapt a bit.
-    pg = Paths.rglob("apidoc", "*.svg").mappedTo(Path("."))
+    ## This needs an adaption whenever we add more source code
+    pg = Paths.rglob("src", "pb*").mappedTo(Path("."))
     self.assertEqual(
-      sorted([Path("fonts/info.svg"), Path("fonts/x-circle.svg")]), sorted([*pg])
-    )
-
-    pg = Paths.glob("apidoc", "*.json").mappedTo(Path("."))
-    self.assertEqual(
-      sorted([Path("searchindex.json"), Path("fullsearchindex.json")]), sorted([*pg])
+      sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg])
     )
 
   def testPathFromStr(self) -> None:
@@ -127,9 +124,9 @@ class TestMain(support.CommonFixture):
     LOG.addFilter(self.filter)
 
   def tearDown(self) -> None:
-    super().tearDown()
     LOG.removeFilter(self.filter)
     self.assertEqual(0, self.logfails)
+    super().tearDown()
 
   def assertLogFails(self, count: int) -> None:
     lf = self.logfails
@@ -167,10 +164,13 @@ class TestMain(support.CommonFixture):
     self.assertTrue(top.recreated)
 
   def testSetLoglevel(self) -> None:
+    ## Without any target on the command line, main() prints the list of targets plus an
+    ## explainer line. To avoid this we provide minimal food.
+    Target("dummy", state="fixed", name="dummy")
     keptLevel = LOG.level
     for level in _loglevels:
       ch = level[0]
-      main("ll=" + ch)
+      main("ll=" + ch, "dummy")
       self.assertEqual(level.upper(), logging.getLevelName(LOG.level))
     LOG.setLevel(keptLevel)
 
@@ -201,3 +201,23 @@ class TestMain(support.CommonFixture):
     t = Target("x=y", name="x=y", state="value")
     self.assertTrue(main("x=y"))
     self.assertTrue(t.recreated)
+
+  def testPrintTargets(self) -> None:
+    one = Target("one", state="fixed")
+    two = Target("two", one, state="fixed")
+    Target("three", two, state="fixed")
+    stdout = sys.stdout
+    buffered = io.StringIO()
+    sys.stdout = buffered
+    try:
+      self.assertTrue(main())
+    except Exception as e:
+      raise e
+    finally:
+      sys.stdout = stdout
+
+    matches = re.findall("one|two|three", buffered.getvalue())
+    self.assertEqual("one", matches[0])
+    self.assertEqual("two", matches[1])
+    self.assertEqual("three", matches[2])
+    
