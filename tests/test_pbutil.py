@@ -1,13 +1,14 @@
 import io
 import logging
 import re
+import shutil
 import sys
 from os import PathLike
 from pathlib import Path
 
 import support
 
-from pbutil import Paths, RootPathMapper, _loglevels, main
+from pbutil import Paths, RootPathMapper, _loglevels, copyFiles, main
 from pythonbuilder import (
   LOG,
   BuildException,
@@ -17,6 +18,7 @@ from pythonbuilder import (
   stateFileIteratorContent,
 )
 
+TESTTMP = Path("build", "testtmp")
 
 class TestRootPathMapper(support.CommonFixture):
   def test_empty(self) -> None:
@@ -59,9 +61,7 @@ class TestPaths(support.CommonFixture):
 
     ## This needs an adaption whenever we add more source code
     pg = Paths.rglob("src", "pb*").mappedTo(Path("."))
-    self.assertEqual(
-      sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg])
-    )
+    self.assertEqual(sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg]))
 
   def testPathFromStr(self) -> None:
     pg = Paths("dodo", lambda p: [p / "x", p / "y"])
@@ -220,4 +220,24 @@ class TestMain(support.CommonFixture):
     self.assertEqual("one", matches[0])
     self.assertEqual("two", matches[1])
     self.assertEqual("three", matches[2])
-    
+
+class TestCopyfiles(support.CommonFixture):
+  COPYFILESDIR = TESTTMP / "copyfiles"
+  def setUp(self) -> None:
+    super().setUp()
+    if self.COPYFILESDIR.exists():
+      shutil.rmtree(self.COPYFILESDIR)
+
+  def testCopySingleFile(self) -> None:
+    p = Paths.glob("src", "pbutil.py")
+    self.assertFalse(Path(self.COPYFILESDIR / "pbutil.py").exists())
+    copyFiles(self.COPYFILESDIR, p)
+    self.assertTrue((self.COPYFILESDIR / "pbutil.py").exists())
+
+  def testCopyFilesInDir(self) -> None:
+    p = Paths.glob(".", "src/pb*.py")
+    self.assertFalse(Path(self.COPYFILESDIR / "src", "pbutil.py").exists())
+    self.assertFalse(Path(self.COPYFILESDIR / "src", "pbpython.py").exists())
+    copyFiles(self.COPYFILESDIR, p)
+    self.assertTrue(Path(self.COPYFILESDIR / "src", "pbutil.py").exists())
+    self.assertTrue(Path(self.COPYFILESDIR / "src", "pbpython.py").exists())

@@ -9,15 +9,15 @@ Using this module is completely optional, obviously.
 import datetime
 import functools
 import inspect
+import os
 import shutil
-from os import PathLike, fspath
 from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Iterator
 
 import pythonbuilder as pb
 
 
-class Paths(Iterable[Path], PathLike):
+class Paths(Iterable[Path], os.PathLike):
   """An iterable on files, much like ``Path().glob()`` but keeps the path from
   which the iteration starts.
 
@@ -41,7 +41,7 @@ class Paths(Iterable[Path], PathLike):
   parameter. Further, this is a restartable iterator, i.e. it is possibly to
   iterate more than once over the same instance.
 
-  When used as a ``PathLike``, the `root` is returned.
+  When used as a ``os.PathLike``, the `root` is returned.
   """
 
   @staticmethod
@@ -93,7 +93,7 @@ class Paths(Iterable[Path], PathLike):
 
   def __fspath__(self) -> str:
     """Calls  ``os.fspath`` on `root`."""
-    return fspath(self.root)
+    return os.fspath(self.root)
 
   def __str__(self) -> str:
     """Readable short form for a ``Paths``"""
@@ -223,7 +223,7 @@ class RootPathMapper:
 
 def copyFiles(dest: Paths | Path, source: Paths) -> None:
   """Copies files from ``source`` to dest preserving the path segments below
-  ``source.root``.
+  ``source.root``. If the source contains directory paths, these are ignored.
 
   :param dest: where to copy files to using ``dest.root`` if it is a ``Paths`` object.
   :param source: files to copy
@@ -231,7 +231,11 @@ def copyFiles(dest: Paths | Path, source: Paths) -> None:
   if isinstance(dest, Paths):
     dest = dest.root
   for p in source:
+    if p.is_dir():
+      continue
     tail = p.relative_to(source.root)
+    out = dest / tail
+    out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(p, dest / tail)
 
 
@@ -307,6 +311,7 @@ def main(*argv: str) -> bool:
   print("Specify one or more of the above targets to built it.")
   return True
 
+
 def printTargets(
   targets: Iterable[pb.Target[Any]] = pb._TARGETS.values(), seen: set[str] = set()
 ) -> None:
@@ -326,6 +331,7 @@ def _targetDepth(target: pb.Target) -> int:
   if not target.dependencies:
     return 0
   return 1 + max([_targetDepth(dep) for dep in target.dependencies])
+
 
 def _setLogLevel(shortcut: str) -> bool:
   """Helper for `main`."""
