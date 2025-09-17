@@ -28,12 +28,12 @@ sys.path += ["pythonbuilder"]
 import pbutil
 from pythonbuilder import Target, LOG, pbexec, toGraphviz
 
-def declareTarget() -> None:
+def defineTarget() -> None:
   ... multiple calls to the Target constructor ...
 
 ... definition of functions to create your targets ...
 
-declareTargets()
+defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
 

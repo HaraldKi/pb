@@ -56,11 +56,11 @@ def jacocoRunJunit4(
      classes
 
   :param testClassRe: a regular expression or compiled pattern which has to be matched
-    by ``*.class`` files on the `testClassPath` to be included as a test class. Classes
-    with a ``$`` in the name are always excluded. If there are no helper classses on the
-    classpath, just use ``.``, otherwise, depending on your convention, ``^Test.*`` or
-    ``.*Test[.]class$`` may be what you need. Only the file name, without any leading
-    path name, will be searched with the pattern.
+    by ``*.class`` files on the ``testClassesPath`` to be included as a test
+    class. Classes with a ``$`` in the name are always excluded. If there are no helper
+    classses on the classpath, just use ``.``, otherwise, depending on your convention,
+    ``^Test.*`` or ``.*Test[.]class$`` may be what you need. Only the file name, without
+    any leading path name, will be searched with the pattern.
 
   :param jacocoJar: the jar ``org.jacoco.agent...jar``, not going on the class
     path
