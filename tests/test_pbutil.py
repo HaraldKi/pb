@@ -8,7 +8,16 @@ from pathlib import Path
 
 import support
 
-from pbutil import Paths, RootPathMapper, _loglevels, copyFiles, main
+from pbutil import (
+  Paths,
+  RootPathMapper,
+  _loglevels,
+  copyFiles,
+  filterPath,
+  filterPathRe,
+  main,
+  touch,
+)
 from pythonbuilder import (
   LOG,
   BuildException,
@@ -19,6 +28,7 @@ from pythonbuilder import (
 )
 
 TESTTMP = Path("build", "testtmp")
+
 
 class TestRootPathMapper(support.CommonFixture):
   def test_empty(self) -> None:
@@ -221,8 +231,10 @@ class TestMain(support.CommonFixture):
     self.assertEqual("two", matches[1])
     self.assertEqual("three", matches[2])
 
+
 class TestCopyfiles(support.CommonFixture):
   COPYFILESDIR = TESTTMP / "copyfiles"
+
   def setUp(self) -> None:
     super().setUp()
     if self.COPYFILESDIR.exists():
@@ -241,3 +253,125 @@ class TestCopyfiles(support.CommonFixture):
     copyFiles(self.COPYFILESDIR, p)
     self.assertTrue(Path(self.COPYFILESDIR / "src", "pbutil.py").exists())
     self.assertTrue(Path(self.COPYFILESDIR / "src", "pbpython.py").exists())
+
+
+class TestFilterPath(support.CommonFixture):
+  D = TESTTMP / "filterpath"
+
+  def setUp(self) -> None:
+    super().setUp()
+    if self.D.exists():
+      shutil.rmtree(self.D)
+
+  def testFileOK(self) -> None:
+    p1 = self.D / "xx"
+    touch(p1)
+    result = list(filterPath(self.D))
+    self.assertEqual(1, len(result))
+    self.assertEqual(p1, result[0])
+
+    p2 = self.D / "yy"
+    touch(p2)
+    result = list(filterPath(self.D, lambda p: p.name == "yy"))
+    self.assertEqual(1, len(result))
+    self.assertEqual(p2, result[0])
+
+    result = list(filterPath(self.D, lambda p: p.name != "xx"))
+    self.assertEqual(1, len(result))
+    self.assertEqual(p2, result[0])
+
+  def testDirOK(self) -> None:
+    p1 = self.D / "d1" / "x"
+    p2 = self.D / "d2" / "x"
+
+    touch(p1)
+    touch(p2)
+    result = list(filterPath(self.D, dirOK=lambda d: d.name == "d1"))
+    self.assertEqual(1, len(result))
+    self.assertEqual(p1, result[0])
+
+    result = list(filterPath(self.D, dirOK=lambda d: d.name != "d1"))
+    self.assertEqual(1, len(result))
+    self.assertEqual(p2, result[0])
+
+
+class TestFilterPathRe(support.CommonFixture):
+  D = TESTTMP / "filterpathre"
+
+  def setUp(self) -> None:
+    super().setUp()
+    if self.D.exists():
+      shutil.rmtree(self.D)
+    touch(self.D / "a")
+    touch(self.D / "ab")
+    touch(self.D / "abc")
+    touch(self.D / "dir1" / "x")
+    touch(self.D / "dir2" / "x")
+    touch(self.D / "dir3" / "a")
+
+  def testGetAll(self) -> None:
+    result = [*filterPathRe(self.D)]
+    self.assertEqual(6, len(result))
+
+    result = [*filterPathRe(self.D, dirs=True)]
+    self.assertEqual(9, len(result))
+
+  def testIncDir(self) -> None:
+    result = list(filterPathRe(self.D, "/", dirI="1"))
+    self.assertEqual(1, len(result))
+    self.assertEqual(self.D / "dir1" / "x", result[0])
+
+  def testExcDir(self) -> None:
+    result = list(
+      map(lambda p: "/".join(p.parts[-2:]), list(filterPathRe(self.D, "/", dirX="1")))
+    )
+    result = sorted(result)
+    self.assertEqual(2, len(result))
+    self.assertEqual("dir2/x", result[0])
+    self.assertEqual("dir3/a", result[1])
+
+  def testIncFile(self) -> None:
+    result = list(filterPathRe(self.D, "(^|/)a"))
+    self.assertEqual(4, len(result))
+
+  def testExcFile(self) -> None:
+    result = list(filterPathRe(self.D, fileX="x|ab$"))
+    self.assertEqual(3, len(result))
+
+
+class TestPathFiltered(support.CommonFixture):
+  """The filterPath and filterPathRe functions are tested quite well. Just make sure
+  we don't have something funky going on. (Smoke test.)"""
+
+  D = TESTTMP / "pathfiltered"
+
+  def setUp(self) -> None:
+    super().setUp()
+    if self.D.exists():
+      shutil.rmtree(self.D)
+
+  def testBasics(self) -> None:
+    p1 = self.D / "blabla"
+    p2 = self.D / "dir" / "blabla"
+    touch(p1)
+    touch(p2)
+    result = sorted(list(Paths.filtered(self.D)))
+    self.assertEqual([p1, p2], result)
+
+    ## verify restartable iterable
+    result = sorted(list(Paths.filtered(self.D)))
+    self.assertEqual([p1, p2], result)
+
+    result = list(Paths.filtered(self.D, dirs=True))
+    self.assertEqual(3, len(result))
+
+    result = list(Paths.filtered(self.D, dirOK=lambda p: False))
+    self.assertEqual(1, len(result))
+
+    result = list(Paths.filtered(self.D, fileOK=lambda p: False))
+    self.assertEqual(0, len(result))
+
+    result = list(
+      Paths.filtered(self.D, fileOK=lambda p: False, dirOK=lambda p: True, dirs=True)
+    )
+    self.assertEqual(1, len(result))

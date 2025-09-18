@@ -10,6 +10,7 @@ import datetime
 import functools
 import inspect
 import os
+import re
 import shutil
 from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Iterator
@@ -59,6 +60,37 @@ class Paths(Iterable[Path], os.PathLike):
     """
     path = Path(path)
     return Paths(path, lambda p: p.rglob(pattern), "r(" + pattern + ")")
+
+  @staticmethod
+  def filtered(
+    path: Path,
+    fileOK: Callable[[Path], bool] = lambda p: True,
+    dirOK: Callable[[Path], bool] = lambda p: True,
+    dirs: bool = False,
+    itName: str = "filtered",
+  ) -> "Paths":
+    """Creates a ``Paths`` object with an iterable created by calling `filterPath`."""
+    return Paths(path, lambda p: filterPath(p, fileOK, dirOK, dirs), itName)
+
+  @staticmethod
+  def reFiltered(
+    path: Path,
+    fileI: str = ".",
+    *,
+    fileX: str | None = None,
+    dirI: str = ".",
+    dirX: str | None = None,
+    dirs: bool = False,
+  ) -> "Paths":
+    """Creates a ``Paths`` object with an iterable created by calling `filterPathRe`."""
+    itName = "✔(" + fileI + ")" if fileI != "." else ""
+    itName += "✘(" + fileX + ")" if fileX is not None else ""
+    itName += "👍(" + dirI + ")" if dirI != "." else ""
+    itName += "👎(" + dirX + ")" if dirX is not None else ""
+    """Creates a ``Paths`` object with an iterable created by calling `filterPathRe`."""
+    return Paths(
+      path, lambda p: filterPathRe(p, fileI, fileX, dirI, dirX, dirs), itName
+    )
 
   def __init__(
     self,
@@ -155,6 +187,97 @@ class Paths(Iterable[Path], os.PathLike):
           + " but must return None or a relative path"
         )
       yield root / other
+
+
+def filterPath(
+  root: Path,
+  fileOK: Callable[[Path], bool] = lambda p: True,
+  dirOK: Callable[[Path], bool] = lambda p: True,
+  dirs: bool = False,
+) -> Iterable[Path]:
+  """An iterable producing file and, possibly, directory paths recursively contained in
+  the ``root`` path. Symlinks are never followed but are handled as regular
+  files.
+
+  ``fileOK`` decides which files to include in the output.
+
+  ``dirOK`` decides which directories to traverse. This can avoid unnecessary traversal
+  of subdirectories and may keep file tests simpler. For example if ``dirOK`` is only
+  true for a subdirectory "src/module1", getting python files from this subdirectory
+  only can just check if a path ends with ``".py"``. Without a ``dirOK``, the prefix
+  ``"src/module1/"`` would also have to be checked for each file and, in addition, other
+  subdirectories would be traversed unneccesarily.
+
+  Directory paths will only show up in the result if ``dirs=True`` **and** if they
+  are traversed.
+
+  :param root: directory to traverse
+  :param fileOK: function to test if a file shall be in the output
+  :param dirOK: function to test if a directory shall be traversed at all
+  :param dirs: if ``True``, provides traversed directory paths in the output
+  :return: paths of files and directories
+
+  """
+  work: list[Path] = [root]
+  while len(work) > 0:
+    for p in work.pop().iterdir():
+      if p.is_dir():
+        if dirOK(p):
+          work.append(p)
+          if dirs:
+            yield p
+      else:
+        if fileOK(p):
+          yield p
+
+
+def filterPathRe(
+  root: Path,
+  fileI: str = ".",
+  fileX: str | None = None,
+  dirI: str = ".",
+  dirX: str | None = None,
+  dirs: bool = False,
+) -> Iterable[Path]:
+  """An iterable producing file and, possibly, directory paths recursively contained in
+  the ``root`` path. This is a wrapper around `filterPath` which creates its ``fileOK``
+  and ``dirOK`` from the provided regular expressions as follows:
+
+  Both parameters for `filterPath` are constructed such that the exclude pattern beats
+  the include pattern. All patterns are **searched** in paths relative to ``root`` after
+  conversion with ``Path.as_posix()``, so paths directly in root will have no ``'/'``
+  inside while deeper nested paths will look like ``"a/b/c.d"``
+
+  For example to only include files in subdirectories of ``root`` use ``fileI="/"`` as
+  it requires that the path contains at least one ``'/'``, like ``module/some.py``.
+
+  Use ``dirI`` and ``dirX`` to prevent traversal of subdirectories which have not files
+  to include as described for `filterPath`.
+
+  :param root: directory to traverse
+  :param fileI: regex to match against file paths for inclusion
+  :param fileX: regex to match against file paths for exclusion, overrules ``fileI``
+  :param dirI: regex to match against directory paths for traversal
+  :param dirX: regex to match against directory paths to skip, overrules ``dirI``
+  :param dirs: if ``True``, provides traversed directory paths in the output
+  :return: paths of files and directories
+
+  """
+  dirDescent = re.compile(dirI)
+  dirAvoid = None if dirX is None else re.compile(dirX)
+  fileInc = re.compile(fileI)
+  fileExc = None if fileX is None else re.compile(fileX)
+
+  def include(inc: re.Pattern[str], exc: re.Pattern[str] | None, p: Path) -> bool:
+    pstr = p.relative_to(root).as_posix()
+    return inc.search(pstr) is not None and (exc is None or not exc.search(pstr))
+
+  return filterPath(
+    root,
+    functools.partial(include, fileInc, fileExc),
+    functools.partial(include, dirDescent, dirAvoid),
+    dirs,
+  )
 
 
 def touch(targetPath: Path, *deps: Any) -> None:
@@ -324,6 +447,7 @@ def printTargets(
     printTargets(t.dependencies, seen)
     print(f"{'.' * pair[0]}•", t.name)
     seen.add(t.name)
+
 
 ## Note: Could benefit from memoization, but for builds with
 ## a typical number of targets, that would be overkill
