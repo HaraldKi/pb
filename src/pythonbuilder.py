@@ -60,13 +60,25 @@ LOG.setLevel(
 )
 
 
-## FIXME: only here for tests, should be properly injectable
-STATEFILE = Path("build", "pbstates")
-"""Path of the file in which to persist the target states.
+_STATEFILE = Path("build", "pbstates")
 
-Set this before calling `updateTargets`.To force all targets to be rebuild,
-delete this file. (FIXME: provide proper api).
-"""
+def setStatefile(path: Path) -> None:
+  """Sets the ``Path`` of the file in which to persist target states.
+
+  Defaults to ``Path("build", "pbstates")``.
+
+  Set this before calling `updateTargets`. To force all targets to be rebuild,
+  delete this file.
+  """
+  global _STATEFILE
+  _STATEFILE = path
+
+def getStatefile() -> Path:
+  """Gets the ``Path`` of the file where target states are persisted. See `setStatefile`.
+  """
+  global _STATEFILE
+  return _STATEFILE
+
 
 
 class BuildException(Exception):  # {
@@ -517,7 +529,7 @@ def rawUpdateTargets(*targets: str | Target) -> None:
   :param targets: the targets to update where any ``str`` argument is looked up
     with `findTarget`
   """
-  states = _StateStore(STATEFILE)
+  states = _StateStore(getStatefile())
   for t in targets:
     target = findTarget(t)
     if target is None:
