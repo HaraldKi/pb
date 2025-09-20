@@ -7,8 +7,8 @@ import unittest
 sys.path += [os.path.join(os.getcwd(), "src")]
 import support
 
-from mavenrepo import MavenArtifact
 from pythonbuilder import resetTraversalState, updateTargets
+from pythonbuilder.mavenrepo import MavenArtifact
 
 TMPDIR = os.path.join("build", "testtmp")
 

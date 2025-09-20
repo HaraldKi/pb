@@ -15,7 +15,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Iterator
 
-import pythonbuilder as pb
+from . import pythonbuilder as pb
 
 
 class Paths(Iterable[Path], os.PathLike):
@@ -447,7 +447,6 @@ def printTargets(
     printTargets(t.dependencies, seen)
     print(f"{'.' * pair[0]}•", t.name)
     seen.add(t.name)
-
 
 ## Note: Could benefit from memoization, but for builds with
 ## a typical number of targets, that would be overkill

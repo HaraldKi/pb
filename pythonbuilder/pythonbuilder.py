@@ -1,7 +1,7 @@
 """
 Define build targets with `Target` and run the build with `updateTargets()`.
 The functions starting with "state" can be used for the ``state`` parameter
-of `Target()`, but most have a string shortcut. See there.
+of `Target()`. Some have a string shortcut. See there.
 """
 
 ## See https://stackoverflow.com/a/33533514/2954288
@@ -250,13 +250,21 @@ class Target(Generic[T]):  # {
       return cast(Callable[[T], str], self.generateState)(self.item)
 
 
-## FIXME: get rid of global variables and encapsulate in a Builder class
-## or so.
 ## FIXME: remove mutable state from Target, keep it in a separate object,
 ##        but check if it worth it, as inspection during the build is more
 #         difficult
-_TARGETS: dict[str, Target] = dict()
 
+_TARGETS: dict[str, Target] = dict()
+def getTargets() -> dict[str, Target]:
+  """Returns a dictionary of the currently defined targets mapped by their ``.name``
+  field.
+
+  This is not needed in normal operation because adding targets is achieved by the
+  `Target` constructor automatically. To reset the traversal state, use
+  `resetTraversalState`.
+  """
+  global _TARGETS
+  return _TARGETS
 
 def findTarget(target: str | Target) -> Target | None:  # {
   """Looks up a target by its name. For convenience, if the parameter is
@@ -466,7 +474,8 @@ def pbexec(*args: Any) -> None:
   """
   Shallow wrapper around
   `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
-  which
+
+  It
 
   - logs the command line at ``INFO`` level
   - runs ``subprocess.run()`` with the flattened input list

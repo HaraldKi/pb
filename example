@@ -3,9 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path += ["pythonbuilder", "src"]
-import pbutil
-from pythonbuilder import LOG, Target
+from pythonbuilder import LOG, Target, pbutil
 
 LOG.setLevel("VERBOSE")
 
