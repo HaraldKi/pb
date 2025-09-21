@@ -11,10 +11,11 @@ for functions using external program ``foo``.
 
 from pathlib import Path
 
-from pbutil import touch
-from pythonbuilder import pbexec
+from .pbutil import touch
+from .pythonbuilder import pbexec
 
 
+## FIXME: allow command line arguments, as at least --quiet has no config setting
 def doRuffCheck(target: Path, tomlFile: Path, *filesAndDirs: Path) -> None:
   """Runs `ruff check <https://docs.astral.sh/ruff/configuration/#full-command-line-interface>`_
 

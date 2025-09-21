@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from pythonbuilder import pbexec
+from .pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
 

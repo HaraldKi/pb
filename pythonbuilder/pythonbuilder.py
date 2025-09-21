@@ -1,7 +1,7 @@
 """
 Define build targets with `Target` and run the build with `updateTargets()`.
 The functions starting with "state" can be used for the ``state`` parameter
-of `Target()`, but most have a string shortcut. See there.
+of `Target()`. Some have a string shortcut. See there.
 """
 
 ## See https://stackoverflow.com/a/33533514/2954288
@@ -31,36 +31,54 @@ from typing import (
   get_origin,
 )
 
+_VERBOSE: Final = logging.INFO - 5
+
+
+def levelVerbose() -> int:
+  """Additional logging level, ``"VERBOSE"`` logging somewhat more than ``"INFO"``."""
+  global _VERBOSE
+  return _VERBOSE
+
+
 logging.basicConfig(format="%(message)s (%(levelname)s)")
-VERBOSE: Final = logging.INFO - 5
-"""Additional logging level providing more information than ``INFO``."""
+logging.addLevelName(levelVerbose(), "VERBOSE")
 
-logging.addLevelName(VERBOSE, "VERBOSE")
-
-LOG = logging.getLogger()
-"""The logger we use.
-
-For consistent logging, the build script can import and use it too, rather than
-creating its own. This logger is used by ``pythonbuilder`` throughout. It has
-the additional level VERBOSE. If the environment variable PBLOGLEVEL is set, it
-is used as the default, otherwise it is ``"INFO"``. The levels are used as
-follows:
-
-- INFO: Show only output from `logcmd` which, in particular, is used by
-  `pbexec`, but is also recommended to be used for target generating commands
-  which don't call external programs.
-
-- VERBOSE: also show targets considered and whether they are determined
-  up-to-date or not
-
-"""
-
-LOG.setLevel(
+_LOG = logging.getLogger()
+_LOG.setLevel(
   "INFO" if "" == os.environ.get("PBLOGLEVEL", "") else os.environ["PBLOGLEVEL"]
 )
 
 
+def getLogger() -> logging.Logger:
+  """The logger we use.
+
+  For consistent logging, the build script can import and use it too, rather than
+  creating its own. This logger is used by ``pythonbuilder`` throughout. If the
+  environment variable PBLOGLEVEL is set, it is used as the default, otherwise it is
+  ``"INFO"``. The levels are used as follows:
+
+  - INFO: Show only output from `logcmd` which, in particular, is used by `pbexec`, but
+    is also recommended to be used for target generating commands which don't call
+    external programs.
+
+  - VERBOSE: also shows targets considered and whether they are determined up-to-date or
+    not (see `levelVerbose`)
+
+  - DEBUG: also shows internal steps and data
+
+  """
+  global _LOG
+  return _LOG
+
+
+def setLogger(logger: logging.Logger) -> None:
+  """Sets the logger we use."""
+  global _LOG
+  _LOG = logger
+
+
 _STATEFILE = Path("build", "pbstates")
+
 
 def setStatefile(path: Path) -> None:
   """Sets the ``Path`` of the file in which to persist target states.
@@ -73,12 +91,11 @@ def setStatefile(path: Path) -> None:
   global _STATEFILE
   _STATEFILE = path
 
+
 def getStatefile() -> Path:
-  """Gets the ``Path`` of the file where target states are persisted. See `setStatefile`.
-  """
+  """Gets the ``Path`` of the file where target states are persisted. See `setStatefile`."""
   global _STATEFILE
   return _STATEFILE
-
 
 
 class BuildException(Exception):  # {
@@ -250,12 +267,23 @@ class Target(Generic[T]):  # {
       return cast(Callable[[T], str], self.generateState)(self.item)
 
 
-## FIXME: get rid of global variables and encapsulate in a Builder class
-## or so.
 ## FIXME: remove mutable state from Target, keep it in a separate object,
 ##        but check if it worth it, as inspection during the build is more
 #         difficult
+
 _TARGETS: dict[str, Target] = dict()
+
+
+def getTargets() -> dict[str, Target]:
+  """Returns a dictionary of the currently defined targets mapped by their ``.name``
+  field.
+
+  This is not needed in normal operation because adding targets is achieved by the
+  `Target` constructor automatically. To reset the traversal state, use
+  `resetTraversalState`.
+  """
+  global _TARGETS
+  return _TARGETS
 
 
 def findTarget(target: str | Target) -> Target | None:  # {
@@ -406,7 +434,7 @@ def resetTraversalState() -> None:
   NOTE: this does not reset the persited target state, so without
   changing any data, a subsequent run of `updateTargets` should do nothing.
   """
-  LOG.debug("  resetting traversal state")
+  _LOG.debug("  resetting traversal state")
   for target in _TARGETS.values():
     target.started = False
     target.updated = False
@@ -459,14 +487,15 @@ def logcmd(cmd: list[str]) -> None:
 
   :param cmd: to log
   """
-  LOG.info("* %s", " ".join(cmd))
+  _LOG.info("* %s", " ".join(cmd))
 
 
 def pbexec(*args: Any) -> None:
   """
   Shallow wrapper around
   `subprocess.run() <https://docs.python.org/3/search.html?q=subprocess.run>`_
-  which
+
+  It
 
   - logs the command line at ``INFO`` level
   - runs ``subprocess.run()`` with the flattened input list
@@ -498,7 +527,7 @@ def updateTargets(*targets: str | Target) -> bool:
   ## point, yet at least on Linux so far this seems to be close to 0 at
   ## process start. Hmm.
   startNanos = buildStart - time.process_time_ns()
-  LOG.log(VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
+  _LOG.log(_VERBOSE, "  startup took %s", _formatNanoDelta(startNanos, buildStart))
 
   resultState = ansiGreen("build ✔")
   buildOK = True
@@ -507,13 +536,13 @@ def updateTargets(*targets: str | Target) -> bool:
   except Exception as e:
     buildOK = False
     resultState = ansiRed("build ✘")
-    if LOG.isEnabledFor(VERBOSE):
+    if _LOG.isEnabledFor(_VERBOSE):
       logging.error(e, exc_info=True)
     else:
       logging.error(e)
 
   buildEnd = time.time_ns()
-  LOG.info(
+  _LOG.info(
     resultState + ", took %s, total %s",
     _formatNanoDelta(buildStart, buildEnd),
     _formatNanoDelta(startNanos, buildEnd),
@@ -523,11 +552,14 @@ def updateTargets(*targets: str | Target) -> bool:
 
 def rawUpdateTargets(*targets: str | Target) -> None:
   """Updates all targets in turn without resetting the traversal state in
-  between, so if target T1 depends on target T0, in the call ``updateTargets(T1,
-  T0)``, then T0 is redundant, because it will be updated already when doing T1.
+  between, but see `updateTargets` too.
+
+  If target T1 depends on target T0, in the call ``updateTargets(T1, T0)``, then T0 is
+  redundant, because it will be updated already when doing T1.
 
   :param targets: the targets to update where any ``str`` argument is looked up
     with `findTarget`
+
   """
   states = _StateStore(getStatefile())
   for t in targets:
@@ -568,9 +600,9 @@ def _updateTarget(
 
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
-  LOG.debug("  %s:\n  old %s\n  new %s\n  force=%s", logTag, old, fresh, target.force)
+  _LOG.debug("  %s:\n  old %s\n  new %s\n  force=%s", logTag, old, fresh, target.force)
   if old == fresh and not target.force:
-    LOG.log(VERBOSE, "- " + logTag)
+    _LOG.log(_VERBOSE, "- " + logTag)
     return
 
   cmdName: str = "no-op"
@@ -580,16 +612,21 @@ def _updateTarget(
     target.cmd(target.item, *map(lambda d: d.item, target.dependencies))
   took = _formatNanoDelta(startNanos, time.time_ns())
 
-  if LOG.isEnabledFor(VERBOSE):
+  if _LOG.isEnabledFor(_VERBOSE):
     if len(triggeringDeps) == 0:
       if old[0] == fresh[0]:
         ## must be forced, otherwise we wouldn't be here
-        LOG.log(VERBOSE, "+ %s(%s): forced to be outdated, %s", cmdName, logTag, took)
+        _LOG.log(_VERBOSE, "+ %s(%s): forced to be outdated, %s", cmdName, logTag, took)
       else:
-        LOG.log(VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
+        _LOG.log(_VERBOSE, "+ %s(%s): outdated, %s", cmdName, logTag, took)
     else:
-      LOG.log(
-        VERBOSE, "+ %s(%s): <- %s, %s", cmdName, logTag, ", ".join(triggeringDeps), took
+      _LOG.log(
+        _VERBOSE,
+        "+ %s(%s): <- %s, %s",
+        cmdName,
+        logTag,
+        ", ".join(triggeringDeps),
+        took,
       )
 
   target.recreated = True
@@ -716,11 +753,11 @@ class _StateStore:
     self.stateFile = stateFile
     self.hashes: dict[str, tuple[str, str]]
     if not os.path.isfile(self.stateFile):
-      LOG.debug("  no file '%s', starting with empty states" % self.stateFile)
+      _LOG.debug("  no file '%s', starting with empty states" % self.stateFile)
       self.hashes = dict()
       return
 
-    LOG.debug("  reading %s" % self.stateFile)
+    _LOG.debug("  reading %s" % self.stateFile)
 
     with open(self.stateFile, "r", encoding="UTF-8") as statefile:
       self.hashes = json.load(statefile)
@@ -745,8 +782,43 @@ class _StateStore:
     return self.hashes[target.name][1]
 
   def save(self) -> None:
-    LOG.debug("  writing %s" % self.stateFile)
+    _LOG.debug("  writing %s" % self.stateFile)
     os.makedirs(os.path.dirname(self.stateFile), exist_ok=True)
 
     with open(self.stateFile, "w", encoding="UTF-8") as statefile:
       json.dump(self.hashes, statefile, indent=2)
+
+
+## How to compute __all__ the way I intend it, but this makes problems at least with
+## mypy and pydoctor, so we use the resulting list and have to update it when
+## we change stuff.
+#__all__ = [n for (n, v) in globals().items() if not n.startswith("_") and getattr(v, "__module__", None) == Target.__module__]
+__all__ = [
+  "levelVerbose",
+  "getLogger",
+  "setLogger",
+  "setStatefile",
+  "getStatefile",
+  "BuildException",
+  "T",
+  "Target",
+  "getTargets",
+  "findTarget",
+  "stateNew",
+  "stateFixed",
+  "stateValue",
+  "stateDirContent",
+  "stateFileContent",
+  "stateFileIteratorContent",
+  "resetTraversalState",
+  "flatten",
+  "logcmd",
+  "pbexec",
+  "updateTargets",
+  "rawUpdateTargets",
+  "toGraphviz",
+  "registerDependencyGraphTarget",
+  "graphToDot",
+  "ansiRed",
+  "ansiGreen",
+]

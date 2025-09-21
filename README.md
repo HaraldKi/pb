@@ -16,17 +16,18 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 
 ## Getting Started
 
-Copy `src/pythonbuilder.py` and the other `*.py` files to some place you like. The
-suggested place is the subdirectory `./pythonbuilder` in your project directory.
+From `./pythonbuilder` copy `__init__.py` and `pythonbuilder.py` plus other
+`*.py` files to some place you like. The suggested place is the subdirectory
+`./pythonbuilder` in your project directory. Absolutely necessary are only the
+first two files, the others are supplements that may be nice to have.
 
 Write a build script in Python, called `pb` (for example), which has the following
 structure:
 ```pyton
 #!/usr/bin/env python3
 import sys
-sys.path += ["pythonbuilder"]
-import pbutil
-from pythonbuilder import Target, LOG, pbexec, toGraphviz
+import pythonbuilder.pbutil as pbutil
+from pythonbuilder import Target, pbexec, toGraphviz, ...
 
 def defineTarget() -> None:
   ... multiple calls to the Target constructor ...
@@ -36,7 +37,6 @@ def defineTarget() -> None:
 defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
-
 ```
 
 Run `./pb target` to build the given target according to the recipe described in
@@ -101,14 +101,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path += ["pythonbuilder", "src"]
-import pbutil
-from pythonbuilder import LOG, Target
+from pythonbuilder import Target, getLogger, pbutil
 
-LOG.setLevel("VERBOSE")
+getLogger().setLevel("VERBOSE")
 
 
-def declareTargets() -> None:
+def defineTargets() -> None:
   ## Declare an initial target, assume it is an existing file in the project
   rmd = Target(Path("README.md"))
 
@@ -129,10 +127,9 @@ def runPandoc(targetPath: Path, readmeMd: Path) -> None:
     subprocess.run(["pandoc", input], stdout=outfile)
 
 
-declareTargets()
+defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
-
 ```
 
 The default name of a `Target`, which has to be unique over the whole built, is

@@ -8,7 +8,15 @@ from pathlib import Path
 
 import support
 
-from pbutil import (
+from pythonbuilder import (
+  BuildException,
+  Target,
+  getLogger,
+  rawUpdateTargets,
+  resetTraversalState,
+  stateFileIteratorContent,
+)
+from pythonbuilder.pbutil import (
   Paths,
   RootPathMapper,
   _loglevels,
@@ -18,16 +26,9 @@ from pbutil import (
   main,
   touch,
 )
-from pythonbuilder import (
-  LOG,
-  BuildException,
-  Target,
-  rawUpdateTargets,
-  resetTraversalState,
-  stateFileIteratorContent,
-)
 
 TESTTMP = Path("build", "testtmp")
+SRCPATH = Path("pythonbuilder")  # used as source for some copying tests
 
 
 class TestRootPathMapper(support.CommonFixture):
@@ -66,11 +67,11 @@ class TestPaths(support.CommonFixture):
 
   def testGlob(self) -> None:
     # Assumes we are running in the project's root directory with subdir ./src
-    pg = Paths(Path("src"), lambda root: root.glob("*.py"))
-    self.assertEqual([*Path("src").glob("*.py")], [*pg])
+    pg = Paths(SRCPATH, lambda root: root.glob("*.py"))
+    self.assertEqual([*SRCPATH.glob("*.py")], [*pg])
 
     ## This needs an adaption whenever we add more source code
-    pg = Paths.rglob("src", "pb*").mappedTo(Path("."))
+    pg = Paths.rglob(str(SRCPATH), "pb*").mappedTo(Path("."))
     self.assertEqual(sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg]))
 
   def testPathFromStr(self) -> None:
@@ -88,11 +89,11 @@ class TestPaths(support.CommonFixture):
       BuildException,
       "botched iterable in Paths",
       list,
-      Paths(Path("src"), lambda p: [p / "bla", Path("not-src/bla")]),
+      Paths(SRCPATH, lambda p: [p / "bla", Path("not-src/bla")]),
     )
 
   def testGlobCanRestart(self) -> None:
-    pg = Paths.glob("src", "*.py")
+    pg = Paths.glob(SRCPATH, "*.py")
     l1 = [*pg]
     l2 = [*pg]
     self.assertTrue(len(l1) > 0)
@@ -101,9 +102,9 @@ class TestPaths(support.CommonFixture):
 
   def testWithTarget(self) -> None:
     # assume we're running in the projects root directory
-    pg = Target(Paths.glob("src", "*.py"), state=stateFileIteratorContent)
+    pg = Target(Paths.glob(SRCPATH, "*.py"), state=stateFileIteratorContent)
     pgState = pg._computeState()
-    expected = stateFileIteratorContent(Path("src").glob("*.py"))
+    expected = stateFileIteratorContent(SRCPATH.glob("*.py"))
     self.assertEqual(expected, pgState)
 
   def testWithFilter(self) -> None:
@@ -131,10 +132,10 @@ class TestMain(support.CommonFixture):
   def setUp(self) -> None:
     super().setUp()
     self.logfails = 0
-    LOG.addFilter(self.filter)
+    getLogger().addFilter(self.filter)
 
   def tearDown(self) -> None:
-    LOG.removeFilter(self.filter)
+    getLogger().removeFilter(self.filter)
     self.assertEqual(0, self.logfails)
     super().tearDown()
 
@@ -174,6 +175,7 @@ class TestMain(support.CommonFixture):
     self.assertTrue(top.recreated)
 
   def testSetLoglevel(self) -> None:
+    LOG = getLogger()
     ## Without any target on the command line, main() prints the list of targets plus an
     ## explainer line. To avoid this we provide minimal food.
     Target("dummy", state="fixed", name="dummy")
@@ -206,7 +208,7 @@ class TestMain(support.CommonFixture):
     self.assertLogFails(1)
 
   def testTargetNameWithEqual(self) -> None:
-    # yes we somehow support this a long as the target does not start with
+    # yes we somehow support this as long as the target does not start with
     # ll= or force= (so far)
     t = Target("x=y", name="x=y", state="value")
     self.assertTrue(main("x=y"))
@@ -241,18 +243,19 @@ class TestCopyfiles(support.CommonFixture):
       shutil.rmtree(self.COPYFILESDIR)
 
   def testCopySingleFile(self) -> None:
-    p = Paths.glob("src", "pbutil.py")
+    p = Paths.glob(SRCPATH, "pbutil.py")
     self.assertFalse(Path(self.COPYFILESDIR / "pbutil.py").exists())
     copyFiles(self.COPYFILESDIR, p)
     self.assertTrue((self.COPYFILESDIR / "pbutil.py").exists())
 
   def testCopyFilesInDir(self) -> None:
-    p = Paths.glob(".", "src/pb*.py")
-    self.assertFalse(Path(self.COPYFILESDIR / "src", "pbutil.py").exists())
-    self.assertFalse(Path(self.COPYFILESDIR / "src", "pbpython.py").exists())
+    src = str(SRCPATH)
+    p = Paths.glob(".", src + "/pb*.py")
+    self.assertFalse(Path(self.COPYFILESDIR / src, "pbutil.py").exists())
+    self.assertFalse(Path(self.COPYFILESDIR / src, "pbpython.py").exists())
     copyFiles(self.COPYFILESDIR, p)
-    self.assertTrue(Path(self.COPYFILESDIR / "src", "pbutil.py").exists())
-    self.assertTrue(Path(self.COPYFILESDIR / "src", "pbpython.py").exists())
+    self.assertTrue(Path(self.COPYFILESDIR / src, "pbutil.py").exists())
+    self.assertTrue(Path(self.COPYFILESDIR / src, "pbpython.py").exists())
 
 
 class TestFilterPath(support.CommonFixture):

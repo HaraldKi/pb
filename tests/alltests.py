@@ -3,15 +3,15 @@ import sys
 import unittest
 
 ## The tests must be started from the project directory
-sys.path += [os.path.join(os.getcwd(), "src")]
+sys.path += [os.getcwd()]
 
-# from test_api import *  # noqa: F403
-# from test_core import *  # noqa: F403
-# from test_mavenrepo import *  # noqa: F403
+from test_api import *  # noqa: F403
+from test_core import *  # noqa: F403
+from test_mavenrepo import *  # noqa: F403
 from test_pbutil import *  # noqa: F403
 
-from pythonbuilder import LOG
+from pythonbuilder import getLogger
 
 if __name__ == "__main__":
-  LOG.setLevel("ERROR")
+  getLogger().setLevel("ERROR")
   unittest.main(verbosity=0)

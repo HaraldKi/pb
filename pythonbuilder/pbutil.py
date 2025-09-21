@@ -15,7 +15,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Final, Iterable, Iterator
 
-import pythonbuilder as pb
+from . import pythonbuilder as pb
 
 
 class Paths(Iterable[Path], os.PathLike):
@@ -436,7 +436,7 @@ def main(*argv: str) -> bool:
 
 
 def printTargets(
-  targets: Iterable[pb.Target[Any]] = pb._TARGETS.values(), seen: set[str] = set()
+  targets: Iterable[pb.Target[Any]] = pb.getTargets().values(), seen: set[str] = set()
 ) -> None:
   depths = [(_targetDepth(t), t) for t in targets]
 
@@ -459,21 +459,23 @@ def _targetDepth(target: pb.Target) -> int:
 
 def _setLogLevel(shortcut: str) -> bool:
   """Helper for `main`."""
+  LOG = pb.getLogger()
   matches = [level for level in _loglevels if level.startswith(shortcut)]
   if len(matches) != 1:
-    pb.LOG.error("no log level starts with " + shortcut)
+    LOG.error("no log level starts with " + shortcut)
     return False
-  pb.LOG.setLevel(matches[0].upper())
+  LOG.setLevel(matches[0].upper())
   return True
 
 
 def _forceTargets(targetNamesOut: list[str], commaList: str) -> bool:
   """Helper for `main`."""
   targets = commaList.split(",")
+  LOG = pb.getLogger()
   for t in targets:
     target = pb.findTarget(t)
     if target is None:
-      pb.LOG.error("no target named '%s' defined" % t)
+      LOG.error("no target named '%s' defined" % t)
       return False
     target.force = True
     targetNamesOut.append(t)
