@@ -16,17 +16,18 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 
 ## Getting Started
 
-Copy `src/pythonbuilder.py` and the other `*.py` files to some place you like. The
-suggested place is the subdirectory `./pythonbuilder` in your project directory.
+From `./pythonbuilder` copy `__init__.py` and `pythonbuilder.py` plus other
+`*.py` files to some place you like. The suggested place is the subdirectory
+`./pythonbuilder` in your project directory. Absolutely necessary are only the
+first two files, the others are supplements that may be nice to have.
 
 Write a build script in Python, called `pb` (for example), which has the following
 structure:
 ```pyton
 #!/usr/bin/env python3
 import sys
-sys.path += ["pythonbuilder"]
-import pbutil
-from pythonbuilder import Target, LOG, pbexec, toGraphviz
+import pythonbuilder.pbutil as pbutil
+from pythonbuilder import Target, pbexec, toGraphviz, ...
 
 def defineTarget() -> None:
   ... multiple calls to the Target constructor ...
@@ -36,7 +37,6 @@ def defineTarget() -> None:
 defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
-
 ```
 
 Run `./pb target` to build the given target according to the recipe described in
