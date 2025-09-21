@@ -101,14 +101,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path += ["pythonbuilder", "src"]
-import pbutil
-from pythonbuilder import LOG, Target
+from pythonbuilder import Target, getLogger, pbutil
 
-LOG.setLevel("VERBOSE")
+getLogger().setLevel("VERBOSE")
 
 
-def declareTargets() -> None:
+def defineTargets() -> None:
   ## Declare an initial target, assume it is an existing file in the project
   rmd = Target(Path("README.md"))
 
@@ -129,10 +127,9 @@ def runPandoc(targetPath: Path, readmeMd: Path) -> None:
     subprocess.run(["pandoc", input], stdout=outfile)
 
 
-declareTargets()
+defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
-
 ```
 
 The default name of a `Target`, which has to be unique over the whole built, is

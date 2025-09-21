@@ -5,7 +5,6 @@ from os import environ, getenv
 from pathlib import Path
 
 from pythonbuilder import (
-  LOG,
   Target,
   pbexec,
   pbutil,
@@ -15,7 +14,6 @@ from pythonbuilder.pbpython import doMypy, doRuffCheck, doRuffFormat
 
 OURNAME = "pythonbuilder"
 
-LOG.setLevel("INFO")
 srcDir = Path("pythonbuilder")
 testsDir = Path("tests")
 buildDir = Path("build")
@@ -116,7 +114,7 @@ def doApidoc(docPath: Path, docTemplates: Path, pypath: Path) -> None:
     "--project-url=https://codeberg.org/harald/pythonbuilder",
     "--template-dir=" + str(docTemplates),
     "--html-output=" + str(docPath),
-    pypath.name
+    pypath.name,
   )
 
 

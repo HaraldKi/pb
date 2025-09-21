@@ -9,9 +9,9 @@ from pathlib import Path
 import support
 
 from pythonbuilder import (
-  LOG,
   BuildException,
   Target,
+  getLogger,
   rawUpdateTargets,
   resetTraversalState,
   stateFileIteratorContent,
@@ -28,7 +28,8 @@ from pythonbuilder.pbutil import (
 )
 
 TESTTMP = Path("build", "testtmp")
-SRCPATH = Path("pythonbuilder") # used as source for some copying tests
+SRCPATH = Path("pythonbuilder")  # used as source for some copying tests
+
 
 class TestRootPathMapper(support.CommonFixture):
   def test_empty(self) -> None:
@@ -131,10 +132,10 @@ class TestMain(support.CommonFixture):
   def setUp(self) -> None:
     super().setUp()
     self.logfails = 0
-    LOG.addFilter(self.filter)
+    getLogger().addFilter(self.filter)
 
   def tearDown(self) -> None:
-    LOG.removeFilter(self.filter)
+    getLogger().removeFilter(self.filter)
     self.assertEqual(0, self.logfails)
     super().tearDown()
 
@@ -174,6 +175,7 @@ class TestMain(support.CommonFixture):
     self.assertTrue(top.recreated)
 
   def testSetLoglevel(self) -> None:
+    LOG = getLogger()
     ## Without any target on the command line, main() prints the list of targets plus an
     ## explainer line. To avoid this we provide minimal food.
     Target("dummy", state="fixed", name="dummy")

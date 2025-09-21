@@ -5,7 +5,7 @@ from abc import abstractmethod
 from pathlib import Path
 from urllib import request
 
-from pythonbuilder import LOG, Target
+from .pythonbuilder import Target, getLogger
 
 
 class MavenArtifact:
@@ -128,7 +128,7 @@ class _MavenArtifactLocal(_Fetcher):
     """
     path = Path.home() / ".m2" / "repository" / self.artifact.repoUrl()
     targetPath.parent.mkdir(parents=True, exist_ok=True)
-    LOG.info("* fetch %s -> %s", path, targetPath)
+    getLogger().info("* fetch %s -> %s", path, targetPath)
     shutil.copy(path, targetPath)
 
 
@@ -144,7 +144,7 @@ class _MavenArtifactRemote(_Fetcher):
     """
     url = self.repoUrl + self.artifact.repoUrl()
     targetPath.parent.mkdir(parents=True, exist_ok=True)
-    LOG.info("* fetch %s -> %s", url, targetPath)
+    getLogger().info("* fetch %s -> %s", url, targetPath)
     with request.urlopen(url) as response:
       data = response.read()
       with open(targetPath, "wb") as f:

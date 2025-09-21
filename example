@@ -3,9 +3,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pythonbuilder import LOG, Target, pbutil
+from pythonbuilder import Target, getLogger, pbutil
 
-LOG.setLevel("VERBOSE")
+getLogger().setLevel("VERBOSE")
 
 
 def defineTargets() -> None:

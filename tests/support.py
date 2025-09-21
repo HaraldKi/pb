@@ -11,7 +11,7 @@ class CommonFixture(unittest.TestCase):
     pythonbuilder.setStatefile(testStatefile)
     testStatefile.unlink(missing_ok=True)
     pythonbuilder.getTargets().clear()
-    pythonbuilder.LOG.setLevel("WARNING")
+    pythonbuilder.getLogger().setLevel("WARNING")
 
   def tearDown(self) -> None:
     pythonbuilder.setStatefile(self.statefile)

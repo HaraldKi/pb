@@ -10,8 +10,8 @@ from test_core import *  # noqa: F403
 from test_mavenrepo import *  # noqa: F403
 from test_pbutil import *  # noqa: F403
 
-from pythonbuilder import LOG
+from pythonbuilder import getLogger
 
 if __name__ == "__main__":
-  LOG.setLevel("ERROR")
+  getLogger().setLevel("ERROR")
   unittest.main(verbosity=0)
