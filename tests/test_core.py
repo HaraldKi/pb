@@ -25,84 +25,83 @@ from pythonbuilder import (
 
 _TMPDIR = Path("build", "testtmp")
 
-# mypy: allow-untyped-defs
-
 
 def noop(t: Any) -> None:
   return None
 
 
 class TestTargetCreation(support.CommonFixture):
-  def test_basic(self):
+  def test_basic(self) -> None:
     t = Target(Path("pb"))
     self.assertEqual(stateFileContent, t.generateState)
     self.assertEqual(t, findTarget("pb"))
 
-  def test_explictName(self):
+  def test_explictName(self) -> None:
     ## we use an arbitrary existing file (FIXME: create test file)
     t = Target(Path("pb"), name="base")
     self.assertEqual(t, findTarget("base"))
 
-  def test_state(self):
-    t = Target("b", state="dir")
+  def test_state(self) -> None:
+    t = Target(Path("b"), state="dir")
     self.assertEqual(stateDirContent, t.generateState)
 
-    t = Target("c", state="file")
+    t = Target(Path("c"), state="file")
     self.assertEqual(stateFileContent, t.generateState)
 
-    t = Target("d", state="fixed")
-    self.assertEqual(stateFixed, t.generateState)
+    t3 = Target("d", state="fixed")
+    self.assertEqual(stateFixed, t3.generateState)
 
-    t = Target("e", state="new")
-    self.assertEqual(stateNew, t.generateState)
+    t4 = Target("e", state="new")
+    self.assertEqual(stateNew, t4.generateState)
 
-  def test_cmd(self):
-    t = Target("b", state="file", cmd=noop)
+  def test_statePathFail(self) -> None:
+    t = Target(Path("pb"), state="dir")
+    with self.assertRaisesRegex(BuildException, "'pb'.*file.*directory"):
+      rawUpdateTargets(t.name)
+
+    t = Target(Path("pythonbuilder"), state="file")
+    with self.assertRaisesRegex(BuildException, "'pythonbuilder'.*directory.*file"):
+      rawUpdateTargets(t.name)
+
+  def test_cmd(self) -> None:
+    t = Target("b", state="value", cmd=noop)
     self.assertEqual(noop, t.cmd)
 
-  def test_deps(self):
-    d0 = Target("d0", state="file")
-    d1 = Target("d1", state="file")
-    t = Target("b", d0, d1, state="file", cmd=lambda: None)
+  def test_deps(self) -> None:
+    d0 = Target("d0", state="value")
+    d1 = Target("d1", state="value")
+    t = Target("b", d0, d1, state="value", cmd=None)
     self.assertEqual(d0, t.dependencies[0])
     self.assertEqual(d1, t.dependencies[1])
 
-  def test_failWrongState(self):
+  def test_failWrongState(self) -> None:
     self.assertRaisesRegex(
       BuildException,
       "'foob' is neither a file nor a directory, cannot",
       lambda: Target("foob"),
     )
 
-  def testFailDoublyDeclared(self):
+  def testFailDoublyDeclared(self) -> None:
     Target(Path("x", "z"), state="file")
     with self.assertRaisesRegex(BuildException, "defined already"):
       Target(Path("x") / "z", state="file")
 
-  def testFailWrongStateFun(self):
-    with self.assertRaisesRegex(BuildException, "'1' is not"):
-      Target("yada1", state=1)
-
-    with self.assertRaisesRegex(BuildException, "dir>' is not"):
-      Target("yada1", state=dir)
-
-    with self.assertRaisesRegex(BuildException, "str'>' is not"):
-      Target("yada2", state=str)
-
-    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
-      Target("yada3", state=lambda: "a")
-
-    with self.assertRaisesRegex(BuildException, "<lambda>.* is not"):
-      Target("yada4", state=lambda a, b: "a")
+  def testFailWrongStateFun(self) -> None:
+    with self.assertRaisesRegex(BuildException, "'file' must.*Path"):
+      Target("yada2", state="file")
+    with self.assertRaisesRegex(BuildException, "'dir' must.*Path"):
+      Target("yada2", state="dir")
+    with self.assertRaisesRegex(BuildException, "'stuff'.*function shortcut"):
+      Target("yada2", state="stuff")
 
 
-def writeToFile(text, fname):
+def writeToFile(text: str, fname: Path) -> None:
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
 
 
 class TestStateComputation(support.CommonFixture):
-  def test_iterator(self):
+  def test_iterator(self) -> None:
     file = _TMPDIR / "thefile"
     writeToFile("hallo", file)
     hex = stateFileIteratorContent([file])
@@ -111,7 +110,7 @@ class TestStateComputation(support.CommonFixture):
     digest.update("hallo".encode())
     self.assertEqual(digest.hexdigest(), hex)
 
-  def test_dirContent(self):
+  def test_dirContent(self) -> None:
     mydir = _TMPDIR / "dircontenttest"
     if mydir.is_dir():
       shutil.rmtree(mydir)
@@ -152,11 +151,11 @@ class TestUpdateTargets(support.CommonFixture):
   def setSimpleValue(self, key: str, value: Any) -> None:
     self.values[key] = str(value)
 
-  def setUp(self):
+  def setUp(self) -> None:
     super().setUp()
     self.values.clear()
 
-  def test_singleTarget(self):
+  def test_singleTarget(self) -> None:
     self.values["blabla"] = "value of blabla"
     t = Target("blabla", state=self.simpleState)
     updateTargets("blabla")
@@ -176,7 +175,7 @@ class TestUpdateTargets(support.CommonFixture):
   # trigger its dependents, even if recreated for the simple reason:
   # If, after recreation, the state is as before, there is no point
   # to trigger the dependents.
-  def test_fixedStateStopsUpdate(self):
+  def test_fixedStateStopsUpdate(self) -> None:
     source = Target("source", state=self.simpleState)
     fixed = Target("fixed", source, state="fixed")
     top = Target("top", fixed, state=self.simpleState)
@@ -210,7 +209,7 @@ class TestUpdateTargets(support.CommonFixture):
     self.assertTrue(top.updated)
     self.assertFalse(top.recreated)
 
-  def failWithZDE(self, t: str, u: str):
+  def failWithZDE(self, t: str, u: str) -> None:
     print(len(t) / 0)
 
   def test_buildFailDoesNotUpdateStatefile(self) -> None:
@@ -231,7 +230,7 @@ class TestUpdateTargets(support.CommonFixture):
       rawUpdateTargets(second)
     self.assertTrue(first.recreated)
 
-  def test_inMemTarget(self):
+  def test_inMemTarget(self) -> None:
     t0 = Target(117, state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 

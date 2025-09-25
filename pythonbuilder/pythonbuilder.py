@@ -25,7 +25,6 @@ from typing import (
   Final,
   Generic,
   Hashable,
-  TypeGuard,
   TypeVar,
   cast,
   get_origin,
@@ -162,12 +161,18 @@ class Target(Generic[T]):  # {
     :param cmd: the command to run to (re-)create the target. Its parameters will
       be the target's ``item`` as well as the items of all dependencies.
     """
-    stateGenerator: Callable[[T], str]
+    stateGenerator: Callable[[T], str] | Callable[[Target[T]], str]
     match state:
       case "dir":
-        stateGenerator = cast(Callable[[T], str], stateDirContent)
+        if isinstance(item, Path):
+          stateGenerator = cast(Callable[[T], str], stateDirContent)
+        else:
+          raise BuildException("state function 'dir' must be used with a Path")
       case "file":
-        stateGenerator = cast(Callable[[T], str], stateFileContent)
+        if isinstance(item, Path):
+          stateGenerator = cast(Callable[[T], str], stateFileContent)
+        else:
+          raise BuildException("state function 'file' must be used with a Path")
       case "new":
         stateGenerator = stateNew
       case "fixed":
@@ -189,10 +194,10 @@ class Target(Generic[T]):  # {
             % item
           )
       case _:
-        if _isStateGenerator(state):
-          stateGenerator = state
-        else:
-          raise BuildException("'%s' is not a function of Target" % state)
+        if isinstance(state, str):
+          raise BuildException(f"'{state}' is not a known state function shortcut")
+        ## Guaranteed to be the correct type if a type checker is used
+        stateGenerator = state
 
     self.item: T = item
     """The item of the target, often a file or directory path."""
@@ -209,13 +214,7 @@ class Target(Generic[T]):  # {
     self.cmd: Callable[Concatenate[T, ...], None] | None = cmd
     """Function to (re-)create the target."""
 
-    for d in dependencies:
-      if not isinstance(d, Target):
-        raise BuildException(
-          "dependency is not of type Target but is %s: %s" % (type(d), d)
-        )
-
-    self.dependencies = dependencies
+    self.dependencies: tuple[Target[Any], ...] = dependencies
     """The target's dependencies."""
 
     self.started: bool = False
@@ -359,26 +358,13 @@ def stateFileContent(targetPath: Path) -> str:
   return stateFileIteratorContent([targetPath])
 
 
-def _isStateGenerator(g: Any) -> TypeGuard[Callable[[Any], str]]:
-  if not callable(g):
-    return False
-  ## FIXME: add better test to fail early
-  try:
-    signature = inspect.signature(g)
-  except Exception as _e:
-    return False
-  if signature.parameters is None or len(signature.parameters) != 1:
-    return False
-  return True
-
-
 def stateFileIteratorContent(iter: Iterable[Path]) -> str:
   """Creates a combined state over files.
 
-  If a path string from the iterable exists in the file system, its content is
-  fed into the checksum, otherwise a `stateNew` is fed in. If the path string
-  denotes a directory, it is ignored. This is a convenience to be able
-  to use this with ``Path.rglob()`` without extra directory name filter.
+  If a path from the iterable exists in the file system, its content is fed into the
+  checksum, otherwise a `stateNew` is fed in. If the path string denotes a directory, it
+  is ignored. This is a convenience to be able to use this with ``Path.rglob()`` without
+  extra directory name filter.
 
   To make a difference between sets of non existing files, all file names are
   also hashed.
@@ -792,7 +778,7 @@ class _StateStore:
 ## How to compute __all__ the way I intend it, but this makes problems at least with
 ## mypy and pydoctor, so we use the resulting list and have to update it when
 ## we change stuff.
-#__all__ = [n for (n, v) in globals().items() if not n.startswith("_") and getattr(v, "__module__", None) == Target.__module__]
+# __all__ = [n for (n, v) in globals().items() if not n.startswith("_") and getattr(v, "__module__", None) == Target.__module__]
 __all__ = [
   "levelVerbose",
   "getLogger",
