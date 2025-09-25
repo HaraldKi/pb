@@ -68,7 +68,6 @@ pyformat = Target(
 ############################################################
 coverageFile = buildDir / "coverage.data"
 environ["COVERAGE_FILE"] = str(coverageFile)
-environ["TEST_MAVENREPO"] = "TRUE"
 
 
 def doRunCoverage(_coverageFile: Path, testSources: Path, *_unused: Path) -> None:
