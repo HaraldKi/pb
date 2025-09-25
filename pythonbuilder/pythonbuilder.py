@@ -97,14 +97,12 @@ def getStatefile() -> Path:
   return _STATEFILE
 
 
-class BuildException(Exception):  # {
+class BuildException(Exception):
   """Raised on failures detected by pythonbuilder."""
 
   def __init__(self, message: str) -> None:
     self.message = message
 
-
-# }
 
 ## From Python 3.12, not needed anymore, see:
 ## https://mypy.readthedocs.io/en/stable/generics.html
@@ -196,22 +194,24 @@ class Target(Generic[T]):  # {
         ## Guaranteed to be the correct type if a type checker is used
         stateGenerator = state
 
-    self.item: T = item
+    self.item: Final[T] = item
     """The item of the target, often a file or directory path."""
 
-    self.name: str = str(item) if name is None else name
+    self.name: Final[str] = str(item) if name is None else name
     """The target's name, defaulting to ``str(item)``.
 
     It can be used as parameter for `updateTargets`.
     """
 
-    self.generateState: Callable[[T], str] | Callable[[Target[T]], str] = stateGenerator
+    self.generateState: Final[Callable[[T], str] | Callable[[Target[T]], str]] = (
+      stateGenerator
+    )
     """Function to generate the state for the target."""
 
-    self.cmd: Callable[Concatenate[T, ...], None] | None = cmd
+    self.cmd: Final[Callable[Concatenate[T, ...], None] | None] = cmd
     """Function to (re-)create the target."""
 
-    self.dependencies: tuple[Target[Any], ...] = dependencies
+    self.dependencies: Final[tuple[Target[Any], ...]] = dependencies
     """The target's dependencies."""
 
     self.started: bool = False
@@ -229,7 +229,7 @@ class Target(Generic[T]):  # {
     command was run.
 
     This does not say whether the target was actually changed by running its
-    ``cmd``.
+    ``cmd``, it merely informs that the command was run.
     """
 
     self.force: bool = False
@@ -262,10 +262,6 @@ class Target(Generic[T]):  # {
     else:
       return cast(Callable[[T], str], self.generateState)(self.item)
 
-
-## FIXME: remove mutable state from Target, keep it in a separate object,
-##        but check if it worth it, as inspection during the build is more
-#         difficult
 
 _TARGETS: dict[str, Target] = dict()
 

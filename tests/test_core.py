@@ -9,6 +9,7 @@ from pythonbuilder import (
   BuildException,
   Target,
   findTarget,
+  getTargets,
   rawUpdateTargets,
   resetTraversalState,
   stateDirContent,
@@ -227,19 +228,24 @@ class TestUpdateTargets(support.CommonFixture):
     self.assertTrue(first.recreated)
 
   def test_inMemTarget(self) -> None:
-    t0 = Target(117, state="value")
+    t0 = Target(117, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 
     rawUpdateTargets(other)
     self.assertTrue(other.recreated)
     self.assertEqual("117", self.values["other"])
 
-    resetTraversalState()
+    getTargets().clear()
+    t0 = Target(117, name="t0", state="value")
+    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
     rawUpdateTargets(other)
     self.assertFalse(other.recreated)
 
+    getTargets().clear()
     resetTraversalState()
-    t0.item = 116
+    t0 = Target(116, name="t0", state="value")
+    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
+
     rawUpdateTargets(other)
     self.assertTrue(other.recreated)
     self.assertEqual("116", self.values["other"])

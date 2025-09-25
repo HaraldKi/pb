@@ -15,4 +15,3 @@ instead of ``from pythonbuilder.pythonbuilder``.
 """
 
 from .pythonbuilder import *  # noqa: F403
-
