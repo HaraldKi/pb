@@ -112,9 +112,6 @@ T = TypeVar("T", bound=Hashable)
 """The data type wrapped by a `Target`."""
 
 
-## FIXME: we should have a stateForward as a middle ground between fixed and
-## new. This state should change independent of the target itself iff the
-## dependency state changed.
 @dataclass(init=False, eq=False)
 class Target(Generic[T]):  # {
   """Represents a target with an item to create, its dependencies, how to
