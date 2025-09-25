@@ -1,11 +1,7 @@
 import hashlib
 import shutil
-import sys
 from pathlib import Path
 from typing import Any
-
-## The tests must be started from the project directory
-sys.path += [str(Path.cwd() / "src")]
 
 import support
 

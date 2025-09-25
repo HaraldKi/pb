@@ -1,9 +1,5 @@
 import shutil
-import sys
 from pathlib import Path
-
-## The tests must be started from the project directory
-sys.path += [str(Path.cwd() / "src")]
 
 import support
 
@@ -13,12 +9,10 @@ from pythonbuilder import (
   stateFileContent,
 )
 
-# mypy: allow-untyped-defs
-
 _TMPDIR = Path("build", "testtmp")
 
 
-def writeToFile(text, fname):
+def writeToFile(text: str, fname: Path) -> None:
   with open(fname, "wb") as outfile:
     outfile.write(text.encode())
 
@@ -28,13 +22,13 @@ class TestPythonBuilderApi(support.CommonFixture):
   to have smaller files.
   """
 
-  def setUp(self):
+  def setUp(self) -> None:
     super().setUp()
     if _TMPDIR.is_dir():
       shutil.rmtree(_TMPDIR)
     _TMPDIR.mkdir(parents=True, exist_ok=True)
 
-  def test_stateFileContent(self):
+  def test_stateFileContent(self) -> None:
     f = _TMPDIR / "testout"
     t = Target(f, state="file")
 
@@ -50,8 +44,8 @@ class TestPythonBuilderApi(support.CommonFixture):
     hash2 = stateFileContent(t.item)
     self.assertEqual(hash1, hash2)
 
-  def test_flatten(self):
-    result = []
+  def test_flatten(self) -> None:
+    result: list[str] = []
     flatten(result, [[], []])
     self.assertEqual([], result)
 
