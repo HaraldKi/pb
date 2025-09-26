@@ -95,6 +95,7 @@ after it was accidentally deleted, the target will not be created unnecessarily.
 ## Example
 
 A minimal example, assumed to be stored in file `pb`:
+<!-- inlined file: example, update with 'pb readme' -->
 ```python
 #!/usr/bin/env python3
 import subprocess
@@ -131,6 +132,7 @@ defineTargets()
 if not pbutil.main(*sys.argv[1:]):
   sys.exit(1)
 ```
+<!-- inlined file end -->
 
 The default name of a `Target`, which has to be unique over the whole built, is
 `str(Target.item)`, where `.item` is initialized by first parameter of

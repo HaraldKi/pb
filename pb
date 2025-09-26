@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+import re
 import sys
 from os import environ, getenv
 from pathlib import Path
 
 from pythonbuilder import (
+  BuildException,
   Target,
   pbexec,
   pbutil,
@@ -126,13 +128,26 @@ apidoc = Target(
 )
 
 ############################################################
+def doReadme(readmeMd: Path, example: Path) -> None:
+  readme = readmeMd.read_text(encoding="UTF-8")
+  insert = example.read_text(encoding="UTF-8")
+  tmpl = "<!-- inlined file: example, update with 'pb readme' -->\n```python\n%s```\n<!-- inlined file end -->"
+  text = re.sub("<!-- inlined file:.*inlined file end -->", (tmpl % ""), readme, flags=re.DOTALL)
+  if text == readme:
+    raise BuildException(f"cannot find pattern to insert file '{example}' into '{readmeMd}'")
+  text = re.sub("<!-- inlined file:.*inlined file end -->", (tmpl % insert), readme, flags=re.DOTALL)
+  readmeMd.write_text(text, encoding="UTF-8")
+
+readmemd = Target(Path("README.md"), example, name="readme", cmd=doReadme)
+
+############################################################
 graph = registerDependencyGraphTarget(Path("dependencies.svg"), "graph", pb)
 
 ############################################################
 
 # Run all targets which have no dependents to see if the
 # full build works
-Target("full", coverage, apidoc, graph, state="new")
+Target("full", coverage, apidoc, graph, readmemd, state="new")
 
 ############################################################
 
