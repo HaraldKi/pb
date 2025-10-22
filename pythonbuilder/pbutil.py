@@ -367,6 +367,7 @@ _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 """
 
 
+# FIXME: move this to pythonbuilder.py and some of the lesser ones to here, like graphviz
 def main(*argv: str) -> bool:
   """Simple wrapper around `pythonbuilder.updateTargets` to set the log level and/or
   force targets to be re-created.
