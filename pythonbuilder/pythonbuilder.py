@@ -9,7 +9,6 @@ of `Target()`. Some have a string shortcut. See there.
 from __future__ import annotations
 
 import hashlib
-import inspect
 import json
 import logging
 import os
@@ -27,7 +26,6 @@ from typing import (
   Hashable,
   TypeVar,
   cast,
-  get_origin,
 )
 
 _VERBOSE: Final = logging.INFO - 5
@@ -121,7 +119,7 @@ class Target(Generic[T]):  # {
     self,
     item: T,
     *dependencies: Target[Any],
-    state: str | Callable[[T], str] | Callable[[Target[T]], str] | None = None,
+    state: str | Callable[[T], str] | None = None,
     name: str | None = None,
     cmd: Callable[Concatenate[T, ...], None] | None = None,
   ):  # {
@@ -146,17 +144,17 @@ class Target(Generic[T]):  # {
       "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
       `stateFixed` or `stateValue` respectively.
 
-      Otherwise, the function's parameter may be either a ``Target[T]`` or a ``T`` and
-      it will be called accordingly. The typical case should be ``T``. Only if the state
-      generator needs access to the dependencies, a parameter of type ``Target[T]``
-      should be necessary.
+      Otherwise, the function's parameter may be ``T`` and it will be called with the
+      ``Target``'s ``item`` to create the checksum.
+
 
     :param name: A nice name for the target to use, for example, on the command
       line. The default is name is ``str(item)``.
     :param cmd: the command to run to (re-)create the target. Its parameters will
       be the target's ``item`` as well as the items of all dependencies.
+
     """
-    stateGenerator: Callable[[T], str] | Callable[[Target[T]], str]
+    stateGenerator: Callable[[T], str]
     match state:
       case "dir":
         if isinstance(item, Path):
@@ -203,9 +201,7 @@ class Target(Generic[T]):  # {
     It can be used as parameter for `updateTargets`.
     """
 
-    self.generateState: Final[Callable[[T], str] | Callable[[Target[T]], str]] = (
-      stateGenerator
-    )
+    self.generateState: Final[Callable[[T], str]] = stateGenerator
     """Function to generate the state for the target."""
 
     self.cmd: Final[Callable[Concatenate[T, ...], None] | None] = cmd
@@ -251,16 +247,6 @@ class Target(Generic[T]):  # {
     s = self.generateState.__name__
     c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
     return f"Target({self.name}, {deps}, name={self.name}," + f" state={s}{c})"
-
-  def _computeState(self) -> str:
-    ## determine whether to call with t or with t.item
-    parameters = inspect.signature(self.generateState).parameters.values()
-    param = next(iter(parameters))
-    anno = param.annotation
-    if get_origin(anno) == Target:
-      return cast(Callable[[Target[T]], str], self.generateState)(self)
-    else:
-      return cast(Callable[[T], str], self.generateState)(self.item)
 
 
 _TARGETS: dict[str, Target] = dict()
@@ -569,7 +555,7 @@ def _updateTarget(
 
   target.updated = True
 
-  targetStateBefore = target._computeState()
+  targetStateBefore = target.generateState(target.item)
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -609,7 +595,7 @@ def _updateTarget(
       )
 
   target.recreated = True
-  targetStateAfter = target._computeState()
+  targetStateAfter = target.generateState(target.item)
   states.setHashes(target, targetStateAfter, depsState)
 
 
