@@ -202,7 +202,7 @@ class TestUpdateTargets(support.CommonFixture):
   def failWithZDE(self, t: str, u: str) -> None:
     print(len(t) / 0)
 
-  def test_buildFailDoesNotUpdateStatefile(self) -> None:
+  def test_buildFailUpdateStatefile(self) -> None:
     first: Target[str] = Target("first", state=self.simpleState)
     second: Target[str] = Target("second", first, state="fixed", cmd=self.failWithZDE)
     self.values[first.item] = "value of first"
@@ -218,7 +218,7 @@ class TestUpdateTargets(support.CommonFixture):
     resetTraversalState()
     with self.assertRaises(ZeroDivisionError):
       rawUpdateTargets(second)
-    self.assertTrue(first.recreated)
+    self.assertFalse(first.recreated)
 
   def test_inMemTarget(self) -> None:
     t0 = Target(117, name="t0", state="value")

@@ -248,7 +248,7 @@ class Target(Generic[T]):  # {
     _TARGETS[self.name] = self
 
   def showNameOnly(self) -> Self:
-    """Suggest to tools like `toGraphViz` not to show a string representation of the
+    """Suggest to tools like `toGraphviz` not to show a string representation of the
     item, but instead only use the name. If no explicit name was provided, calling this
     function is silly, as in that case the name is ``str(item)`` anyway.
 
@@ -548,12 +548,14 @@ def rawUpdateTargets(*targets: str | Target) -> None:
 
   """
   states = _StateStore(getStatefile())
-  for t in targets:
-    target = findTarget(t)
-    if target is None:
-      raise BuildException("target '%s' not defined" % t)
-    _updateTarget(states, target, [])
-  states.save()
+  try:
+    for t in targets:
+      target = findTarget(t)
+      if target is None:
+        raise BuildException("target '%s' not defined" % t)
+      _updateTarget(states, target, [])
+  finally:
+    states.save()
 
 
 def _updateTarget(
