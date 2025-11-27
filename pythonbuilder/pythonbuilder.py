@@ -28,6 +28,8 @@ from typing import (
   cast,
 )
 
+from typing_extensions import Self
+
 _VERBOSE: Final = logging.INFO - 5
 
 
@@ -234,10 +236,29 @@ class Target(Generic[T]):  # {
     rebuilding a target.
     """
 
+    self.nameOnly: bool = False
+    """Setting this to ``True`` means that a representation of the item should typically
+    not be shown in output. Currently used only when the dependency graph is
+    drawn.
+    """
+
     if self.name in _TARGETS:
       raise BuildException("'%s' defined already" % item)
 
     _TARGETS[self.name] = self
+
+  def showNameOnly(self) -> Self:
+    """Suggest to tools like `toGraphViz` not to show a string representation of the
+    item, but instead only use the name. If no explicit name was provided, calling this
+    function is silly, as in that case the name is ``str(item)`` anyway.
+
+    This is typically used for targets whose string representation reveals a developers
+    local setup, like environment variables.  If the representation ends up committed,
+    like the dependency graph, targets which change frequently, like file names
+    containing a version, may also opt to use ``showNameOnly()``.
+    """
+    self.nameOnly = True
+    return self
 
   def __str__(self) -> str:
     """Readable short form for a ``Target``"""
@@ -616,7 +637,7 @@ def _targetToGraphviz(target: Target) -> str:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"\n'
 
   text = str(target.item)
-  if target.name != text:
+  if target.name != text and not target.nameOnly:
     if len(text) > 33:
       abbrev = text[:30] + "..."
       tooltip = f' tooltip="{_escdq(text)}"'
