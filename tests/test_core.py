@@ -1,12 +1,13 @@
 import hashlib
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, cast
 
 import support
 
 from pythonbuilder import (
   BuildException,
+  StateProvider,
   Target,
   findTarget,
   getTargets,
@@ -19,6 +20,7 @@ from pythonbuilder import (
   stateNew,
   updateTargets,
 )
+from pythonbuilder.pythonbuilder import _StateProviderImpl
 
 _TMPDIR = Path("build", "testtmp")
 
@@ -27,10 +29,21 @@ def noop(t: Any) -> None:
   return None
 
 
+class DummySelfState(StateProvider):
+  def __init__(self, v: str):
+    self.v = v
+
+  def provideState(self) -> str:
+    return "X" + self.v
+
+
 class TestTargetCreation(support.CommonFixture):
+  def getGenerator(self, t: Target[Any]) -> Callable[[Any], str]:
+    return cast(_StateProviderImpl, t.stateGenerator).generator
+
   def test_basic(self) -> None:
     t = Target(Path("pb"))
-    self.assertEqual(stateFileContent, t.generateState)
+    self.assertEqual(stateFileContent, self.getGenerator(t))
     self.assertEqual(t, findTarget("pb"))
 
   def test_explictName(self) -> None:
@@ -40,16 +53,21 @@ class TestTargetCreation(support.CommonFixture):
 
   def test_state(self) -> None:
     t = Target(Path("b"), state="dir")
-    self.assertEqual(stateDirContent, t.generateState)
+    self.assertEqual(stateDirContent, self.getGenerator(t))
 
     t = Target(Path("c"), state="file")
-    self.assertEqual(stateFileContent, t.generateState)
+    self.assertEqual(stateFileContent, self.getGenerator(t))
 
     t3 = Target("d", state="fixed")
-    self.assertEqual(stateFixed, t3.generateState)
+    self.assertEqual(stateFixed, self.getGenerator(t3))
 
     t4 = Target("e", state="new")
-    self.assertEqual(stateNew, t4.generateState)
+    self.assertEqual(stateNew, self.getGenerator(t4))
+
+    v = DummySelfState("ulu")
+    t5 = Target(v)
+    self.assertEqual(v, t5.stateGenerator)
+    self.assertEqual("Xulu", t5.stateGenerator.provideState())
 
   def test_statePathFail(self) -> None:
     t = Target(Path("pb"), state="dir")
@@ -91,6 +109,14 @@ class TestTargetCreation(support.CommonFixture):
     with self.assertRaisesRegex(BuildException, "'stuff'.*function shortcut"):
       Target("yada2", state="stuff")
 
+  def testStrOfTarget(self) -> None:
+    t0 = Target("zero", state="value", cmd=print)
+    t1 = Target(DummySelfState("xx"), t0, name="t1")
+    self.assertEqual(
+      "Target(zero, [], name=zero, state=stateValue, cmd=print)", str(t0)
+    )
+    self.assertEqual("Target(t1, [zero], name=t1, state=(itemstate))", str(t1))
+
 
 def writeToFile(text: str, fname: Path) -> None:
   with open(fname, "wb") as outfile:
@@ -129,7 +155,6 @@ class TestStateComputation(support.CommonFixture):
       digest.update(str(f).encode())
       digest.update(str(f.name).encode())
     self.assertEqual(digest.hexdigest(), hex)
-
 
 
 class TestUpdateTargets(support.CommonFixture):
@@ -249,3 +274,13 @@ class TestUpdateTargets(support.CommonFixture):
     # because preventing a call for an already updated target was only done in the
     # loop over the dependencies in _updateTarget, not in updateTargets()
     self.assertTrue(updateTargets("t0", "t0"))
+
+  def test_failWithDependencyLoop(self) -> None:
+    # Somewhat hard to test, because the way we create targets, its dependencies must
+    # be defined before they can be used. Yet shit may happen, so lets check the loop
+    # detection.
+    t1 = Target("one", state="value")
+    t2 = Target("two", t1, state="value")
+    t1.__setattr__("dependencies", (t2,))
+    with self.assertRaisesRegex(BuildException, "dependency loop.*one.*<-.*two.*one"):
+      rawUpdateTargets(t1)

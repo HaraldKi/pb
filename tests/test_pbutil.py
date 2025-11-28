@@ -102,8 +102,8 @@ class TestPaths(support.CommonFixture):
 
   def testWithTarget(self) -> None:
     # assume we're running in the projects root directory
-    pg = Target(Paths.glob(SRCPATH, "*.py"), state=stateFileIteratorContent)
-    pgState = pg.generateState(pg.item)
+    pg = Target(Paths.glob(SRCPATH, "*.py"))
+    pgState = pg.stateGenerator.provideState()
     expected = stateFileIteratorContent(SRCPATH.glob("*.py"))
     self.assertEqual(expected, pgState)
 

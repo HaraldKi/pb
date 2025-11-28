@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import time
+from abc import abstractmethod
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,9 +24,10 @@ from typing import (
   Concatenate,
   Final,
   Generic,
-  Hashable,
+  Protocol,
   TypeVar,
   cast,
+  runtime_checkable,
 )
 
 from typing_extensions import Self
@@ -106,12 +108,34 @@ class BuildException(Exception):
 
 ## From Python 3.12, not needed anymore, see:
 ## https://mypy.readthedocs.io/en/stable/generics.html
-T = TypeVar("T", bound=Hashable)
+T = TypeVar("T")
 """The data type wrapped by a `Target`."""
 
 
+@runtime_checkable
+class StateProvider(Protocol):
+  @abstractmethod
+  def provideState(self) -> str:
+    """Provides a state string for ``self``.
+
+    Objects with this function don't require to provide a separate ``state=`` parameter
+    when constructing a `Target`. Instead this function is used to get the state
+    representation.
+    """
+    ...
+
+
+@dataclass
+class _StateProviderImpl(StateProvider, Generic[T]):
+  item: T
+  generator: Callable[[T], str]
+
+  def provideState(self) -> str:
+    return self.generator(self.item)
+
+
 @dataclass(init=False, eq=False)
-class Target(Generic[T]):  # {
+class Target(Generic[T]):
   """Represents a target with an item to create, its dependencies, how to
   compute its state (hashed content, fingerprint), how to (re-)create it and an
   optional nice name.
@@ -136,17 +160,19 @@ class Target(Generic[T]):  # {
       directory name
     :param dependencies: the dependencies of this target
     :param state: describes how to generate a state (checksum, fingerprint) for
-      this target item. The function must generate a small fingerprint string
+      this target's item. The function must generate a small fingerprint string
       from the target's item.
 
-      If ``state`` is not provided, the `item` must denote an **existing** file
-      or directory.
+      If ``state`` is not provided, the `item` must denote an **existing** file or
+      directory for a default of `stateFileContent` or `stateDirContent`, or implement
+      `StateProvider`, in which case the item's `StateProvider.provideState` function is
+      used to generate its state.
 
       If given as a string, it must be "dir", "file", "new",
       "fixed" or "value" for `stateDirContent`, `stateFileContent`, `stateNew`,
       `stateFixed` or `stateValue` respectively.
 
-      Otherwise, the function's parameter may be ``T`` and it will be called with the
+      Otherwise it must be a function with parameter ``T`` to be called with the
       ``Target``'s ``item`` to create the checksum.
 
 
@@ -156,7 +182,8 @@ class Target(Generic[T]):  # {
       be the target's ``item`` as well as the items of all dependencies.
 
     """
-    stateGenerator: Callable[[T], str]
+
+    stateGenerator: Callable[[T], str] | None
     match state:
       case "dir":
         if isinstance(item, Path):
@@ -175,7 +202,9 @@ class Target(Generic[T]):  # {
       case "value":
         stateGenerator = stateValue
       case None:
-        if isinstance(item, Path) and item.is_dir():
+        if isinstance(item, StateProvider):
+          stateGenerator = None
+        elif isinstance(item, Path) and item.is_dir():
           stateGenerator = cast(Callable[[T], str], stateDirContent)
         elif isinstance(item, Path) and item.is_file():
           stateGenerator = cast(Callable[[T], str], stateFileContent)
@@ -194,6 +223,13 @@ class Target(Generic[T]):  # {
         ## Guaranteed to be the correct type if a type checker is used
         stateGenerator = state
 
+    self.stateGenerator: Final[StateProvider] = (
+      cast(StateProvider, item)
+      if stateGenerator is None
+      else _StateProviderImpl(item, stateGenerator)
+    )
+    """State generator for the target."""
+
     self.item: Final[T] = item
     """The item of the target, often a file or directory path."""
 
@@ -202,9 +238,6 @@ class Target(Generic[T]):  # {
 
     It can be used as parameter for `updateTargets`.
     """
-
-    self.generateState: Final[Callable[[T], str]] = stateGenerator
-    """Function to generate the state for the target."""
 
     self.cmd: Final[Callable[Concatenate[T, ...], None] | None] = cmd
     """Function to (re-)create the target."""
@@ -264,10 +297,16 @@ class Target(Generic[T]):  # {
     """Readable short form for a ``Target``"""
     deps = ", ".join([d.name for d in self.dependencies])
     if len(deps) == 0:
-      deps = "-"
-    s = self.generateState.__name__
-    c = ", cmd=" + self.cmd.__name__ if self.cmd is not None else ""
-    return f"Target({self.name}, {deps}, name={self.name}," + f" state={s}{c})"
+      deps = ""
+
+    if isinstance(self.stateGenerator, _StateProviderImpl):
+      stateGen = getattr(self.stateGenerator, "generator")
+      s = getattr(stateGen, "__name__", "(callable)")
+    else:
+      s = "(itemstate)"
+
+    c = ", cmd=" + getattr(self.cmd, "__name__", "?") if self.cmd is not None else ""
+    return f"Target({self.name}, [{deps}], name={self.name}, state={s}{c})"
 
 
 _TARGETS: dict[str, Target] = dict()
@@ -559,26 +598,28 @@ def rawUpdateTargets(*targets: str | Target) -> None:
 
 
 def _updateTarget(
-  states: "_StateStore", target: Target[T], onbehalf: list[Target]
+  states: "_StateStore", target: Target[T], onbehalf: list[str]
 ) -> None:
   if target.updated:
     return
 
   if target.started:
-    raise BuildException("dependency loop detected: '%s'<-'%s'" % (target, onbehalf))
+    raise BuildException(
+      "dependency loop detected: '%s'<-'%s'" % (target.name, onbehalf)
+    )
   target.started = True
 
   triggeringDeps = []
   depsDigest = hashlib.sha256()
   for dep in target.dependencies:
-    _updateTarget(states, dep, [target] + onbehalf)
+    _updateTarget(states, dep, [target.name] + onbehalf)
     depsDigest.update(states.getOwnHash(dep).encode())
     if dep.recreated:
       triggeringDeps.append(dep.name)
 
   target.updated = True
 
-  targetStateBefore = target.generateState(target.item)
+  targetStateBefore = target.stateGenerator.provideState()
   depsState = depsDigest.hexdigest()
 
   strItem = str(target.item)
@@ -618,7 +659,7 @@ def _updateTarget(
       )
 
   target.recreated = True
-  targetStateAfter = target.generateState(target.item)
+  targetStateAfter = target.stateGenerator.provideState()
   states.setHashes(target, targetStateAfter, depsState)
 
 
@@ -787,6 +828,7 @@ __all__ = [
   "setLogger",
   "setStatefile",
   "getStatefile",
+  "StateProvider",
   "BuildException",
   "T",
   "Target",

@@ -18,7 +18,7 @@ from typing import Any, Callable, Final, Iterable, Iterator
 from . import pythonbuilder as pb
 
 
-class Paths(Iterable[Path], os.PathLike):
+class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
   """An iterable on files, much like ``Path().glob()`` but keeps the path from
   which the iteration starts.
 
@@ -130,6 +130,14 @@ class Paths(Iterable[Path], os.PathLike):
   def __str__(self) -> str:
     """Readable short form for a ``Paths``"""
     return f"Paths[{self.root},{self._itName}]"
+
+  # FIXME: with Python 3.12 start using @override
+  def provideState(self) -> str:
+    """Provides the state of the files such that a ``Paths`` object may be used with no
+    ``state`` provided when used as a `Target`'s item. The function
+    `stateFileIteratorContent` is used to compute the state.
+    """
+    return pb.stateFileIteratorContent(self)
 
   def mappedTo(self, otherRoot: Path) -> "Paths":
     """Maps this object to a different common ancestor. All paths returned when
