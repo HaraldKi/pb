@@ -26,7 +26,7 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
   when combined with `pythonbuilder.stateFileIteratorContent` as the ``state=``
   parameter.
 
-  Many `Target`\s have a ``Path`` as their item and use ``state="dir"`` to obtain its
+  Many targets have a ``Path`` as their item and use ``state="dir"`` to obtain its
   state hash, which includes *all* contained files. If only a subset of files shall
   covered, use this class as a target's item.  You could use the iterator
   ``Path("src/python").rglob("*.py")`` directly as the item, but then you loose the
@@ -216,6 +216,10 @@ def filterPath(
   ``"src/module1/"`` would also have to be checked for each file and, in addition, other
   subdirectories would be traversed unneccesarily.
 
+  The path parameter to both, ``fileOK`` and ``dirOK`, is relative to the ``root``, so
+  to include a directory ``a`` below any root, it suffices to use ``dirOK=lambda p:
+  p.parts[0]=="a"``.
+
   Directory paths will only show up in the result if ``dirs=True`` **and** if they
   are traversed.
 
@@ -229,13 +233,14 @@ def filterPath(
   work: list[Path] = [root]
   while len(work) > 0:
     for p in work.pop().iterdir():
+      relativeP = p.relative_to(root)
       if p.is_dir():
-        if dirOK(p):
+        if dirOK(relativeP):
           work.append(p)
           if dirs:
             yield p
       else:
-        if fileOK(p):
+        if fileOK(relativeP):
           yield p
 
 
@@ -277,7 +282,7 @@ def filterPathRe(
   fileExc = None if fileX is None else re.compile(fileX)
 
   def include(inc: re.Pattern[str], exc: re.Pattern[str] | None, p: Path) -> bool:
-    pstr = p.relative_to(root).as_posix()
+    pstr = p.as_posix()
     return inc.search(pstr) is not None and (exc is None or not exc.search(pstr))
 
   return filterPath(

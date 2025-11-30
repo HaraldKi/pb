@@ -120,6 +120,17 @@ class TestPaths(support.CommonFixture):
     with self.assertRaisesRegex(BuildException, "botched filter maps"):
       [*filtered]
 
+  def testFilteredStripsRootForOKfunctions(self) -> None:
+    def okOrRaise(p: Path) -> bool:
+      if len(p.parts) == 1:
+        return True
+      self.fail("filter function did not clip off root: " + str(SRCPATH) + ", got: " + str(p))
+
+    # The main test is to see that this does not fail with th exceptoin
+    matched = [p for p in Paths.filtered(SRCPATH, fileOK=okOrRaise)]
+    expected = [p for p in SRCPATH.glob("*")]
+    self.assertEqual(len(expected), len(matched))
+
 
 class TestMain(support.CommonFixture):
   logfails: int = 0
