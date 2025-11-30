@@ -4,8 +4,11 @@
 **Table of Contents**
 
   - [Getting Started](#getting-started)
+  - [Some Theory or "Why?"](#some-theory-or-why)
   - [Functional Overview](#functional-overview)
   - [Example](#example)
+  - [Why Python](#why-python)
+  - [Dependency Graph of pythonbuilder's build](#dependency-graph-of-pythonbuilders-build)
 
 <!-- markdown-toc end -->
 
@@ -17,19 +20,19 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 ## Getting Started
 
 From `./pythonbuilder` copy `__init__.py` and `pythonbuilder.py` plus other
-`*.py` files to some place you like. The suggested place is the subdirectory
+`*.py` files to some place you like. The suggested place is the sub-directory
 `./pythonbuilder` in your project directory. Absolutely necessary are only the
 first two files, the others are supplements that may be nice to have.
 
 Write a build script in Python, called `pb` (for example), which has the following
 structure:
-```pyton
+```python
 #!/usr/bin/env python3
 import sys
 import pythonbuilder.pbutil as pbutil
 from pythonbuilder import Target, pbexec, toGraphviz, ...
 
-def defineTarget() -> None:
+def defineTargets() -> None:
   ... multiple calls to the Target constructor ...
 
 ... definition of functions to create your targets ...
@@ -44,6 +47,48 @@ your build script, where target is a name of one of the `Target` objects you cre
 
 A more extensive example, is the [our build script](./pb) or see
 [below](#example).
+
+## Some Theory or "Why?"
+
+Why do we have build systems at all? What do they do? Why not just write a
+script which runs all the commands we need to build our product in the right
+order? These days I see one real reason and two pseudo reasons to use a build
+system. Lets start with the two pseudo-reasons:
+
+**Dependency resolution:** Sure, these days this is a major thing to even get
+started with any non-trivial project: pull in the cornucopia of libraries you
+want to use. But, hey, this is just "dependency resolution", not what I call the
+genuine task of a build system. Even with a straight script you could have one
+command, call it `npm install` or `pulldeps` in some imagined ecosystem, which
+pulls your libraries. Just call it first and be done.
+
+**Task library:** There are tasks which need to be done in every build for a
+software written in language or eco-system. Not having to repeat the task for
+every new software would be great, so a task library to lint, compile, package,
+publish and what-not is nice. But still not the genuine task of the build
+system. You could have that library for whatever script language you use to
+write your build script.
+
+**Guarded execution:** Repeating tasks for which the input did not change will
+result in the same output we have already. This is not only annoying, but takes
+unnecessary time and, in particular, strains our patience. So the very thing
+ancient `make` introduced was to avoid compiling C files which did not change,
+based on their last write time stamp. That's what I call "guarded execution": if
+
+- the input did not change and
+- the output is still available unchanged
+
+there is no point executing the command which create that output from the input.
+
+And it is exactly that last genuine task of a build system that `pythonbuilder`
+implements. In particular the `Target`
+
+- encodes the list if inputs and its output,
+- how to get from the inputs to the outputs and
+- how to check whether either of them changed since we last looked.
+
+Agreed, we have `java.py` and `pbpython.py` which provide a bit of the "task
+library" bit, but more as an example than as a full blown feature set.
 
 ## Functional Overview
 A **target** is something you want to build. Usually it is a file or the
@@ -165,6 +210,25 @@ If you use this in a Java project, then
 and module
 [java](https://harald.codeberg.page/docs/@main/pythonbuilder/java.html)
 might be interesting too.
+
+## Why Python?
+
+Well, because I tried other solutions:
+
+- [BuildMachine](https://codeberg.org/harald/BuildMachine) is mostly the same
+  but written in Java. While implementing the machinery in Java is great, the
+  actual use in writing the "build script" is a bit bumpy despite recent
+  improvements whereby source files can be run without compilation
+  ... script-like.
+- [bashbuilder](https://codeberg.org/harald/bashbuilder) is again mostly the
+  same but written in `bash`. Though here it is the other way round: writing a
+  build script is as straight forward as writing a bash script. But implementing
+  the machinery was an absolute pita, mostly because of the missing or hard to
+  use data structures like maps and lists.
+
+Python provides just the right middle ground for both implementing the
+machinery, these days even mostly type safe with type hints, and writing the
+build script without lots of ceremony.
 
 ## Dependency Graph of pythonbuilder's build
 <img src="dependencies.svg" width="95%">
