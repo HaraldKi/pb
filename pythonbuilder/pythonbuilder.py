@@ -26,7 +26,6 @@ from typing import (
   Generic,
   Protocol,
   TypeVar,
-  cast,
   runtime_checkable,
 )
 
@@ -183,31 +182,32 @@ class Target(Generic[T]):
 
     """
 
-    stateGenerator: Callable[[T], str] | None
+    # stateGenerator: Callable[[T], str] | StateProvider | None
+    stateGenerator: StateProvider
     match state:
       case "dir":
         if isinstance(item, Path):
-          stateGenerator = cast(Callable[[T], str], stateDirContent)
+          stateGenerator = _StateProviderImpl(item, stateDirContent)
         else:
           raise BuildException("state function 'dir' must be used with a Path")
       case "file":
         if isinstance(item, Path):
-          stateGenerator = cast(Callable[[T], str], stateFileContent)
+          stateGenerator = _StateProviderImpl(item, stateFileContent)
         else:
           raise BuildException("state function 'file' must be used with a Path")
       case "new":
-        stateGenerator = stateNew
+        stateGenerator = _StateProviderImpl(None, stateNew)
       case "fixed":
-        stateGenerator = stateFixed
+        stateGenerator = _StateProviderImpl(None, stateFixed)
       case "value":
-        stateGenerator = stateValue
+        stateGenerator = _StateProviderImpl(item, stateValue)
       case None:
         if isinstance(item, StateProvider):
-          stateGenerator = None
+          stateGenerator = item
         elif isinstance(item, Path) and item.is_dir():
-          stateGenerator = cast(Callable[[T], str], stateDirContent)
+          stateGenerator = _StateProviderImpl(item, stateDirContent)
         elif isinstance(item, Path) and item.is_file():
-          stateGenerator = cast(Callable[[T], str], stateFileContent)
+          stateGenerator = _StateProviderImpl(item, stateFileContent)
         else:
           raise BuildException(
             (
@@ -221,13 +221,9 @@ class Target(Generic[T]):
         if isinstance(state, str):
           raise BuildException(f"'{state}' is not a known state function shortcut")
         ## Guaranteed to be the correct type if a type checker is used
-        stateGenerator = state
+        stateGenerator = _StateProviderImpl(item, state)
 
-    self.stateGenerator: Final[StateProvider] = (
-      cast(StateProvider, item)
-      if stateGenerator is None
-      else _StateProviderImpl(item, stateGenerator)
-    )
+    self.stateGenerator: Final[StateProvider] = stateGenerator
     """State generator for the target."""
 
     self.item: Final[T] = item
