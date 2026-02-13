@@ -118,7 +118,7 @@ class StateProvider(Protocol):
     """Provides a state string for ``self``.
 
     Objects with this function don't require to provide a separate ``state=`` parameter
-    when constructing a `Target`. Instead this function is used to get the state
+    when constructing a `Target`. Instead this function is used to get the stateb
     representation.
     """
     ...

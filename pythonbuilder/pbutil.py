@@ -357,15 +357,19 @@ class RootPathMapper:
       yield newRoot / tail
 
 
-def copyFiles(dest: Paths | Path, source: Paths) -> None:
+def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
   """Copies files from ``source`` to dest preserving the path segments below
-  ``source.root``. If the source contains directory paths, these are ignored.
+  ``source.root``. If the source contains directory paths, these are ignored. If
+  the source is a ``Path``, then ``Paths.rglob(source, "*")`` is used.
 
   :param dest: where to copy files to using ``dest.root`` if it is a ``Paths`` object.
   :param source: files to copy
   """
   if isinstance(dest, Paths):
     dest = dest.root
+  if isinstance(source, Path):
+    source = Paths.rglob(source, "*")
+
   for p in source:
     if p.is_dir():
       continue
