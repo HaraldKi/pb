@@ -10,6 +10,14 @@ from pathlib import Path
 from .pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
+_JUNIT4_MAIN_CLASS = "org.junit.runner.JUnitCore"
+
+
+def setJunitMainClass(className: str) -> None:
+  """Set the fully qualified class name of the class to be invoked by jacocoRunJunit4,
+  which defaults to ``org.junit.runner.JUnitCore``."""
+  global _JUNIT4_MAIN_CLASS
+  _JUNIT4_MAIN_CLASS = className
 
 
 def compileJava(
@@ -80,12 +88,15 @@ def jacocoRunJunit4(
     ),
   )
   cp = _PATHSEP.join(map(lambda d: str(d), [testClassesPath] + list(classpath)))
+  ("org.junit.runner.JUnitCore",)
+
+  global _JUNIT4_MAIN_CLASS
   pbexec(
     "java",
     "-javaagent:%s=destfile=%s,append=false" % (jacocoJar, targetPath),
     "-cp",
     cp,
-    "org.junit.runner.JUnitCore",
+    _JUNIT4_MAIN_CLASS,
     *testclasses,
   )
 
