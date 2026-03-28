@@ -484,17 +484,20 @@ def _formatNanoDelta(
 
 def flatten(result: list[str], nested: Any) -> None:
   """Flattens a multiply nested Iterable into the given result. Any element not
-  ``Iterable`` and not ``str`` is added to the result as ``str(element)``
+  ``Iterable`` and not ``str`` is added to the result as ``str(element)``, except
+  ``None``.
 
   :param result: to which elements are appended
-  :param nested: either an ``Iterable`` to flatten or a string or other object to
-    add to the result
+  :param nested: either an ``Iterable`` to flatten or a string or other object to add to
+    the result
   """
   if isinstance(nested, str):
     result.append(nested)
   elif isinstance(nested, Iterable):
     for elem in nested:
       flatten(result, elem)
+  elif nested is None:
+    return
   else:
     result.append(str(nested))
 
