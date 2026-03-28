@@ -1,11 +1,11 @@
-"""Provides a class to work with maven (gradle) style artifacts."""
+"""Provides classes and functions to work with maven (gradle) style artifacts."""
 
 import shutil
 from abc import abstractmethod
 from pathlib import Path
 from urllib import request
 
-from .pythonbuilder import Target, getLogger
+from .pythonbuilder import StateProvider, Target, getLogger, pbexec, stateDirContent
 
 
 class MavenArtifact:
@@ -110,6 +110,73 @@ class MavenArtifact:
     return Target(
       Path(dir, self.filename()), state="file", name=name, cmd=fetcher.fetch
     )
+
+
+class MavenRepoArtifact(StateProvider):
+  """Combines a MavenArtifact with a (local) repository URL prefix to represent a
+  (locally) installed artifact.
+
+  Maven calls stuff in its local repository, typically ``~/.m2/repository``, "installed"
+  as opposed to "locally published". But see `publishLocal`.
+
+  """
+
+  artifact: MavenArtifact
+  """to be installed/published"""
+
+  repo: Path = Path.home() / ".m2" / "repository"
+  """maven repository path"""
+
+  def __init__(
+    self, artifact: MavenArtifact, repo: Path = Path.home() / ".m2" / "repository"
+  ):
+    """Creates the artifact/repository combo.
+
+    :param artifact: to be installed/published.
+    :param repo: maven repository path.
+    """
+    self.artifact: MavenArtifact = artifact
+    self.repo: Path = repo
+
+  def fullPath(self) -> Path:
+    """Returns the full path to the artifact where it ends up in the repository."""
+    return self.repo / self.artifact.repoUrl()
+
+  def provideState(self) -> str:
+    """Provides state over the whole directory where the artifact ends up to include
+    source files and pom and whatnot."""
+    statePath = self.fullPath().parent
+    return stateDirContent(statePath)
+
+
+def publishLocal(
+  repoArtifact: MavenRepoArtifact, file: Path, srcjar: Path | None = None
+) -> None:
+  """Publishes the dependency as the target artifact, to be used as the ``cmd``
+  parameter of a `Target`.
+
+  A glorious description for copying the ``file`` into the local maven repository,
+  optionally accompanied by the ``srcjar``.
+
+  :param repoArtifact: to create or overwrite
+  :param file: the file representing the artifact
+  :param srcjar: a jar (or other archive) with the source code, optional
+
+  """
+  src = None if srcjar is None else "-Dsources=" + str(srcjar)
+  artifact = repoArtifact.artifact
+  pbexec(
+    "mvn",
+    "install:install-file",
+    "-DlocalRepositoryPath=" + str(repoArtifact.repo),
+    "-Dfile=" + str(file),
+    src,
+    "-DgroupId=" + artifact.group,
+    "-DartifactId=" + artifact.name,
+    "-Dversion=" + artifact.version,
+    "-Dpackaging=" + artifact.type,
+    "-DgeneratePom=true",
+  )
 
 
 class _Fetcher:
