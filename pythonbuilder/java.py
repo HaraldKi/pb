@@ -4,6 +4,7 @@ Helpers to compile Java and run unit tests with  coverage.
 
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -23,14 +24,20 @@ def setJunitMainClass(className: str) -> None:
 def compileJava(
   targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path
 ) -> None:
-  """A default java compilation command. Kept simple. If you need a more
-  elaborate setup, it is easy enough to write your own, rather than this
-  function being extremely configurable and configure it.
+  """A default java compilation command, kept simple.
 
-  :param targetPath: a ``Path`` where to drop the compiled files
+  If you need a more elaborate setup, it is easy enough to write your own, rather than
+  this function being extremely configurable and configure it.
+
+  **NOTE**: This function recursively deletes ``targetPath`` first to make sure no cruft
+  classes are left over after a source file was renamed or deleted.
+
+  :param targetPath: a ``Path`` where to drop the compiled files, will be remove first
   :param srcPath: the source files directory
   :param classpath: classpath members
   """
+  if Path(targetPath).exists():
+    shutil.rmtree(targetPath)
   files = map(str, Path(srcPath).rglob("*.java"))
   cp = os.pathsep.join(map(lambda d: os.fspath(d), classpath))
   pbexec(
