@@ -356,6 +356,17 @@ class RootPathMapper:
         )
       yield newRoot / tail
 
+def copyFile(dest: os.PathLike, source: os.PathLike) -> None:
+  """A wrapper around ``shutil.copy`` to be used as a command in a target.
+
+  It creates the destination directory, if necessary, swaps the arguments to fit
+  ``shutil.copy``, logs the command."""
+
+  destPath = Path(dest)
+  destPath.parent.mkdir(0o754, parents=True, exist_ok=True)
+  shutil.copy(source, dest)
+  pb.logcmd(["copyFile", str(dest), "<-", str(source)])
+
 
 def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
   """Copies files from ``source`` to dest preserving the path segments below
@@ -363,11 +374,13 @@ def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
   the source is a ``Path``, then ``Paths.rglob(source, "*")`` is used.
 
   :param dest: where to copy files to using ``dest.root`` if it is a ``Paths`` object.
-  :param source: files to copy
+  :param source: files to copy, if a ``Path`` it must be a directory.
   """
   if isinstance(dest, Paths):
     dest = dest.root
   if isinstance(source, Path):
+    if not source.is_dir():
+      raise pb.BuildException("source must be a directory but is " + str(source))
     source = Paths.rglob(source, "*")
 
   for p in source:
@@ -377,7 +390,7 @@ def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
     out = dest / tail
     out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(p, dest / tail)
-
+  pb.logcmd(["copyFiles", str(dest), "<-", str(source)])
 
 _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 """FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()
@@ -463,7 +476,10 @@ def printTargets(
     if t.name in seen:
       continue
     printTargets(t.dependencies, seen)
-    print(f"{'.' * pair[0]}•", t.name)
+    deps = "<- " + ", ".join([d.name for d in t.dependencies])
+    print(f"{'.' * pair[0]}•", t.name, "" if len(deps)==3 else deps)
+    #if t.__doc__ is not None:
+    #  print(f"{' ' * pair[0]}  ", t.__doc__)
     seen.add(t.name)
 
 
