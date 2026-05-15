@@ -43,6 +43,11 @@ class MavenArtifact:
     self.type = type
     """artifact type, typically a file extension like "jar" """
 
+  def __repr__(self) -> str:
+    cls = "" if self.classifier is None else self.classifier
+    key = ":".join([self.group, self.name, self.version, cls, self.type])
+    return f"Maven({key})"
+
   @staticmethod
   def fromGradleShort(groupNameVersionClassifier: str, type: str) -> "MavenArtifact":
     """
