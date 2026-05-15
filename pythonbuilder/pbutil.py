@@ -412,11 +412,11 @@ def main(*argv: str) -> bool:
 
   The arguments on the command line are used as follows:
 
-  ``ll=``\ *level* sets the log level, where level can be any string abbreviating one of
+  ``ll=`` sets the log level, where level can be any string abbreviating one of
   the lowercase loglevel keyswords, ``debug``, ``verbose``, ``info``, ``warning``,
   ``error``, ``critical``. An example is ``ll=v`` to switch to ``VERBOSE`` logging.
 
-  ``force=``\ *targetlist* forces all targets in the comma separated list (no
+  ``force=...`` forces all targets in the comma separated list (no
   whitespace) to be handled as if out-of-date. This is useful for debugging a build
   step, for example ``doc``, which produces its output files but with wrong content. By
   using ``force=doc`` the build step for ``doc`` can be re-run without other more

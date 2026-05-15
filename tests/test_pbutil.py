@@ -239,10 +239,11 @@ class TestMain(support.CommonFixture):
     finally:
       sys.stdout = stdout
 
-    matches = re.findall("one|two|three", buffered.getvalue())
-    self.assertEqual("one", matches[0])
-    self.assertEqual("two", matches[1])
-    self.assertEqual("three", matches[2])
+    matches = re.findall("• one|• two|• three", buffered.getvalue())
+
+    self.assertEqual("• one", matches[0])
+    self.assertEqual("• two", matches[1])
+    self.assertEqual("• three", matches[2])
 
 
 class TestCopyfiles(support.CommonFixture):
