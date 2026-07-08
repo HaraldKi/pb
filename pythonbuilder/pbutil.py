@@ -216,7 +216,7 @@ def filterPath(
   ``"src/module1/"`` would also have to be checked for each file and, in addition, other
   subdirectories would be traversed unneccesarily.
 
-  The path parameter to both, ``fileOK`` and ``dirOK`, is relative to the ``root``, so
+  The path parameter to both, ``fileOK`` and ``dirOK``, is relative to the ``root``, so
   to include a directory ``a`` below any root, it suffices to use ``dirOK=lambda p:
   p.parts[0]=="a"``.
 
@@ -232,7 +232,7 @@ def filterPath(
   """
   work: list[Path] = [root]
   while len(work) > 0:
-    for p in work.pop().iterdir():
+    for p in work.pop().glob("*"):
       relativeP = p.relative_to(root)
       if p.is_dir():
         if dirOK(relativeP):
