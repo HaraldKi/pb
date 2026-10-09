@@ -6,7 +6,7 @@ from __future__ import annotations
 import hashlib
 import time
 from functools import wraps
-from typing import Any, Callable, Concatenate, cast
+from typing import Any, Callable
 
 from pythonbuilder.pbutil import _setLogLevel, parseArgv
 from pythonbuilder.pythonbuilder import (
@@ -24,8 +24,14 @@ from pythonbuilder.pythonbuilder import (
 )
 
 _CURRENTBUILD = None
-_DEFINED_TASKS: dict[str, Callable[[], Target2]] = dict()
+_DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
+class _TaskInfo:
+  def __init__(self, startNanos: int, stateCurrent: tuple[str, str],
+               triggeringDeps: list[str]):
+    self.startNanos = startNanos
+    self.stateCurrent = stateCurrent
+    self.triggeringDeps = triggeringDeps
 
 class _Build:
   def __init__(self) -> None:
@@ -33,9 +39,19 @@ class _Build:
     self._forced: set[str] = set()
     self._hasTarget: set[str] = set()
     self._taskStack: list[str] = []
+    self._taskInfo: dict[str, _TaskInfo] = dict()
 
   def currentTasks(self) -> list[str]:
     return list(self._taskStack)
+
+  def setInfo(self, info: _TaskInfo) -> None:
+    self._taskInfo[self.current()] = info
+
+  def getInfo(self) -> _TaskInfo:
+    return self._taskInfo[self.current()]
+
+  def hasObtainedTarget(self) -> bool:
+    return self.current() in self._hasTarget
 
   def targetObtained(self) -> None:
     task = self.current()
@@ -59,7 +75,7 @@ class _Build:
     return self._taskStack[-1] in self._forced
 
 
-def getBuild() -> _Build:
+def _getBuild() -> _Build:
   global _CURRENTBUILD
   if _CURRENTBUILD is None:
     _CURRENTBUILD = _Build()
@@ -67,7 +83,7 @@ def getBuild() -> _Build:
 
 
 def main(argv: list[str]) -> bool:
-  build = getBuild()
+  build = _getBuild()
   (tasks, forced, ll) = parseArgv(argv)
   if ll is not None:
     if not _setLogLevel(ll):
@@ -93,114 +109,95 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
     for f in functions:
       f()
   finally:
-    getBuild().states.save()
+    _getBuild().states.save()
 
 
-def target(
-  item: T,
-  *dependencies: Target2,
-  state: str | Callable[[T], str] | None = None,
-  name: str | None = None,
-  cmd: Callable[Concatenate[T, ...], None] | None = None,
-) -> Target2:
-  t = Target2(item, *dependencies, state=state, name=name, cmd=cmd)
-  build = getBuild()
-  build.targetObtained()
-  t.prepare(build)
-  return t
-
-
-def task(updater: Callable[[], Target2]) -> Any:
+def task(updater: Callable[[], Target]) -> Any:
   taskName = updater.__name__
 
   @wraps(updater)
-  def taskWrapper() -> Target2:
+  def taskWrapper() -> Target:
     # print("taskWrapper called for", updater)
-    build = getBuild()
+    build = _getBuild()
     build.enter(taskName)
     target = findTarget(taskName)
     if target is None:
       # print("running", updater)
       target = updater()
-      target.finish(taskName)
+      if not build.hasObtainedTarget():
+        raise BuildException(f"{taskName}: task failed to call target()")
+      _finish(build, target, taskName)
       _TARGETS[taskName] = target
-    else:
-      target = cast(Target2, target)
-      # print("skipping already done", updater)
-      pass
     build.leave()
     return target
 
   _DEFINED_TASKS[taskName] = taskWrapper
   return taskWrapper
 
-
-class Target2(Target):
-  def __init__(
-    self,
-    item: T,
-    *dependencies: Target[Any],
-    state: str | Callable[[T], str] | None = None,
-    name: str | None = None,
-    cmd: Callable[Concatenate[T, ...], None] | None = None,
-  ) -> None:
-    super().__init__(item, *dependencies, state=state, name=name, cmd=cmd)
-    self.entered = False
-    self.outdated = True
-    self._startNanos = 0
-
-  def prepare(self, build: _Build) -> Target2:
-    if self.updated:
-      return self
-    if self.started:
-      raise BuildException(
-        "dependency loop detected for: '%s'<-'%s'"
-        % (self.name, str(build.currentTasks))
-      )
-    self.started = True
-    self._startNanos = time.time_ns()
-
-    fails = []
-    triggering = []
-    depsDigest = hashlib.sha256()
-    for d in self.dependencies:
-      if d.updated:
-        depsDigest.update(build.states.getOwnHash(d).encode())
-        if d.recreated:
-          triggering.append(d)
-      else:
-        fails.append(d)
-    if len(fails) > 0:
-      raise BuildException(
-        "dependencies where not updated, check their constructing functions: "
-        + str(fails)
-      )
-
-    self._stateCurrent = (self.stateGenerator.provideState(), depsDigest.hexdigest())
-    combinedOld = build.states.get(self)
-    forced = build.forced()
-    _LOG.debug(
-      "  %s:%s:\n  old %s\n  new %s\n  force=%s",
-      self.name,
-      combinedOld,
-      self._stateCurrent,
-      forced,
+def target(
+  item: T,
+  *dependencies: Target,
+  state: str | Callable[[T], str] | None = None,
+  name: str | None = None,
+) -> Target:
+  target = Target(item, *dependencies, state=state, name=name)
+  build = _getBuild()
+  build.targetObtained()
+  if target.updated:
+    return target
+  if target.started:
+    raise BuildException(
+      "dependency loop detected for: '%s'<-'%s'"
+      % (target.name, str(build.currentTasks))
     )
-    self.outdated = combinedOld != self._stateCurrent or forced
-    if not self.outdated:
-      _LOG.log(_VERBOSE, "- " + build.current())
-    return self
+  target.started = True
+  target.force = build.forced()
+  startNanos = time.time_ns()
+  fails = []
+  triggering = []
+  depsDigest = hashlib.sha256()
+  for d in target.dependencies:
+    if d.updated:
+      depsDigest.update(build.states.getOwnHash(d).encode())
+      if d.outdated:
+        triggering.append(d.name)
+    else:
+      fails.append(d)
+  if len(fails) > 0:
+    raise BuildException(
+      "dependencies where not updated, check their constructing functions: "
+      + str(fails)
+    )
+  target.updated = True
+  stateCurrent = (target.stateGenerator.provideState(), depsDigest.hexdigest())
+  combinedOld = build.states.get(target)
+  build.setInfo(_TaskInfo(startNanos, stateCurrent, triggering))
 
-  def finish(self, currentTask: str) -> None:
-    if self.updated:
-      return
-    self.updated = True
-    took = _formatNanoDelta(self._startNanos, time.time_ns())
-    stateAfter = self.stateGenerator.provideState()
-    if self._stateCurrent[0] != stateAfter:
-      # only half true, as the command, may have re-created the same state
-      self.recreated = True
-      _LOG.log(_VERBOSE, "+ %s(%s)", currentTask, took)
-    elif self.outdated:
-      _LOG.log(_VERBOSE, ". %s(%s)", currentTask, took)
-    getBuild().states.setHashes(self, stateAfter, self._stateCurrent[1])
+  _LOG.debug(
+    "  %s:%s:\n  old %s\n  new %s\n  force=%s",
+    target.name,
+    combinedOld,
+    stateCurrent,
+    target.force,
+  )
+  target.outdated = combinedOld != stateCurrent or target.force
+  if not target.outdated:
+    _LOG.log(_VERBOSE, "- " + build.current())
+  return target
+
+def _finish(build: _Build, target: Target, currentTask: str) -> None:
+  info = build.getInfo()
+  took = _formatNanoDelta(info.startNanos, time.time_ns())
+  stateAfter = target.stateGenerator.provideState()
+  if _LOG.isEnabledFor(_VERBOSE) and target.outdated:
+    trigger = ""
+    if len(info.triggeringDeps) > 0:
+      trigger = " <- " + ",".join(info.triggeringDeps)
+    elif target.outdated and not target.force:
+      trigger = " <- outdated"
+    elif target.force:
+      trigger = " <- forced"
+    changed = "+" if info.stateCurrent[0] != stateAfter else "."
+    _LOG.log(_VERBOSE, "%s %s(%s%s) (%s)", changed, currentTask, target.name, trigger, took)
+    
+  build.states.setHashes(target, stateAfter, info.stateCurrent[1])
