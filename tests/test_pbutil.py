@@ -72,7 +72,8 @@ class TestPaths(support.CommonFixture):
 
     ## This needs an adaption whenever we add more source code
     pg = Paths.rglob(str(SRCPATH), "pb*").mappedTo(Path("."))
-    self.assertEqual(sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg]))
+    expected = [Path("pb2.py"), Path("pbpython.py"), Path("pbutil.py")]
+    self.assertEqual(sorted(expected), sorted([*pg]))
 
   def testPathFromStr(self) -> None:
     pg = Paths("dodo", lambda p: [p / "x", p / "y"])
@@ -160,7 +161,7 @@ class TestMain(support.CommonFixture):
     mid = Target("mid", bottom, state="value")
     top = Target("top", mid, state="value")
 
-    rawUpdateTargets(top)
+    rawUpdateTargets([top])
     self.assertTrue(bottom.recreated)
     self.assertTrue(mid.recreated)
     self.assertTrue(top.recreated)
@@ -180,7 +181,7 @@ class TestMain(support.CommonFixture):
     self.assertFalse(top.recreated)
 
     resetTraversalState()
-    self.assertTrue(main("force=top,bottom"))
+    self.assertTrue(main("force=top", "force=bottom"))
     self.assertTrue(bottom.recreated)
     self.assertFalse(mid.recreated)
     self.assertTrue(top.recreated)
@@ -205,7 +206,7 @@ class TestMain(support.CommonFixture):
     # we set force for a target immediately, even if pbmain then fails on ll
     t0 = Target("some-target", name="some-target", state="value")
     self.assertFalse(main("force=some-target", "ll=x"))
-    self.assertTrue(t0.force)
+    self.assertFalse(t0.force)
     self.assertLogFails(1)
 
   def testFailWrongTarget(self) -> None:
@@ -214,7 +215,7 @@ class TestMain(support.CommonFixture):
 
   def testForceTargetThenFailUnknownTarget(self) -> None:
     t = Target("other-target", name="other-target", state="value")
-    self.assertFalse(main("force=other-target,ddxx"))
+    self.assertFalse(main("force=other-target", "force=ddxx"))
     self.assertTrue(t.force)
     self.assertLogFails(1)
 

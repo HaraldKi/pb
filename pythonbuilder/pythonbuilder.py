@@ -133,6 +133,9 @@ class _StateProviderImpl(StateProvider, Generic[T]):
     return self.generator(self.item)
 
 
+StateProviderImpl = _StateProviderImpl
+
+
 @dataclass(init=False, eq=False)
 class Target(Generic[T]):
   """Represents a target with an item to create, its dependencies, how to
@@ -229,8 +232,8 @@ class Target(Generic[T]):
     self.item: Final[T] = item
     """The item of the target, often a file or directory path."""
 
-    self.name: Final[str] = str(item) if name is None else name
-    """The target's name, defaulting to ``str(item)``.
+    self.name: Final[str] = targetName(item, name)
+    """The target's name computed with `targetName` which defaults to ``str(item)``.
 
     It can be used as parameter for `updateTargets`.
     """
@@ -308,6 +311,10 @@ class Target(Generic[T]):
 _TARGETS: dict[str, Target] = dict()
 
 
+def targetName[T](item: T, givenName: str | None) -> str:
+  return str(item) if givenName is None else givenName
+
+
 def getTargets() -> dict[str, Target]:
   """Returns a dictionary of the currently defined targets mapped by their ``.name``
   field.
@@ -329,6 +336,7 @@ def findTarget(target: str | Target) -> Target | None:  # {
   """
   if isinstance(target, Target):
     return target
+  global _TARGETS
   return _TARGETS.get(target, None)
 
 
@@ -537,6 +545,10 @@ def pbexec(*args: Any) -> None:
 
 
 def updateTargets(*targets: str | Target) -> bool:
+  return _runBuild(rawUpdateTargets, list(targets))
+
+
+def _runBuild[V](f: Callable[[list[V]], None], targets: list[V]) -> bool:
   """Wraps `rawUpdateTargets` to log times and trim any exception to
   just its message.
 
@@ -556,7 +568,7 @@ def updateTargets(*targets: str | Target) -> bool:
   resultState = ansiGreen("build ✔")
   buildOK = True
   try:
-    rawUpdateTargets(*targets)
+    f(targets)
   except Exception as e:
     buildOK = False
     resultState = ansiRed("build ✘")
@@ -574,7 +586,7 @@ def updateTargets(*targets: str | Target) -> bool:
   return buildOK
 
 
-def rawUpdateTargets(*targets: str | Target) -> None:
+def rawUpdateTargets(targets: list[str | Target]) -> None:
   """Updates all targets in turn without resetting the traversal state in
   between, but see `updateTargets` too.
 

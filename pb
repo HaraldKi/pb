@@ -152,5 +152,5 @@ Target("full", coverage, apidoc, graph, readmemd, state="new")
 ############################################################
 
 if __name__ == "__main__":
-  if not pbutil.main(*(sys.argv[1:])):
+  if not pbutil.main(*sys.argv[1:]):
     sys.exit(1)

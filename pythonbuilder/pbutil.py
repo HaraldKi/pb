@@ -356,6 +356,7 @@ class RootPathMapper:
         )
       yield newRoot / tail
 
+
 def copyFile(dest: os.PathLike, source: os.PathLike) -> None:
   """A wrapper around ``shutil.copy`` to be used as a command in a target.
 
@@ -391,6 +392,7 @@ def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(p, dest / tail)
   pb.logcmd(["copyFiles", str(dest), "<-", str(source)])
+
 
 _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 """FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()
@@ -440,7 +442,30 @@ def main(*argv: str) -> bool:
   :return: the return value of `updateTargets` or ``True`` if no targets are given
 
   """
+  (targets, forced, ll) = parseArgv(list(argv))
+  if ll is not None:
+    if not _setLogLevel(ll):
+      return False
+  if not _forceTargets(forced):
+    return False
+  targets.extend(forced)
+  if targets:
+    return pb.updateTargets(*targets)
+
+  printTargets()
+  print("Specify one or more of the above targets to built it.")
+  return True
+
+
+def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:
+  """Returns target names, forced target names and the last ``ll`` value on the
+  command line as described for `main`.
+  """
+
   targets: list[str] = []
+  forced: list[str] = []
+  ll: str | None = None
+
   for arg in argv:
     parts = arg.split("=", 1)
     if len(parts) != 2:
@@ -448,22 +473,14 @@ def main(*argv: str) -> bool:
       continue
 
     if parts[0] == "ll":
-      if not _setLogLevel(parts[1]):
-        return False
+      ll = parts[1]
       continue
 
     if parts[0] == "force":
-      if not _forceTargets(targets, parts[1]):
-        return False
+      forced.append(parts[1])
       continue
     targets.append(arg)
-
-  if targets:
-    return pb.updateTargets(*targets)
-
-  printTargets()
-  print("Specify one or more of the above targets to built it.")
-  return True
+  return (targets, forced, ll)
 
 
 def printTargets(
@@ -477,8 +494,8 @@ def printTargets(
       continue
     printTargets(t.dependencies, seen)
     deps = "<- " + ", ".join([d.name for d in t.dependencies])
-    print(f"{'.' * pair[0]}•", t.name, "" if len(deps)==3 else deps)
-    #if t.__doc__ is not None:
+    print(f"{'.' * pair[0]}•", t.name, "" if len(deps) == 3 else deps)
+    # if t.__doc__ is not None:
     #  print(f"{' ' * pair[0]}  ", t.__doc__)
     seen.add(t.name)
 
@@ -502,9 +519,8 @@ def _setLogLevel(shortcut: str) -> bool:
   return True
 
 
-def _forceTargets(targetNamesOut: list[str], commaList: str) -> bool:
+def _forceTargets(targets: list[str]) -> bool:
   """Helper for `main`."""
-  targets = commaList.split(",")
   LOG = pb.getLogger()
   for t in targets:
     target = pb.findTarget(t)
@@ -512,5 +528,4 @@ def _forceTargets(targetNamesOut: list[str], commaList: str) -> bool:
       LOG.error("no target named '%s' defined" % t)
       return False
     target.force = True
-    targetNamesOut.append(t)
   return True

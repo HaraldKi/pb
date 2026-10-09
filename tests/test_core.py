@@ -72,11 +72,11 @@ class TestTargetCreation(support.CommonFixture):
   def test_statePathFail(self) -> None:
     t = Target(Path("pb"), state="dir")
     with self.assertRaisesRegex(BuildException, "'pb'.*file.*directory"):
-      rawUpdateTargets(t.name)
+      rawUpdateTargets([t.name])
 
     t = Target(Path("pythonbuilder"), state="file")
     with self.assertRaisesRegex(BuildException, "'pythonbuilder'.*directory.*file"):
-      rawUpdateTargets(t.name)
+      rawUpdateTargets([t.name])
 
   def test_cmd(self) -> None:
     t = Target("b", state="value", cmd=noop)
@@ -233,7 +233,7 @@ class TestUpdateTargets(support.CommonFixture):
     self.values[first.item] = "value of first"
     self.values[second.item] = "value of second"
     with self.assertRaises(ZeroDivisionError):
-      rawUpdateTargets(second)
+      rawUpdateTargets([second])
     self.assertTrue(first.updated)
     self.assertTrue(first.recreated)
     self.assertTrue(second.updated)
@@ -242,21 +242,21 @@ class TestUpdateTargets(support.CommonFixture):
     ## Now run again and see that first is again recreated
     resetTraversalState()
     with self.assertRaises(ZeroDivisionError):
-      rawUpdateTargets(second)
+      rawUpdateTargets([second])
     self.assertFalse(first.recreated)
 
   def test_inMemTarget(self) -> None:
     t0 = Target(117, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 
-    rawUpdateTargets(other)
+    rawUpdateTargets([other])
     self.assertTrue(other.recreated)
     self.assertEqual("117", self.values["other"])
 
     getTargets().clear()
     t0 = Target(117, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
-    rawUpdateTargets(other)
+    rawUpdateTargets([other])
     self.assertFalse(other.recreated)
 
     getTargets().clear()
@@ -264,7 +264,7 @@ class TestUpdateTargets(support.CommonFixture):
     t0 = Target(116, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 
-    rawUpdateTargets(other)
+    rawUpdateTargets([other])
     self.assertTrue(other.recreated)
     self.assertEqual("116", self.values["other"])
 
@@ -283,4 +283,4 @@ class TestUpdateTargets(support.CommonFixture):
     t2 = Target("two", t1, state="value")
     t1.__setattr__("dependencies", (t2,))
     with self.assertRaisesRegex(BuildException, "dependency loop.*one.*<-.*two.*one"):
-      rawUpdateTargets(t1)
+      rawUpdateTargets([t1])
