@@ -254,7 +254,7 @@ class Target(Generic[T]):
     The target's command may or may not be run subsequently.
     """
 
-    self.recreated: bool = False
+    self.outdated: bool = False
     """Set during `updateTargets` if this target was out-of-date and its
     command was run.
 
@@ -467,7 +467,7 @@ def resetTraversalState() -> None:
   for target in _TARGETS.values():
     target.started = False
     target.updated = False
-    target.recreated = False
+    target.outdated = False
     target.force = False
 
 
@@ -625,7 +625,7 @@ def _updateTarget(
   for dep in target.dependencies:
     _updateTarget(states, dep, [target.name] + onbehalf)
     depsDigest.update(states.getOwnHash(dep).encode())
-    if dep.recreated:
+    if dep.outdated:
       triggeringDeps.append(dep.name)
 
   target.updated = True
@@ -641,7 +641,8 @@ def _updateTarget(
   old = states.get(target)
   fresh = (targetStateBefore, depsState)
   _LOG.debug("  %s:\n  old %s\n  new %s\n  force=%s", logTag, old, fresh, target.force)
-  if old == fresh and not target.force:
+  target.outdated = old != fresh or target.force
+  if not target.outdated:
     _LOG.log(_VERBOSE, "- " + logTag)
     return
 
@@ -669,7 +670,6 @@ def _updateTarget(
         took,
       )
 
-  target.recreated = True
   targetStateAfter = target.stateGenerator.provideState()
   states.setHashes(target, targetStateAfter, depsState)
 

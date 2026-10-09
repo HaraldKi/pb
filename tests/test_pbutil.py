@@ -162,29 +162,29 @@ class TestMain(support.CommonFixture):
     top = Target("top", mid, state="value")
 
     rawUpdateTargets([top])
-    self.assertTrue(bottom.recreated)
-    self.assertTrue(mid.recreated)
-    self.assertTrue(top.recreated)
+    self.assertTrue(bottom.outdated)
+    self.assertTrue(mid.outdated)
+    self.assertTrue(top.outdated)
 
     resetTraversalState()
     self.assertTrue(main("top"))
-    self.assertFalse(bottom.recreated)
-    self.assertFalse(mid.recreated)
-    self.assertFalse(top.recreated)
+    self.assertFalse(bottom.outdated)
+    self.assertFalse(mid.outdated)
+    self.assertFalse(top.outdated)
 
     resetTraversalState()
     self.assertTrue(main("force=mid"))
-    self.assertFalse(bottom.recreated)
-    self.assertTrue(mid.recreated)
+    self.assertFalse(bottom.outdated)
+    self.assertTrue(mid.outdated)
     # top is false again, because though mid was recreated, its value, so it state
     # are unchanged
-    self.assertFalse(top.recreated)
+    self.assertFalse(top.outdated)
 
     resetTraversalState()
     self.assertTrue(main("force=top", "force=bottom"))
-    self.assertTrue(bottom.recreated)
-    self.assertFalse(mid.recreated)
-    self.assertTrue(top.recreated)
+    self.assertTrue(bottom.outdated)
+    self.assertFalse(mid.outdated)
+    self.assertTrue(top.outdated)
 
   def testSetLoglevel(self) -> None:
     LOG = getLogger()
@@ -224,7 +224,7 @@ class TestMain(support.CommonFixture):
     # ll= or force= (so far)
     t = Target("x=y", name="x=y", state="value")
     self.assertTrue(main("x=y"))
-    self.assertTrue(t.recreated)
+    self.assertTrue(t.outdated)
 
   def testPrintTargets(self) -> None:
     one = Target("one", state="fixed")

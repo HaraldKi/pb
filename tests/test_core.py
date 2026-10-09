@@ -176,13 +176,13 @@ class TestUpdateTargets(support.CommonFixture):
     updateTargets("blabla")
     self.assertTrue(t.started)
     self.assertTrue(t.updated)
-    self.assertTrue(t.recreated)
+    self.assertTrue(t.outdated)
 
     resetTraversalState()
     updateTargets("blabla")
     self.assertTrue(t.started)
     self.assertTrue(t.updated)
-    self.assertFalse(t.recreated)
+    self.assertFalse(t.outdated)
 
   ##
   # A Target with a fixed state or, more generally, a Target the
@@ -198,31 +198,31 @@ class TestUpdateTargets(support.CommonFixture):
     self.values[top.item] = "value of top"
     updateTargets(top)
     self.assertTrue(source.updated)
-    self.assertTrue(source.recreated)
+    self.assertTrue(source.outdated)
     self.assertTrue(fixed.updated)
-    self.assertTrue(fixed.recreated)
+    self.assertTrue(fixed.outdated)
     self.assertTrue(top.updated)
-    self.assertTrue(top.recreated)
+    self.assertTrue(top.outdated)
 
     resetTraversalState()
     updateTargets(top)
     self.assertTrue(source.updated)
-    self.assertFalse(source.recreated)
+    self.assertFalse(source.outdated)
     self.assertTrue(fixed.updated)
-    self.assertFalse(fixed.recreated)
+    self.assertFalse(fixed.outdated)
     self.assertTrue(top.updated)
-    self.assertFalse(top.recreated)
+    self.assertFalse(top.outdated)
 
     resetTraversalState()
     self.values[source.item] = "value of source changed"
 
     updateTargets(top)
     self.assertTrue(source.updated)
-    self.assertTrue(source.recreated)
+    self.assertTrue(source.outdated)
     self.assertTrue(fixed.updated)
-    self.assertTrue(fixed.recreated)
+    self.assertTrue(fixed.outdated)
     self.assertTrue(top.updated)
-    self.assertFalse(top.recreated)
+    self.assertFalse(top.outdated)
 
   def failWithZDE(self, t: str, u: str) -> None:
     print(len(t) / 0)
@@ -235,29 +235,29 @@ class TestUpdateTargets(support.CommonFixture):
     with self.assertRaises(ZeroDivisionError):
       rawUpdateTargets([second])
     self.assertTrue(first.updated)
-    self.assertTrue(first.recreated)
+    self.assertTrue(first.outdated)
     self.assertTrue(second.updated)
-    self.assertFalse(second.recreated)
+    self.assertTrue(second.outdated)
 
     ## Now run again and see that first is again recreated
     resetTraversalState()
     with self.assertRaises(ZeroDivisionError):
       rawUpdateTargets([second])
-    self.assertFalse(first.recreated)
+    self.assertFalse(first.outdated)
 
   def test_inMemTarget(self) -> None:
     t0 = Target(117, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 
     rawUpdateTargets([other])
-    self.assertTrue(other.recreated)
+    self.assertTrue(other.outdated)
     self.assertEqual("117", self.values["other"])
 
     getTargets().clear()
     t0 = Target(117, name="t0", state="value")
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
     rawUpdateTargets([other])
-    self.assertFalse(other.recreated)
+    self.assertFalse(other.outdated)
 
     getTargets().clear()
     resetTraversalState()
@@ -265,7 +265,7 @@ class TestUpdateTargets(support.CommonFixture):
     other = Target("other", t0, state="value", cmd=self.setSimpleValue)
 
     rawUpdateTargets([other])
-    self.assertTrue(other.recreated)
+    self.assertTrue(other.outdated)
     self.assertEqual("116", self.values["other"])
 
   def test_updatingAnUpdatedIsNoop(self) -> None:

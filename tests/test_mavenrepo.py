@@ -29,10 +29,10 @@ class TestMavenArtifact(support.CommonFixture):
     ## first download from remote
     remoteTarget = lib.asTarget(TMPDIR, "https://repo1.maven.org/maven2/", name="lib")
     updateTargets("lib")
-    self.assertTrue(remoteTarget.recreated)
+    self.assertTrue(remoteTarget.outdated)
     self.assertTrue(os.path.isfile(os.path.join(TMPDIR, lib.filename())))
 
     resetTraversalState()
     updateTargets("lib")
     self.assertTrue(remoteTarget.updated)
-    self.assertFalse(remoteTarget.recreated)
+    self.assertFalse(remoteTarget.outdated)
