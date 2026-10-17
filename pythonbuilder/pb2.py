@@ -27,6 +27,14 @@ _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
 
+class _ShortCircuit(Exception):
+  """Thrown in `target()` to avoid running the code after ``target`` in
+  a ``@task``."""
+
+  def __init__(self) -> None:
+    pass
+
+
 class _TaskInfo:
   def __init__(self, name: str) -> None:
     self.name = name
@@ -60,9 +68,6 @@ class _Build:
 
   def current(self) -> _TaskInfo:
     return self._taskStack[-1]
-
-  def hasObtainedTarget(self) -> bool:
-    return self.current().target is not None
 
   def setTarget(self, target: Target) -> None:
     taskInfo = self.current()
@@ -114,7 +119,7 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
     _getBuild().states.save()
 
 
-def task(updater: Callable[[], Target]) -> Any:
+def task(updater: Callable[[], None]) -> Callable[[], Target]:
   taskName = updater.__name__
 
   @wraps(updater)
@@ -123,13 +128,18 @@ def task(updater: Callable[[], Target]) -> Any:
     build = _getBuild()
     build.enter(taskName)
     target = findTarget(taskName)
-    if target is None:
+    if target is not None:
+      return target
       # print("running", updater)
-      target = updater()
-      if not build.hasObtainedTarget():
-        raise BuildException(f"{taskName}: task failed to call target()")
-      _finish(build, target, taskName)
-      _TARGETS[taskName] = target
+    try:
+      updater()
+    except _ShortCircuit:
+      pass
+    target = build.current().target
+    if target is None:
+      raise BuildException(f"{taskName}: task failed to call target()")
+    _finish(build, target, taskName)
+    _TARGETS[taskName] = target
     build.leave()
     return target
 
@@ -142,12 +152,12 @@ def target(
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
   name: str | None = None,
-) -> Target:
+) -> None:
   target = Target(item, *dependencies, state=state, name=name)
   build = _getBuild()
   build.setTarget(target)
   if target.updated:
-    return target
+    return
   if target.started:
     raise BuildException(
       "dependency loop detected for: '%s'<-'%s'"
@@ -186,7 +196,7 @@ def target(
   target.outdated = combinedOld != stateCurrent or target.force
   if not target.outdated:
     _LOG.log(_VERBOSE, "- " + build.current().name)
-  return target
+    raise _ShortCircuit()
 
 
 def _finish(build: _Build, target: Target, currentTask: str) -> None:
