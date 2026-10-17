@@ -26,53 +26,55 @@ from pythonbuilder.pythonbuilder import (
 _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
+
 class _TaskInfo:
-  def __init__(self, startNanos: int, stateCurrent: tuple[str, str],
-               triggeringDeps: list[str]):
+  def __init__(self, name: str) -> None:
+    self.name = name
+    self.startNanos = -1
+    self.stateCurrent: tuple[str, str] = ("", "")
+    self.triggeringDeps: list[str] = []
+    self.target: None | Target = None
+
+  def setActive(
+    self, startNanos: int, stateCurrent: tuple[str, str], triggeringDeps: list[str]
+  ) -> None:
     self.startNanos = startNanos
     self.stateCurrent = stateCurrent
     self.triggeringDeps = triggeringDeps
+
 
 class _Build:
   def __init__(self) -> None:
     self.states = _StateStore(getStatefile())
     self._forced: set[str] = set()
-    self._hasTarget: set[str] = set()
-    self._taskStack: list[str] = []
-    self._taskInfo: dict[str, _TaskInfo] = dict()
+    self._taskStack: list[_TaskInfo] = []
 
   def currentTasks(self) -> list[str]:
-    return list(self._taskStack)
-
-  def setInfo(self, info: _TaskInfo) -> None:
-    self._taskInfo[self.current()] = info
-
-  def getInfo(self) -> _TaskInfo:
-    return self._taskInfo[self.current()]
-
-  def hasObtainedTarget(self) -> bool:
-    return self.current() in self._hasTarget
-
-  def targetObtained(self) -> None:
-    task = self.current()
-    if task in self._hasTarget:
-      raise BuildException(f"target() called twice in a task {task}")
-    self._hasTarget.add(task)
-
-  def current(self) -> str:
-    return self._taskStack[-1]
+    return [ti.name for ti in list(self._taskStack)]
 
   def enter(self, taskName: str) -> None:
-    self._taskStack.append(taskName)
+    self._taskStack.append(_TaskInfo(taskName))
 
   def leave(self) -> None:
     self._taskStack.pop()
 
-  def force(self, tname: str) -> None:
-    self._forced.add(tname)
+  def current(self) -> _TaskInfo:
+    return self._taskStack[-1]
+
+  def hasObtainedTarget(self) -> bool:
+    return self.current().target is not None
+
+  def setTarget(self, target: Target) -> None:
+    taskInfo = self.current()
+    if taskInfo.target is not None:
+      raise BuildException(f"target() called twice in a task {taskInfo.name}")
+    taskInfo.target = target
+
+  def force(self, taskName: str) -> None:
+    self._forced.add(taskName)
 
   def forced(self) -> bool:
-    return self._taskStack[-1] in self._forced
+    return self.current().name in self._forced
 
 
 def _getBuild() -> _Build:
@@ -134,6 +136,7 @@ def task(updater: Callable[[], Target]) -> Any:
   _DEFINED_TASKS[taskName] = taskWrapper
   return taskWrapper
 
+
 def target(
   item: T,
   *dependencies: Target,
@@ -142,7 +145,7 @@ def target(
 ) -> Target:
   target = Target(item, *dependencies, state=state, name=name)
   build = _getBuild()
-  build.targetObtained()
+  build.setTarget(target)
   if target.updated:
     return target
   if target.started:
@@ -171,7 +174,7 @@ def target(
   target.updated = True
   stateCurrent = (target.stateGenerator.provideState(), depsDigest.hexdigest())
   combinedOld = build.states.get(target)
-  build.setInfo(_TaskInfo(startNanos, stateCurrent, triggering))
+  build.current().setActive(startNanos, stateCurrent, triggering)
 
   _LOG.debug(
     "  %s:%s:\n  old %s\n  new %s\n  force=%s",
@@ -182,11 +185,12 @@ def target(
   )
   target.outdated = combinedOld != stateCurrent or target.force
   if not target.outdated:
-    _LOG.log(_VERBOSE, "- " + build.current())
+    _LOG.log(_VERBOSE, "- " + build.current().name)
   return target
 
+
 def _finish(build: _Build, target: Target, currentTask: str) -> None:
-  info = build.getInfo()
+  info = build.current()
   took = _formatNanoDelta(info.startNanos, time.time_ns())
   stateAfter = target.stateGenerator.provideState()
   if _LOG.isEnabledFor(_VERBOSE) and target.outdated:
@@ -198,6 +202,8 @@ def _finish(build: _Build, target: Target, currentTask: str) -> None:
     elif target.force:
       trigger = " <- forced"
     changed = "+" if info.stateCurrent[0] != stateAfter else "."
-    _LOG.log(_VERBOSE, "%s %s(%s%s) (%s)", changed, currentTask, target.name, trigger, took)
-    
+    _LOG.log(
+      _VERBOSE, "%s %s(%s%s) (%s)", changed, currentTask, target.name, trigger, took
+    )
+
   build.states.setHashes(target, stateAfter, info.stateCurrent[1])
