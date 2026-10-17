@@ -27,14 +27,6 @@ _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
 
-class _ShortCircuit(Exception):
-  """Thrown in `target()` to avoid running the code after ``target`` in
-  a ``@task``."""
-
-  def __init__(self) -> None:
-    pass
-
-
 class _TaskInfo:
   def __init__(self, name: str) -> None:
     self.name = name
@@ -102,7 +94,6 @@ def main(argv: list[str]) -> bool:
   functions = []
   for task in tasks:
     updater = _DEFINED_TASKS.get(task, None)
-    # print("x main: get", task, "->", updater)
     if updater is None:
       _LOG.error(f"{task}: no task with this name defined")
       return False
@@ -124,17 +115,14 @@ def task(updater: Callable[[], None]) -> Callable[[], Target]:
 
   @wraps(updater)
   def taskWrapper() -> Target:
-    # print("taskWrapper called for", updater)
     build = _getBuild()
     build.enter(taskName)
     target = findTarget(taskName)
     if target is not None:
+      build.leave()
       return target
-      # print("running", updater)
-    try:
-      updater()
-    except _ShortCircuit:
-      pass
+
+    updater()
     target = build.current().target
     if target is None:
       raise BuildException(f"{taskName}: task failed to call target()")
@@ -146,18 +134,45 @@ def task(updater: Callable[[], None]) -> Callable[[], Target]:
   _DEFINED_TASKS[taskName] = taskWrapper
   return taskWrapper
 
+# We could write isDone=target, but pydoctor simply skips the doc then, so here we go
+def isDone(
+  item: T,
+  *dependencies: Target,
+  state: str | Callable[[T], str] | None = None,
+) -> bool:
+  """An alias for `target()` for more intuitive understanding of the return value.
+
+  Consider the canonical code structurem for a `task`.
+
+  .. code-block:: python
+
+    @task
+    def stuff() -> None:
+      # ...
+      if isDone(Path("stuff"), ...):
+        return
+      # do stuff
+
+  Using ``isDone``, the meaning of the boolean return value is clearer."""
+  return target(item, *dependencies, state=state)
+
+
+def isOld(
+  item: T,
+  *dependencies: Target,
+  state: str | Callable[[T], str] | None = None,
+) -> bool:
+  return not target(item, *dependencies, state=state)
+
 
 def target(
   item: T,
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
-  name: str | None = None,
-) -> None:
-  target = Target(item, *dependencies, state=state, name=name)
+) -> bool:
+  target = Target(item, *dependencies, state=state)
   build = _getBuild()
   build.setTarget(target)
-  if target.updated:
-    return
   if target.started:
     raise BuildException(
       "dependency loop detected for: '%s'<-'%s'"
@@ -188,6 +203,7 @@ def target(
 
   _LOG.debug(
     "  %s:%s:\n  old %s\n  new %s\n  force=%s",
+    build.current().name,
     target.name,
     combinedOld,
     stateCurrent,
@@ -196,7 +212,7 @@ def target(
   target.outdated = combinedOld != stateCurrent or target.force
   if not target.outdated:
     _LOG.log(_VERBOSE, "- " + build.current().name)
-    raise _ShortCircuit()
+  return not target.outdated
 
 
 def _finish(build: _Build, target: Target, currentTask: str) -> None:
