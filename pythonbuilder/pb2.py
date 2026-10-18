@@ -22,8 +22,8 @@ from __future__ import annotations
 
 import hashlib
 import time
-from functools import partial, wraps
-from typing import Any, Callable
+from functools import wraps
+from typing import Any, Callable, ParamSpec
 
 from pythonbuilder.pbutil import _setLogLevel, parseArgv
 from pythonbuilder.pythonbuilder import (
@@ -44,10 +44,9 @@ _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
 
-class _TaskInfo[I]:
-  def __init__(self, name: str, item: I) -> None:
+class _TaskInfo:
+  def __init__(self, name: str) -> None:
     self.name = name
-    self.item = item
     self.startNanos = -1
     self.stateCurrent: tuple[str, str] = ("", "")
     self.triggeringDeps: list[str] = []
@@ -70,8 +69,8 @@ class _Build:
   def currentTasks(self) -> list[str]:
     return [ti.name for ti in list(self._taskStack)]
 
-  def enter[I](self, taskName: str, item: I) -> None:
-    self._taskStack.append(_TaskInfo(taskName, item))
+  def enter(self, taskName: str) -> None:
+    self._taskStack.append(_TaskInfo(taskName))
 
   def leave(self) -> None:
     self._taskStack.pop()
@@ -128,22 +127,29 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
     _getBuild().states.save()
 
 
-def task[I](item: I) -> Callable[[Callable[[I], None]], Callable[[], Target[I]]]:
-  return partial(_task, item)
+P = ParamSpec("P")
 
 
-def _task[I](item: I, updater: Callable[[I], None]) -> Callable[[], Target[I]]:
+def internalTask(updater: Callable[P, None]) -> Callable[P, Target[T]]:
+  return _task(updater, True)
+
+
+def task(updater: Callable[P, None]) -> Callable[P, Target[T]]:
+  return _task(updater, False)
+
+
+def _task(updater: Callable[P, None], internal: bool) -> Callable[P, Target[T]]:
   taskName = updater.__name__
 
   @wraps(updater)
-  def taskWrapper() -> Target:
+  def taskWrapper(*args: P.args, **kwargs: P.kwargs) -> Target:
     build = _getBuild()
     target = findTarget(taskName)
     if target is not None:
       return target
 
-    build.enter(taskName, item)
-    updater(item)
+    build.enter(taskName)
+    updater(*args, **kwargs)
     target = build.current().target
     if target is None:
       raise BuildException(f"{taskName}: task failed to call target()")
@@ -152,48 +158,18 @@ def _task[I](item: I, updater: Callable[[I], None]) -> Callable[[], Target[I]]:
     build.leave()
     return target
 
-  _DEFINED_TASKS[taskName] = taskWrapper
+  if not internal:
+    _DEFINED_TASKS[taskName] = taskWrapper
   return taskWrapper
 
 
-# We could write isDone=target, but pydoctor simply skips the doc then, so here we go
-def isDone(
+def target[T](
+  item: T,
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
-) -> bool:
-  """An alias for `target()` for more intuitive understanding of the return value.
-
-  Consider the canonical code structure of a `task`.
-  ```python
-    @task
-    def stuff() -> None:
-      # ...
-      if isDone(Path("stuff"), ...):
-        return
-      # do stuff
-  ```
-  Using ``isDone``, the meaning of the boolean return value is clearer than using
-  ```python
-  if target(...):
-    return
-  ```
-  """
-  return target(*dependencies, state=state)
-
-
-def isOld(
-  *dependencies: Target,
-  state: str | Callable[[T], str] | None = None,
-) -> bool:
-  return not target(*dependencies, state=state)
-
-
-def target(
-  *dependencies: Target,
-  state: str | Callable[[T], str] | None = None,
-) -> bool:
+) -> Target[T]:
   build = _getBuild()
-  target = Target(build.current().item, *dependencies, state=state)
+  target = Target(item, *dependencies, state=state)
   build.setTarget(target)
   if target.started:
     raise BuildException(
@@ -234,7 +210,7 @@ def target(
   target.outdated = combinedOld != stateCurrent or target.force
   if not target.outdated:
     _LOG.log(_VERBOSE, "- " + build.current().name)
-  return not target.outdated
+  return target
 
 
 def _finish(build: _Build, target: Target, currentTask: str) -> None:
