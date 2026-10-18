@@ -39,6 +39,7 @@ from pythonbuilder.pythonbuilder import (
   findTarget,
   getStatefile,
 )
+from pythonbuilder.pythonbuilder import toGraphviz as pbToGraphviz
 
 _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
@@ -63,6 +64,7 @@ class _TaskInfo:
 class _Build:
   def __init__(self) -> None:
     self.states = _StateStore(getStatefile())
+    self.doGraph = False
     self._forced: set[str] = set()
     self._taskStack: list[_TaskInfo] = []
 
@@ -96,6 +98,22 @@ def _getBuild() -> _Build:
   if _CURRENTBUILD is None:
     _CURRENTBUILD = _Build()
   return _CURRENTBUILD
+
+
+def toGraphviz() -> str:
+  global _CURRENTBUILD, _TARGETS
+  keptBuild = _getBuild()
+  keptTargets = _TARGETS
+  _CURRENTBUILD = _Build()
+  _TARGETS = dict()
+  _getBuild().doGraph = True
+  try:
+    for f in _DEFINED_TASKS.values():
+      f()
+  finally:
+    _TARGETS = keptTargets
+    _CURRENTBUILD = keptBuild
+  return pbToGraphviz(set(_DEFINED_TASKS.keys()))
 
 
 def main(argv: list[str]) -> bool:
@@ -154,7 +172,6 @@ def _task(updater: Callable[P, None], internal: bool) -> Callable[P, Target[T]]:
     if target is None:
       raise BuildException(f"{taskName}: task failed to call target()")
     _finish(build, target, taskName)
-    _TARGETS[taskName] = target
     build.leave()
     return target
 
@@ -169,7 +186,7 @@ def target[T](
   state: str | Callable[[T], str] | None = None,
 ) -> Target[T]:
   build = _getBuild()
-  target = Target(item, *dependencies, state=state)
+  target = Target(item, *dependencies, state=state, name=build.current().name)
   build.setTarget(target)
   if target.started:
     raise BuildException(
@@ -207,8 +224,8 @@ def target[T](
     stateCurrent,
     target.force,
   )
-  target.outdated = combinedOld != stateCurrent or target.force
-  if not target.outdated:
+  target.outdated = not build.doGraph and (combinedOld != stateCurrent or target.force)
+  if not target.outdated and not build.doGraph:
     _LOG.log(_VERBOSE, "- " + build.current().name)
   return target
 
