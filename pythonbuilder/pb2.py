@@ -1,11 +1,28 @@
 #!/usr/bin/env python3
+"""An alternative and simpler approach to define targets, dependencies and how to build
+them.
+
+The canonical use to define a task which creates a target looks like:
+```python
+@task
+def stuff() -> None:
+  dep1 = dependency1()
+  dep2 = dependency2()
+  f = Path("build/file")
+  if isDone(file, dep1, dep2, state="file"):
+    return
+  pbexec("compile", f, dep1.item, dep2.item)
+```
+where the `@task` converts the function `stuff` into a build task, which
+"""
+
 ## See https://stackoverflow.com/a/33533514/2954288
 ## for use of class as type annotations before class is fully defined
 from __future__ import annotations
 
 import hashlib
 import time
-from functools import wraps
+from functools import partial, wraps
 from typing import Any, Callable
 
 from pythonbuilder.pbutil import _setLogLevel, parseArgv
@@ -27,9 +44,10 @@ _CURRENTBUILD = None
 _DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
 
 
-class _TaskInfo:
-  def __init__(self, name: str) -> None:
+class _TaskInfo[I]:
+  def __init__(self, name: str, item: I) -> None:
     self.name = name
+    self.item = item
     self.startNanos = -1
     self.stateCurrent: tuple[str, str] = ("", "")
     self.triggeringDeps: list[str] = []
@@ -52,8 +70,8 @@ class _Build:
   def currentTasks(self) -> list[str]:
     return [ti.name for ti in list(self._taskStack)]
 
-  def enter(self, taskName: str) -> None:
-    self._taskStack.append(_TaskInfo(taskName))
+  def enter[I](self, taskName: str, item: I) -> None:
+    self._taskStack.append(_TaskInfo(taskName, item))
 
   def leave(self) -> None:
     self._taskStack.pop()
@@ -110,19 +128,22 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
     _getBuild().states.save()
 
 
-def task(updater: Callable[[], None]) -> Callable[[], Target]:
+def task[I](item: I) -> Callable[[Callable[[I], None]], Callable[[], Target[I]]]:
+  return partial(_task, item)
+
+
+def _task[I](item: I, updater: Callable[[I], None]) -> Callable[[], Target[I]]:
   taskName = updater.__name__
 
   @wraps(updater)
   def taskWrapper() -> Target:
     build = _getBuild()
-    build.enter(taskName)
     target = findTarget(taskName)
     if target is not None:
-      build.leave()
       return target
 
-    updater()
+    build.enter(taskName, item)
+    updater(item)
     target = build.current().target
     if target is None:
       raise BuildException(f"{taskName}: task failed to call target()")
@@ -134,44 +155,45 @@ def task(updater: Callable[[], None]) -> Callable[[], Target]:
   _DEFINED_TASKS[taskName] = taskWrapper
   return taskWrapper
 
+
 # We could write isDone=target, but pydoctor simply skips the doc then, so here we go
 def isDone(
-  item: T,
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
 ) -> bool:
   """An alias for `target()` for more intuitive understanding of the return value.
 
-  Consider the canonical code structurem for a `task`.
-
-  .. code-block:: python
-
+  Consider the canonical code structure of a `task`.
+  ```python
     @task
     def stuff() -> None:
       # ...
       if isDone(Path("stuff"), ...):
         return
       # do stuff
-
-  Using ``isDone``, the meaning of the boolean return value is clearer."""
-  return target(item, *dependencies, state=state)
+  ```
+  Using ``isDone``, the meaning of the boolean return value is clearer than using
+  ```python
+  if target(...):
+    return
+  ```
+  """
+  return target(*dependencies, state=state)
 
 
 def isOld(
-  item: T,
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
 ) -> bool:
-  return not target(item, *dependencies, state=state)
+  return not target(*dependencies, state=state)
 
 
 def target(
-  item: T,
   *dependencies: Target,
   state: str | Callable[[T], str] | None = None,
 ) -> bool:
-  target = Target(item, *dependencies, state=state)
   build = _getBuild()
+  target = Target(build.current().item, *dependencies, state=state)
   build.setTarget(target)
   if target.started:
     raise BuildException(
@@ -202,7 +224,7 @@ def target(
   build.current().setActive(startNanos, stateCurrent, triggering)
 
   _LOG.debug(
-    "  %s:%s:\n  old %s\n  new %s\n  force=%s",
+    "  %s->%s:\n  old %s\n  new %s\n  force=%s",
     build.current().name,
     target.name,
     combinedOld,
