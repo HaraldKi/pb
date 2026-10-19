@@ -1,156 +1,136 @@
 #!/usr/bin/env python3
 
+import os
 import re
+import subprocess
 import sys
-from os import environ, getenv
 from pathlib import Path
 
-from pythonbuilder import (
-  BuildException,
-  Target,
-  pbexec,
-  pbutil,
-  registerDependencyGraphTarget,
-)
-from pythonbuilder.pbpython import doMypy, doRuffCheck, doRuffFormat
+# from typing import reveal_type
+from pythonbuilder import BuildException, Target, logcmd, pbexec
+from pythonbuilder.tasks import internalTask, main, target, task, toGraphviz
 
 OURNAME = "pythonbuilder"
-
-srcDir = Path("pythonbuilder")
-testsDir = Path("tests")
-buildDir = Path("build")
-
-pb = Target(Path("pb"))
-pySources = Target(srcDir)
-testSources = Target(testsDir)
-example = Target(Path("example"))
-
-############################################################
-
-mypy = Target(
-  buildDir / "mypy.stamp",
-  Target(Path("config", "mypy.ini")),
-  pb,
-  pySources,
-  testSources,
-  example,
-  name="mypy",
-  state="file",
-  cmd=doMypy,
-)
-
-############################################################
-ruffConfig = Target(Path("config", "ruff.toml"))
-
-ruff = Target(
-  buildDir / "ruff.stamp",
-  ruffConfig,
-  pb,
-  pySources,
-  testSources,
-  example,
-  name="ruff",
-  state="file",
-  cmd=doRuffCheck,
-)
-
-############################################################
-pyformat = Target(
-  buildDir / "ruffFormat.stamp",
-  ruffConfig,
-  pb,
-  pySources,
-  testSources,
-  example,
-  name="pyformat",
-  state="file",
-  cmd=doRuffFormat,
-)
-
-############################################################
-coverageFile = buildDir / "coverage.data"
-environ["COVERAGE_FILE"] = str(coverageFile)
+BUILD = Path("build")
 
 
-def doRunCoverage(_coverageFile: Path, testSources: Path, *_unused: Path) -> None:
-  pbexec("python3-coverage", "run", testSources / "alltests.py")
+@internalTask
+def testSources() -> Target[Path]:
+  return target(Path("tests"))
 
 
-test = Target(
-  coverageFile,
-  testSources,
-  pySources,
-  mypy,
-  ruff,
-  name="test",
-  state="file",
-  cmd=doRunCoverage,
-)
+@internalTask
+def pySources() -> Target[Path]:
+  return target(Path("pythonbuilder"))
 
 
-############################################################
-def coverageReport(coverageOut: Path, _coverageFile: Path) -> None:
-  pbexec(
-    "python3-coverage",
-    "html",
-    "-d",
-    coverageOut,
-    srcDir.glob("*.py"),
-    testsDir.glob("*.py"),
-  )
+@task
+def test() -> Target[Path]:
+  tests = testSources()
+  t = target(BUILD / "coverage.data", tests, pySources(), state="file")
+  if t.outdated:
+    pbexec(
+      "python3-coverage",
+      "run",
+      "--data-file=" + str(t.item),
+      tests.item / "alltests.py",
+    )
+  return t
 
 
-coverage = Target(
-  buildDir / "coverage", test, name="coverage", state="dir", cmd=coverageReport
-)
+@task
+def coverage() -> Target[Path]:
+  tests = testSources()
+  src = pySources()
+  coverageData = test()
+  t = target(BUILD / "coverage", coverageData, src, tests, state="dir")
+  if t.outdated:
+    pbexec(
+      "python3-coverage",
+      "html",
+      "--data-file=" + str(coverageData.item),
+      "-d",
+      t.item,
+      src.item.glob("*.py"),
+      tests.item.glob("*.py"),
+    )
+  return t
 
 
-############################################################
-def doApidoc(docPath: Path, docTemplates: Path, pypath: Path) -> None:
-  pbexec(
-    "pydoctor",
-    "-q",
-    "--docformat=restructuredtext",
-    "--project-name=pythonbuilder",
-    "--project-url=https://codeberg.org/harald/pythonbuilder",
-    "--template-dir=" + str(docTemplates),
-    "--html-output=" + str(docPath),
-    pypath.name,
-  )
+@internalTask
+def docTemplates() -> Target[Path]:
+  return target(Path("doc-templates"))
 
 
-docTemplates = Target(Path("doc-templates"), name="docTemplates")
-docout = getenv("DOCUMENTATION_OUT")
-APIDOC_OUT = Path(docout, OURNAME) if docout is not None else Path("apidoc")
+@task
+def apidoc() -> Target[Path]:
+  outDir = os.getenv("DOCUMENTATION_OUT")
+  docOut = Path(outDir, OURNAME) if outDir is not None else BUILD / "apidoc"
+  templates = docTemplates()
+  src = pySources()
+  t = target(docOut, templates, src, state="dir")
+  if t.outdated:
+    pbexec("pdoc", "-o", docOut, "-d", "markdown", src.item)
+  return t
 
-apidoc = Target(
-  APIDOC_OUT, docTemplates, pySources, state="dir", name="apidoc", cmd=doApidoc
-)
 
-############################################################
-def doReadme(readmeMd: Path, example: Path) -> None:
-  readme = readmeMd.read_text(encoding="UTF-8")
-  insert = example.read_text(encoding="UTF-8")
+@internalTask
+def readmeMd() -> Target[Path]:
+  return target(Path("README.md"))
+
+
+@internalTask
+def exampleCode() -> Target[Path]:
+  return target(Path("example"))
+
+
+@task
+def readme() -> Target[Path]:
+  fileIn = readmeMd()
+  example = exampleCode()
+  t = target(fileIn.item, fileIn, example)
+  if not t.outdated:
+    return t
+  readme = fileIn.item.read_text(encoding="UTF-8")
+  insert = example.item.read_text(encoding="UTF-8")
   tmpl = "<!-- inlined file: example, update with 'pb readme' -->\n```python\n%s```\n<!-- inlined file end -->"
-  text = re.sub("<!-- inlined file:.*inlined file end -->", (tmpl % ""), readme, flags=re.DOTALL)
+  text = re.sub(
+    "<!-- inlined file:.*inlined file end -->", (tmpl % ""), readme, flags=re.DOTALL
+  )
   if text == readme:
-    raise BuildException(f"cannot find pattern to insert file '{example}' into '{readmeMd}'")
-  text = re.sub("<!-- inlined file:.*inlined file end -->", (tmpl % insert), readme, flags=re.DOTALL)
-  readmeMd.write_text(text, encoding="UTF-8")
+    raise BuildException(
+      f"cannot find pattern to insert file '{example}' into '{readmeMd}'"
+    )
+  text = re.sub(
+    "<!-- inlined file:.*inlined file end -->", (tmpl % insert), readme, flags=re.DOTALL
+  )
+  t.item.write_text(text, encoding="UTF-8")
+  logcmd(["updated", str(t.item)])
+  return t
 
-readmemd = Target(Path("README.md"), example, name="readme", cmd=doReadme)
 
-############################################################
-graph = registerDependencyGraphTarget(Path("dependencies.svg"), "graph", pb)
+@internalTask
+def buildscript() -> Target[Path]:
+  return target(Path("pb"))
 
-############################################################
 
-# Run all targets which have no dependents to see if the
-# full build works
-Target("full", coverage, apidoc, graph, readmemd, state="new")
+@task
+def graph() -> Target[Path]:
+  outName = "dependencies.svg"
+  t = target(Path(outName), buildscript(), state="file")
+  if not t.outdated:
+    return t
+  dot = toGraphviz()
+  cmd = ["dot", "-Tsvg", "-Grankdir=LR", "-o" + outName]
+  logcmd(cmd)
+  subprocess.run(cmd, input=dot, encoding="utf8").check_returncode()
+  return t
 
-############################################################
 
-if __name__ == "__main__":
-  if not pbutil.main(*sys.argv[1:]):
-    sys.exit(1)
+@task
+def full() -> Target[None]:
+  return target("full", graph(), coverage(), apidoc(), readme(), state="new")
+
+
+if not main(sys.argv[1:]):
+  sys.exit(1)

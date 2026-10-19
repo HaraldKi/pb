@@ -5,15 +5,34 @@ them.
 The canonical use to define a task which creates a target looks like:
 ```python
 @task
-def stuff() -> None:
+def stuff() -> Target[Path]:
   dep1 = dependency1()
   dep2 = dependency2()
-  f = Path("build/file")
-  if isDone(file, dep1, dep2, state="file"):
-    return
-  pbexec("compile", f, dep1.item, dep2.item)
+  t = target(Path("build/file"), dep1, dep2, state="file"):
+  if t.outdated:
+    pbexec("compile", f, dep1.item, dep2.item)
+  return t
 ```
-where the `@task` converts the function `stuff` into a build task, which
+where the `@task` converts the function `stuff` into a build task. Lets go through
+the details:
+
+- `dependency1()` and `dependency2()` must also be `@task` decorated functions returning
+  a `Target[X]` for some type `X`. They are aptly named to show them as the dependencies
+  of the target we are about to construct here.
+- `t = target(...)` creates a new target, in this case supposed to create or update the
+  file `build/file`. For `state=file` see `pythonbuilder.pythonbuilder.Target`. The
+  `target` function does a whole lot of work, in particular is registers the target,
+  computes checksums and checks whether, given the checksums of the dependencies and the
+  current state of the target's item (`build/file`) the target needs to be
+  (re-)created. If yes, `t.outdated` is set to `True`.
+- `t.outdated`, if `True` tells us that the target's item is out of date and needs to be
+  created (again).
+- `pbexec(...)` If the target is outdated, any python code can be used to update it. The
+  example uses `pythonbuilder.pythonbuilder.pbexec` to run an external command.
+- Finally, the target must be returned.
+
+During the build process, the decorated `stuff` may be called more than once, but the
+`@task` decorator makes sure the plain one will be called at most once.
 """
 
 ## See https://stackoverflow.com/a/33533514/2954288
@@ -25,10 +44,12 @@ import time
 from functools import wraps
 from typing import Any, Callable, ParamSpec
 
+# REMINDER: an import copies a value, not a reference, so to access
+# _TARGETS, we must use pb._TARGETS
+import pythonbuilder.pythonbuilder as pb
 from pythonbuilder.pbutil import _setLogLevel, parseArgv
 from pythonbuilder.pythonbuilder import (
   _LOG,
-  _TARGETS,
   _VERBOSE,
   BuildException,
   T,
@@ -51,7 +72,6 @@ class _TaskInfo:
     self.startNanos = -1
     self.stateCurrent: tuple[str, str] = ("", "")
     self.triggeringDeps: list[str] = []
-    self.target: None | Target = None
 
   def setActive(
     self, startNanos: int, stateCurrent: tuple[str, str], triggeringDeps: list[str]
@@ -80,12 +100,6 @@ class _Build:
   def current(self) -> _TaskInfo:
     return self._taskStack[-1]
 
-  def setTarget(self, target: Target) -> None:
-    taskInfo = self.current()
-    if taskInfo.target is not None:
-      raise BuildException(f"target() called twice in a task {taskInfo.name}")
-    taskInfo.target = target
-
   def force(self, taskName: str) -> None:
     self._forced.add(taskName)
 
@@ -103,17 +117,17 @@ def _getBuild() -> _Build:
 def toGraphviz() -> str:
   global _CURRENTBUILD, _TARGETS
   keptBuild = _getBuild()
-  keptTargets = _TARGETS
+  keptTargets = pb._TARGETS
   _CURRENTBUILD = _Build()
-  _TARGETS = dict()
+  pb._TARGETS = dict()
   _getBuild().doGraph = True
   try:
     for f in _DEFINED_TASKS.values():
       f()
+    return pbToGraphviz(set(_DEFINED_TASKS.keys()))
   finally:
-    _TARGETS = keptTargets
+    pb._TARGETS = keptTargets
     _CURRENTBUILD = keptBuild
-  return pbToGraphviz(set(_DEFINED_TASKS.keys()))
 
 
 def main(argv: list[str]) -> bool:
@@ -148,15 +162,15 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
 P = ParamSpec("P")
 
 
-def internalTask(updater: Callable[P, None]) -> Callable[P, Target[T]]:
+def internalTask(updater: Callable[P, Target[T]]) -> Callable[P, Target[T]]:
   return _task(updater, True)
 
 
-def task(updater: Callable[P, None]) -> Callable[P, Target[T]]:
+def task(updater: Callable[P, Target[T]]) -> Callable[P, Target[T]]:
   return _task(updater, False)
 
 
-def _task(updater: Callable[P, None], internal: bool) -> Callable[P, Target[T]]:
+def _task(updater: Callable[P, Target[T]], internal: bool) -> Callable[P, Target[T]]:
   taskName = updater.__name__
 
   @wraps(updater)
@@ -167,8 +181,7 @@ def _task(updater: Callable[P, None], internal: bool) -> Callable[P, Target[T]]:
       return target
 
     build.enter(taskName)
-    updater(*args, **kwargs)
-    target = build.current().target
+    target = updater(*args, **kwargs)
     if target is None:
       raise BuildException(f"{taskName}: task failed to call target()")
     _finish(build, target, taskName)
@@ -182,12 +195,11 @@ def _task(updater: Callable[P, None], internal: bool) -> Callable[P, Target[T]]:
 
 def target[T](
   item: T,
-  *dependencies: Target,
+  *dependencies: Target[Any],
   state: str | Callable[[T], str] | None = None,
 ) -> Target[T]:
   build = _getBuild()
   target = Target(item, *dependencies, state=state, name=build.current().name)
-  build.setTarget(target)
   if target.started:
     raise BuildException(
       "dependency loop detected for: '%s'<-'%s'"
@@ -215,7 +227,6 @@ def target[T](
   stateCurrent = (target.stateGenerator.provideState(), depsDigest.hexdigest())
   combinedOld = build.states.get(target)
   build.current().setActive(startNanos, stateCurrent, triggering)
-
   _LOG.debug(
     "  %s->%s:\n  old %s\n  new %s\n  force=%s",
     build.current().name,
