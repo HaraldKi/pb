@@ -24,12 +24,12 @@ from typing import (
   Concatenate,
   Final,
   Generic,
+  Literal,
   Protocol,
+  Self,
   TypeVar,
   runtime_checkable,
 )
-
-from typing_extensions import Self
 
 _VERBOSE: Final = logging.INFO - 5
 
@@ -284,7 +284,7 @@ class Target(Generic[T]):
     item, but instead only use the name. If no explicit name was provided, calling this
     function is silly, as in that case the name is ``str(item)`` anyway.
 
-    This is typically used for targets whose string representation reveals a developers
+    This is typically used for targets whose string representation reveals a developer's
     local setup, like environment variables.  If the representation ends up committed,
     like the dependency graph, targets which change frequently, like file names
     containing a version, may also opt to use ``showNameOnly()``.
@@ -345,13 +345,13 @@ def findTarget(target: str | Target) -> Target | None:  # {
 
 def stateNew(_t: Any = None) -> str:
   """Returns a state string which is never the same, independent of the
-  input
+  input.
 
   This is subject to ``time.time_ns()`` changing more frequently than this
   function is called.
 
   :param _t: unused
-  :return: a different implementation dependent string for each call
+  :return: an implementation dependent string, differing for each call
   """
   return str(time.time_ns())
 
@@ -366,8 +366,8 @@ def stateFixed(_t: Any = None) -> str:
 
 
 def stateValue(item: Any) -> str:
-  """Computes a state string from ``item``, so it can be used for in-memory
-  targets like, for example, a version string generated from the current date.
+  """Computes a state string from ``item``, to be used for for in-memory
+  targets like a version string generated from the current date.
 
   :param item: to compute the state string from
   :return: an implementation dependent string is always the same for
@@ -543,17 +543,18 @@ def pbexec(*args: Any) -> None:
   logcmd(cmd)
   subprocess.run(cmd).check_returncode()
 
-
-def updateTargets(*targets: str | Target) -> bool:
+  
+def updateTargets(*targets: str | Target) -> Literal[0, 1]:
   return _runBuild(rawUpdateTargets, list(targets))
 
 
-def _runBuild[V](f: Callable[[list[V]], None], targets: list[V]) -> bool:
+def _runBuild[V](f: Callable[[list[V]], None], targets: list[V]) -> Literal[0, 1]:
   """Wraps `rawUpdateTargets` to log times and trim any exception to
   just its message.
 
-  :return: False if the build failed with an exception, otherwise True. Use this
-    for a ``sys.exit(1)`` in the fail case.
+  ### Return
+  1 if the build failed with an exception, otherwise 0. **NOTE** the inverted
+  logic geared towards using with ``sys.exit()``.
   """
 
   buildStart = time.time_ns()
@@ -583,7 +584,7 @@ def _runBuild[V](f: Callable[[list[V]], None], targets: list[V]) -> bool:
     _formatNanoDelta(buildStart, buildEnd),
     _formatNanoDelta(startNanos, buildEnd),
   )
-  return buildOK
+  return 0 if buildOK else 1
 
 
 def rawUpdateTargets(targets: list[str | Target]) -> None:
@@ -685,12 +686,13 @@ def _eschtml(
   return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s)
 
 
-def _targetToGraphviz(target: Target) -> str:
+def _targetToGraphviz(target: Target, isCli: bool) -> str:
   result = ""
   for dep in target.dependencies:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"\n'
 
   text = str(target.item)
+  label = ""
   if target.name != text and not target.nameOnly:
     if len(text) > 33:
       abbrev = text[:30] + "..."
@@ -699,15 +701,21 @@ def _targetToGraphviz(target: Target) -> str:
       abbrev = text
       tooltip = ""
 
-    result += (
-      f'  "{_escdq(target.name)}" [label=<{_eschtml(target.name)}'
+    label = (
+      f"label=<{_eschtml(target.name)}"
       + f'<BR/><FONT POINT-SIZE="10">{_eschtml(abbrev)}</FONT>>'
-      + f"{tooltip}]\n"
+      + f"{tooltip}"
     )
+  color = ""
+  if not isCli:
+    color = "color=grey fontcolor=grey"
+
+  if color != "" or label != "":
+    result += f'  "{_escdq(target.name)}" [{label} {color}]\n'
   return result
 
 
-def toGraphviz() -> str:
+def toGraphviz(fromCli: set[str] = set()) -> str:
   """Creates the dependency graph of all targets in `dot <https://graphviz.org>`_
   format.
 
@@ -717,10 +725,13 @@ def toGraphviz() -> str:
   :return: graph in dot format
 
   """
+  known: set[str] = set()
   result = "digraph {\n"
 
   for target in _TARGETS.values():
-    result += _targetToGraphviz(target)
+    if target.name not in known:
+      known.add(target.name)
+      result += _targetToGraphviz(target, target.name in fromCli)
 
   result += "}\n"
   return result

@@ -72,7 +72,7 @@ class TestPaths(support.CommonFixture):
 
     ## This needs an adaption whenever we add more source code
     pg = Paths.rglob(str(SRCPATH), "pb*").mappedTo(Path("."))
-    expected = [Path("pb2.py"), Path("pbpython.py"), Path("pbutil.py")]
+    expected = [Path("pbpython.py"), Path("pbutil.py")]
     self.assertEqual(sorted(expected), sorted([*pg]))
 
   def testPathFromStr(self) -> None:
@@ -167,13 +167,13 @@ class TestMain(support.CommonFixture):
     self.assertTrue(top.outdated)
 
     resetTraversalState()
-    self.assertTrue(main("top"))
+    self.assertEqual(0, main("top"))
     self.assertFalse(bottom.outdated)
     self.assertFalse(mid.outdated)
     self.assertFalse(top.outdated)
 
     resetTraversalState()
-    self.assertTrue(main("force=mid"))
+    self.assertEqual(0, main("force=mid"))
     self.assertFalse(bottom.outdated)
     self.assertTrue(mid.outdated)
     # top is false again, because though mid was recreated, its value, so it state
@@ -181,7 +181,7 @@ class TestMain(support.CommonFixture):
     self.assertFalse(top.outdated)
 
     resetTraversalState()
-    self.assertTrue(main("force=top", "force=bottom"))
+    self.assertEqual(0, main("force=top", "force=bottom"))
     self.assertTrue(bottom.outdated)
     self.assertFalse(mid.outdated)
     self.assertTrue(top.outdated)
@@ -199,23 +199,23 @@ class TestMain(support.CommonFixture):
     LOG.setLevel(keptLevel)
 
   def testFailWrongLevel(self) -> None:
-    self.assertFalse(main("ll=x"))
+    self.assertEqual(1, main("ll=x"))
     self.assertLogFails(1)
 
   def testForceTargetThenFailLevel(self) -> None:
     # we set force for a target immediately, even if pbmain then fails on ll
     t0 = Target("some-target", name="some-target", state="value")
-    self.assertFalse(main("force=some-target", "ll=x"))
+    self.assertEqual(1, main("force=some-target", "ll=x"))
     self.assertFalse(t0.force)
     self.assertLogFails(1)
 
   def testFailWrongTarget(self) -> None:
-    self.assertFalse(main("force=xxyy"))
+    self.assertEqual(1, main("force=xxyy"))
     self.assertLogFails(1)
 
   def testForceTargetThenFailUnknownTarget(self) -> None:
     t = Target("other-target", name="other-target", state="value")
-    self.assertFalse(main("force=other-target", "force=ddxx"))
+    self.assertEqual(1, main("force=other-target", "force=ddxx"))
     self.assertTrue(t.force)
     self.assertLogFails(1)
 
@@ -223,7 +223,7 @@ class TestMain(support.CommonFixture):
     # yes we somehow support this as long as the target does not start with
     # ll= or force= (so far)
     t = Target("x=y", name="x=y", state="value")
-    self.assertTrue(main("x=y"))
+    self.assertEqual(0, main("x=y"))
     self.assertTrue(t.outdated)
 
   def testPrintTargets(self) -> None:
@@ -234,7 +234,7 @@ class TestMain(support.CommonFixture):
     buffered = io.StringIO()
     sys.stdout = buffered
     try:
-      self.assertTrue(main())
+      self.assertEqual(0, main())
     except Exception as e:
       raise e
     finally:

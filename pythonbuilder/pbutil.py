@@ -13,7 +13,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Final, Iterable, Iterator
+from typing import Any, Callable, Final, Iterable, Iterator, Literal
 
 from . import pythonbuilder as pb
 
@@ -400,7 +400,7 @@ _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 
 
 # FIXME: move this to pythonbuilder.py and some of the lesser ones to here, like graphviz
-def main(*argv: str) -> bool:
+def main(*argv: str) -> Literal[0, 1]:
   """Simple wrapper around `pythonbuilder.updateTargets` to set the log level and/or
   force targets to be re-created.
 
@@ -445,16 +445,16 @@ def main(*argv: str) -> bool:
   (targets, forced, ll) = parseArgv(list(argv))
   if ll is not None:
     if not _setLogLevel(ll):
-      return False
+      return 1
   if not _forceTargets(forced):
-    return False
+    return 1
   targets.extend(forced)
   if targets:
     return pb.updateTargets(*targets)
 
   printTargets()
   print("Specify one or more of the above targets to built it.")
-  return True
+  return 0
 
 
 def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:

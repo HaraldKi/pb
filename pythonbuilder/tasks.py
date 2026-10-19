@@ -33,6 +33,7 @@ the details:
 
 During the build process, the decorated `stuff` may be called more than once, but the
 `@task` decorator makes sure the plain one will be called at most once.
+<hr>
 """
 
 ## See https://stackoverflow.com/a/33533514/2954288
@@ -42,7 +43,7 @@ from __future__ import annotations
 import hashlib
 import time
 from functools import wraps
-from typing import Any, Callable, ParamSpec
+from typing import Any, Callable, Literal, ParamSpec
 
 # REMINDER: an import copies a value, not a reference, so to access
 # _TARGETS, we must use pb._TARGETS
@@ -114,43 +115,6 @@ def _getBuild() -> _Build:
   return _CURRENTBUILD
 
 
-def toGraphviz() -> str:
-  global _CURRENTBUILD, _TARGETS
-  keptBuild = _getBuild()
-  keptTargets = pb._TARGETS
-  _CURRENTBUILD = _Build()
-  pb._TARGETS = dict()
-  _getBuild().doGraph = True
-  try:
-    for f in _DEFINED_TASKS.values():
-      f()
-    return pbToGraphviz(set(_DEFINED_TASKS.keys()))
-  finally:
-    pb._TARGETS = keptTargets
-    _CURRENTBUILD = keptBuild
-
-
-def main(argv: list[str]) -> bool:
-  build = _getBuild()
-  (tasks, forced, ll) = parseArgv(argv)
-  if ll is not None:
-    if not _setLogLevel(ll):
-      return False
-  for t in forced:
-    build.force(t)
-  tasks = forced + tasks
-
-  functions = []
-  for task in tasks:
-    updater = _DEFINED_TASKS.get(task, None)
-    if updater is None:
-      _LOG.error(f"{task}: no task with this name defined")
-      return False
-    functions.append(updater)
-
-  return _runBuild(_runTasks, functions)
-
-
 def _runTasks(functions: list[Callable[[], Any]]) -> None:
   try:
     for f in functions:
@@ -160,14 +124,30 @@ def _runTasks(functions: list[Callable[[], Any]]) -> None:
 
 
 P = ParamSpec("P")
-
-
-def internalTask(updater: Callable[P, Target[T]]) -> Callable[P, Target[T]]:
-  return _task(updater, True)
+"""Generic parameter type for the functions we annotate with `task`."""
 
 
 def task(updater: Callable[P, Target[T]]) -> Callable[P, Target[T]]:
+  """A decorator which wraps a function into as a task.
+
+  In particular the resulting task makes sure that the wrapped function is called at most
+  once during a build, caching the target returned.
+
+  ### Parameters
+
+  - updater: task function, which must return a `Target`. The function may have
+  parameters, but at least for functions to be called as a command line parameter, the
+  parameters must be optional. If `toGraphviz` is used, *all* task functions' parameters
+  must be unused outside the code guarded by the canonical `if target.outdated`.
+
+  """
   return _task(updater, False)
+
+
+def internalTask(updater: Callable[P, Target[T]]) -> Callable[P, Target[T]]:
+  """Same as `task` except that the decorated function name will not be available when
+  using `main` to process a command line."""
+  return _task(updater, True)
 
 
 def _task(updater: Callable[P, Target[T]], internal: bool) -> Callable[P, Target[T]]:
@@ -182,8 +162,6 @@ def _task(updater: Callable[P, Target[T]], internal: bool) -> Callable[P, Target
 
     build.enter(taskName)
     target = updater(*args, **kwargs)
-    if target is None:
-      raise BuildException(f"{taskName}: task failed to call target()")
     _finish(build, target, taskName)
     build.leave()
     return target
@@ -198,6 +176,22 @@ def target[T](
   *dependencies: Target[Any],
   state: str | Callable[[T], str] | None = None,
 ) -> Target[T]:
+  """Creates a target from within a `@task` decorated function.
+
+  This is, in fact, required. And each `@task` may only call `target()` once and the
+  task must return this same target. Some violations are captured, but beware.
+
+  The `Target.name` of the returned target is the name of the calling `@task` function.
+  ### Parameters
+  - item: see `pythonbuilder.pythonbuilder.Target`
+  - dependencies: see `pythonbuilder.pythonbuilder.Target`
+  - state: see `pythonbuilder.pythonbuilder.Target`
+
+  ### Return
+  A pythonbuilder.pythonbuilder.Target with field `outdated` set to `True` if the
+  target's item was determined to be out of date. The Target's `cmd` is not set, as
+  the task based approach does not need it.
+  """
   build = _getBuild()
   target = Target(item, *dependencies, state=state, name=build.current().name)
   if target.started:
@@ -259,3 +253,62 @@ def _finish(build: _Build, target: Target, currentTask: str) -> None:
     )
 
   build.states.setHashes(target, stateAfter, info.stateCurrent[1])
+
+
+def toGraphviz() -> str:
+  """Creates a dependency graph of the define targets in
+  [graphviz](https://graphviz.org/) format.
+
+  This needs to run all `@task`s in some arbitrary order in a way such `t.outdated`
+  is always false. If all tasks correctly test `t.outdated` and do not touch the
+  target to build, this has no side effects. Otherwise, obviously, the build's
+  overall state may get messed up.
+
+  ### Return
+  A string which can be passed through one of the the graphviz renderers to create
+  a dependency graph.
+  """
+
+  global _CURRENTBUILD, _TARGETS
+  keptBuild = _getBuild()
+  keptTargets = pb._TARGETS
+  _CURRENTBUILD = _Build()
+  pb._TARGETS = dict()
+  _getBuild().doGraph = True
+  try:
+    for f in _DEFINED_TASKS.values():
+      f()
+    return pbToGraphviz(set(_DEFINED_TASKS.keys()))
+  finally:
+    pb._TARGETS = keptTargets
+    _CURRENTBUILD = keptBuild
+
+
+def main(argv: list[str]) -> Literal[0, 1]:
+  """Provides minimal command line parsing and calling of tasks named on the
+  command line.
+
+  ### Parameters
+  see `pythonbuilder.pbutil.parseArgv`
+
+  ### Return
+  0 or 1 ready to be used with `sys.exit()`, i.e. 1 means we had a problem.
+  """
+  build = _getBuild()
+  (tasks, forced, ll) = parseArgv(argv)
+  if ll is not None:
+    if not _setLogLevel(ll):
+      return 1
+  for t in forced:
+    build.force(t)
+  tasks = forced + tasks
+
+  functions = []
+  for task in tasks:
+    updater = _DEFINED_TASKS.get(task, None)
+    if updater is None:
+      _LOG.error(f"{task}: no task with this name defined")
+      return 1
+    functions.append(updater)
+
+  return _runBuild(_runTasks, functions)

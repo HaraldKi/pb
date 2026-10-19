@@ -273,7 +273,7 @@ class TestUpdateTargets(support.CommonFixture):
     # This failed in some version, because rawUpdateTargets was called twice for t0,
     # because preventing a call for an already updated target was only done in the
     # loop over the dependencies in _updateTarget, not in updateTargets()
-    self.assertTrue(updateTargets("t0", "t0"))
+    self.assertEqual(0, updateTargets("t0", "t0"))
 
   def test_failWithDependencyLoop(self) -> None:
     # Somewhat hard to test, because the way we create targets, its dependencies must

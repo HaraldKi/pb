@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pythonbuilder.pbutil as pbutil
+
 # from typing import reveal_type
 from pythonbuilder import BuildException, Target, logcmd, pbexec
 from pythonbuilder.tasks import internalTask, main, target, task, toGraphviz
@@ -62,16 +64,40 @@ def docTemplates() -> Target[Path]:
   return target(Path("doc-templates"))
 
 
-@task
-def apidoc() -> Target[Path]:
-  outDir = os.getenv("DOCUMENTATION_OUT")
-  docOut = Path(outDir, OURNAME) if outDir is not None else BUILD / "apidoc"
+@internalTask
+def logo() -> Target[Path]:
+  return target(Path("config", "pythonbuilder-logo.png"))
+
+
+def doApidoc(serve: bool) -> Target[Path]:
+  tLogo = logo()
   templates = docTemplates()
   src = pySources()
-  t = target(docOut, templates, src, state="dir")
+
+  outDir = os.getenv("DOCUMENTATION_OUT")
+  docOut = Path(outDir, OURNAME) if outDir is not None else BUILD / "apidoc"
+  t = target(docOut, templates, src, tLogo, state="new" if serve else "dir")
   if t.outdated:
-    pbexec("pdoc", "-o", docOut, "-d", "markdown", src.item)
+    pbutil.copyFile(docOut, tLogo.item)
+    outParam = ["--no-browser"] if serve else ["-o", docOut, "--logo", tLogo.item.name]
+    try:
+      pbexec("pdoc", *outParam, "--docformat", "markdown", src.item)
+    except KeyboardInterrupt:
+      if serve:
+        print("server stopped")
+      else:
+        raise
   return t
+
+
+@task
+def docshow() -> Target[Path]:
+  return doApidoc(True)
+
+
+@task
+def apidoc() -> Target[Path]:
+  return doApidoc(False)
 
 
 @internalTask
@@ -128,9 +154,8 @@ def graph() -> Target[Path]:
 
 
 @task
-def full() -> Target[None]:
+def full() -> Target[str]:
   return target("full", graph(), coverage(), apidoc(), readme(), state="new")
 
 
-if not main(sys.argv[1:]):
-  sys.exit(1)
+sys.exit(main(sys.argv[1:]))
