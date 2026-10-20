@@ -3,8 +3,7 @@ from pathlib import Path
 
 import support
 
-from pythonbuilder import (
-  Target,
+from pythonbuilder.pythonbuilder import (
   flatten,
   stateFileContent,
 )
@@ -30,18 +29,17 @@ class TestPythonBuilderApi(support.CommonFixture):
 
   def test_stateFileContent(self) -> None:
     f = _TMPDIR / "testout"
-    t = Target(f, state="file")
 
     ## Don't fail for a non-existent file and provide a new hash each time.
-    ## hello future when this fails due to same nanosecond, you have
+    ## Hello future when this fails due to same nanosecond, you have
     ## really fast computers
-    hash1 = stateFileContent(t.item)
-    hash2 = stateFileContent(t.item)
+    hash1 = stateFileContent(f)
+    hash2 = stateFileContent(f)
     self.assertNotEqual(hash1, hash2)
 
     writeToFile("hallo", f)
-    hash1 = stateFileContent(t.item)
-    hash2 = stateFileContent(t.item)
+    hash1 = stateFileContent(f)
+    hash2 = stateFileContent(f)
     self.assertEqual(hash1, hash2)
 
   def test_flatten(self) -> None:

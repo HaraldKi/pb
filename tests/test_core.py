@@ -5,22 +5,24 @@ from typing import Any, Callable, cast
 
 import support
 
-from pythonbuilder import (
+from pythonbuilder.pbutil import Value
+from pythonbuilder.pythonbuilder import (
   BuildException,
   StateProvider,
+  StateProviderImpl,
   Target,
-  findTarget,
-  getTargets,
-  rawUpdateTargets,
-  resetTraversalState,
+  currentBuild,
+  inputTask,
+  newBuild,
+  runTasks,
   stateDirContent,
   stateFileContent,
   stateFileIteratorContent,
   stateFixed,
   stateNew,
-  updateTargets,
+  target,
+  task,
 )
-from pythonbuilder.pythonbuilder import _StateProviderImpl
 
 _TMPDIR = Path("build", "testtmp")
 
@@ -37,96 +39,87 @@ class DummySelfState(StateProvider):
     return "X" + self.v
 
 
-class TestTargetCreation(support.CommonFixture):
+class TestTaskCreation(support.CommonFixture):
   def getGenerator(self, t: Target[Any]) -> Callable[[Any], str]:
-    return cast(_StateProviderImpl, t.stateGenerator).generator
+    return cast(StateProviderImpl, t._stateGenerator).generator
 
   def test_basic(self) -> None:
-    t = Target(Path("pb"))
+    t = inputTask(Path("pb"))()
     self.assertEqual(stateFileContent, self.getGenerator(t))
-    self.assertEqual(t, findTarget("pb"))
+    self.assertEqual(t, currentBuild().getTarget("pb"))
 
   def test_explictName(self) -> None:
     ## we use an arbitrary existing file (FIXME: create test file)
-    t = Target(Path("pb"), name="base")
-    self.assertEqual(t, findTarget("base"))
+    t = inputTask(Path("pb"), name="base")()
+    self.assertEqual(t, currentBuild().getTarget("base"))
 
   def test_state(self) -> None:
-    t = Target(Path("b"), state="dir")
+    t = inputTask(Path("b"), state="dir")()
     self.assertEqual(stateDirContent, self.getGenerator(t))
 
-    t = Target(Path("c"), state="file")
+    t = inputTask(Path("c"), state="file")()
     self.assertEqual(stateFileContent, self.getGenerator(t))
 
-    t3 = Target("d", state="fixed")
+    t3 = inputTask("d", state="fixed")()
     self.assertEqual(stateFixed, self.getGenerator(t3))
 
-    t4 = Target("e", state="new")
+    t4 = inputTask("e", state="new")()
     self.assertEqual(stateNew, self.getGenerator(t4))
 
     v = DummySelfState("ulu")
-    t5 = Target(v)
-    self.assertEqual(v, t5.stateGenerator)
-    self.assertEqual("Xulu", t5.stateGenerator.provideState())
-
-  def test_statePathFail(self) -> None:
-    t = Target(Path("pb"), state="dir")
-    with self.assertRaisesRegex(BuildException, "'pb'.*file.*directory"):
-      rawUpdateTargets([t.name])
-
-    t = Target(Path("pythonbuilder"), state="file")
-    with self.assertRaisesRegex(BuildException, "'pythonbuilder'.*directory.*file"):
-      rawUpdateTargets([t.name])
-
-  def test_cmd(self) -> None:
-    t = Target("b", state="value", cmd=noop)
-    self.assertEqual(noop, t.cmd)
+    t5 = inputTask(v)()
+    self.assertEqual(v, t5._stateGenerator)
+    self.assertEqual("Xulu", t5._stateGenerator.provideState())
 
   def test_deps(self) -> None:
-    d0 = Target("d0", state="value")
-    d1 = Target("d1", state="value")
-    t = Target("b", d0, d1, state="value", cmd=None)
-    self.assertEqual(d0, t.dependencies[0])
-    self.assertEqual(d1, t.dependencies[1])
+    d0 = inputTask("d0", state="value")
+    d1 = inputTask("d1", state="value")
+
+    @task
+    def top() -> Target[str]:
+      return target("b", d0(), d1(), state="value")
+
+    t = top()
+    self.assertEqual(d0(), t.dependencies[0])
+    self.assertEqual(d1(), t.dependencies[1])
 
   def test_failWrongState(self) -> None:
     self.assertRaisesRegex(
       BuildException,
       "'foob' is neither a file nor a directory, cannot",
-      lambda: Target("foob"),
+      lambda: inputTask("foob")(),
     )
 
   def testFailDoublyDeclared(self) -> None:
-    Target(Path("x", "z"), state="file")
-    with self.assertRaisesRegex(BuildException, "defined already"):
-      Target(Path("x") / "z", state="file")
+    @task
+    def t0() -> Target[str]:
+      return target("t0", state="value")  # pragma: no cover
+
+    with self.assertRaisesRegex(BuildException, "already defined"):
+      inputTask("t0", state="value")
 
   def testFailWrongStateFun(self) -> None:
     with self.assertRaisesRegex(BuildException, "'file' must.*Path"):
-      Target("yada2", state="file")
+      inputTask("yada1", state="file")()
     with self.assertRaisesRegex(BuildException, "'dir' must.*Path"):
-      Target("yada2", state="dir")
+      inputTask("yada2", state="dir")()
     with self.assertRaisesRegex(BuildException, "'stuff'.*function shortcut"):
-      Target("yada2", state="stuff")
+      inputTask("yada3", state="stuff")()
 
   def testStrOfTarget(self) -> None:
-    t0 = Target("zero", state="value", cmd=print)
-    t1 = Target(DummySelfState("xx"), t0, name="t1")
-    self.assertEqual(
-      "Target(zero, [], name=zero, state=stateValue, cmd=print)", str(t0)
-    )
-    self.assertEqual("Target(t1, [zero], name=t1, state=(itemstate))", str(t1))
+    t0 = inputTask("zero", state="value")()
+    @task
+    def t1() -> Target[Any]:
+      return target(DummySelfState("xx"), t0)
 
-
-def writeToFile(text: str, fname: Path) -> None:
-  with open(fname, "wb") as outfile:
-    outfile.write(text.encode())
+    self.assertEqual("Target(zero, [], name=zero, state=stateValue)", str(t0))
+    self.assertEqual("Target(t1, [zero], name=t1, state=(itemstate))", str(t1()))
 
 
 class TestStateComputation(support.CommonFixture):
   def test_iterator(self) -> None:
     file = _TMPDIR / "thefile"
-    writeToFile("hallo", file)
+    file.write_text("hallo")
     hex = stateFileIteratorContent([file])
     digest = hashlib.sha256()
     digest.update(str(file).encode())
@@ -136,18 +129,18 @@ class TestStateComputation(support.CommonFixture):
   def test_dirContent(self) -> None:
     mydir = _TMPDIR / "dircontenttest"
     if mydir.is_dir():
-      shutil.rmtree(mydir)
+      shutil.rmtree(mydir)  # pragma: no cover
 
     dir = mydir / "dir0"
     dir.mkdir(parents=True, exist_ok=True)
-    t = Target(mydir)
+    t = inputTask(mydir)()
 
     file1 = mydir / "file1"
     file2 = mydir / "file2"
     file3 = dir / "file3"
-    writeToFile("file1", file1)
-    writeToFile("file2", file2)
-    writeToFile("file3", file3)
+    file1.write_text("file1")
+    file2.write_text("file2")
+    file3.write_text("file3")
     hex = stateDirContent(t.item)
 
     digest = hashlib.sha256()
@@ -158,129 +151,158 @@ class TestStateComputation(support.CommonFixture):
 
 
 class TestUpdateTargets(support.CommonFixture):
-  values: dict[str, str] = dict()
-
-  def simpleState(self, value: str) -> str:
-    return self.values.get(value, stateNew(value))
-
-  def setSimpleValue(self, key: str, value: Any) -> None:
-    self.values[key] = str(value)
-
   def setUp(self) -> None:
     super().setUp()
-    self.values.clear()
 
   def test_singleTarget(self) -> None:
-    self.values["blabla"] = "value of blabla"
-    t = Target("blabla", state=self.simpleState)
-    updateTargets("blabla")
-    self.assertTrue(t.started)
-    self.assertTrue(t.updated)
+    v = Value("blabla", "value of blabla")
+    blabla = inputTask(v)
+    t = blabla()
     self.assertTrue(t.outdated)
 
-    resetTraversalState()
-    updateTargets("blabla")
-    self.assertTrue(t.started)
-    self.assertTrue(t.updated)
+    newBuild()
+    t = blabla()
     self.assertFalse(t.outdated)
+
+    newBuild()
+    v.value = "othervalue"
+    t = blabla()
+    self.assertTrue(t.outdated)
+
+  def test_statePathFail(self) -> None:
+    t = inputTask(Path("pb"), state="dir")
+    with self.assertRaisesRegex(BuildException, "'pb'.*file.*directory"):
+      t()
+
+    t = inputTask(Path("pythonbuilder"), state="file")
+    with self.assertRaisesRegex(BuildException, "'pythonbuilder'.*directory.*file"):
+      t()
+
+  def testTargetCalledNotFromTask(self) -> None:
+    # first from the top level
+    def broken() -> Target[str]:
+      return target("broken", state="value")
+
+    with self.assertRaisesRegex(BuildException, "no current task.*@task"):
+      broken()
+
+    # next from another target as dependency
+    newBuild()
+
+    @task
+    def caller() -> Target[str]:
+      return target("caller", broken(), state="value")
+
+    with self.assertRaisesRegex(BuildException, "'caller'.*already.*@task"):
+      caller()
 
   ##
   # A Target with a fixed state or, more generally, a Target the
   # state of which does not change on recomputation does not
-  # trigger its dependents, even if recreated for the simple reason:
-  # If, after recreation, the state is as before, there is no point
-  # to trigger the dependents.
+  # trigger its dependents, even if recreated.
   def test_fixedStateStopsUpdate(self) -> None:
-    source = Target("source", state=self.simpleState)
-    fixed = Target("fixed", source, state="fixed")
-    top = Target("top", fixed, state=self.simpleState)
-    self.values[source.item] = "value of source"
-    self.values[top.item] = "value of top"
-    updateTargets(top)
-    self.assertTrue(source.updated)
-    self.assertTrue(source.outdated)
-    self.assertTrue(fixed.updated)
-    self.assertTrue(fixed.outdated)
-    self.assertTrue(top.updated)
-    self.assertTrue(top.outdated)
+    vSource = Value("source", "vsource")
+    source = inputTask(vSource)
+    vTop = Value("top", "vtop")
 
-    resetTraversalState()
-    updateTargets(top)
-    self.assertTrue(source.updated)
-    self.assertFalse(source.outdated)
-    self.assertTrue(fixed.updated)
-    self.assertFalse(fixed.outdated)
-    self.assertTrue(top.updated)
-    self.assertFalse(top.outdated)
+    @task
+    def fixed() -> Target[Value[str]]:
+      return target(Value("fixed", "vfixed"), source())
 
-    resetTraversalState()
-    self.values[source.item] = "value of source changed"
+    @task
+    def top() -> Target[Value[str]]:
+      return target(vTop, fixed())
 
-    updateTargets(top)
-    self.assertTrue(source.updated)
-    self.assertTrue(source.outdated)
-    self.assertTrue(fixed.updated)
-    self.assertTrue(fixed.outdated)
-    self.assertTrue(top.updated)
-    self.assertFalse(top.outdated)
+    topTarget = top()
+    self.assertTrue(source().outdated)
+    self.assertTrue(fixed().outdated)
+    self.assertTrue(topTarget.outdated)
 
-  def failWithZDE(self, t: str, u: str) -> None:
+    newBuild()
+    topTarget = top()
+    self.assertFalse(source().outdated)
+    self.assertFalse(fixed().outdated)
+    self.assertFalse(topTarget.outdated)
+
+    newBuild()
+    vSource.value = "newvalue"
+    topTarget = top()
+    self.assertTrue(source().outdated)
+    self.assertTrue(fixed().outdated)
+    self.assertFalse(topTarget.outdated)
+
+  def failWithZDE(self, t: str) -> None:
     print(len(t) / 0)
 
   def test_buildFailUpdateStatefile(self) -> None:
-    first: Target[str] = Target("first", state=self.simpleState)
-    second: Target[str] = Target("second", first, state="fixed", cmd=self.failWithZDE)
-    self.values[first.item] = "value of first"
-    self.values[second.item] = "value of second"
-    with self.assertRaises(ZeroDivisionError):
-      rawUpdateTargets([second])
-    self.assertTrue(first.updated)
-    self.assertTrue(first.outdated)
-    self.assertTrue(second.updated)
-    self.assertTrue(second.outdated)
+    first = inputTask(Value("first", "vfirst"))
 
-    ## Now run again and see that first is again recreated
-    resetTraversalState()
+    @task
+    def second() -> Target[Value[str]]:
+      t = target(Value("second", "vsecond"), first(), state="fixed")
+      if t.outdated:
+        self.failWithZDE("a")
+      return t
+
     with self.assertRaises(ZeroDivisionError):
-      rawUpdateTargets([second])
-    self.assertFalse(first.outdated)
+      second()
+    tSecond = currentBuild().getTarget("second")
+    self.assertTrue(first().outdated)
+    self.assertIsNotNone(tSecond)
+    self.assertTrue(tSecond is not None and tSecond.outdated)
+
+    ## Now run again and see that first is not again recreated
+
+    newBuild()
+    with self.assertRaises(ZeroDivisionError):
+      second()
+    self.assertFalse(first().outdated)
 
   def test_inMemTarget(self) -> None:
-    t0 = Target(117, name="t0", state="value")
-    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
+    v0 = Value("t0", 117)
+    t0 = inputTask(v0)
 
-    rawUpdateTargets([other])
-    self.assertTrue(other.outdated)
-    self.assertEqual("117", self.values["other"])
+    vOther = Value("other", 0)
 
-    getTargets().clear()
-    t0 = Target(117, name="t0", state="value")
-    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
-    rawUpdateTargets([other])
-    self.assertFalse(other.outdated)
+    @task
+    def other() -> Target[Value[int]]:
+      dep = t0()
+      t = target(vOther, dep, state="value")
+      if t.outdated:
+        t.item.value = dep.item.value
+      return t
 
-    getTargets().clear()
-    resetTraversalState()
-    t0 = Target(116, name="t0", state="value")
-    other = Target("other", t0, state="value", cmd=self.setSimpleValue)
+    tOther = other()
+    self.assertTrue(tOther.outdated)
+    self.assertEqual(117, tOther.item.value)
 
-    rawUpdateTargets([other])
-    self.assertTrue(other.outdated)
-    self.assertEqual("116", self.values["other"])
+    newBuild()
+    tOther = other()
+    self.assertFalse(tOther.outdated)
+
+    newBuild()
+    v0.value = 116
+    tOther = other()
+
+    self.assertTrue(tOther.outdated)
+    self.assertEqual(116, tOther.item.value)
 
   def test_updatingAnUpdatedIsNoop(self) -> None:
-    Target("somevalue", name="t0", state="value")
-    # This failed in some version, because rawUpdateTargets was called twice for t0,
-    # because preventing a call for an already updated target was only done in the
-    # loop over the dependencies in _updateTarget, not in updateTargets()
-    self.assertEqual(0, updateTargets("t0", "t0"))
+    @task
+    def t0() -> Target[str]:
+      return target("somevalue", state="value")
 
-  def test_failWithDependencyLoop(self) -> None:
-    # Somewhat hard to test, because the way we create targets, its dependencies must
-    # be defined before they can be used. Yet shit may happen, so lets check the loop
-    # detection.
-    t1 = Target("one", state="value")
-    t2 = Target("two", t1, state="value")
-    t1.__setattr__("dependencies", (t2,))
-    with self.assertRaisesRegex(BuildException, "dependency loop.*one.*<-.*two.*one"):
-      rawUpdateTargets([t1])
+    # This failed in some version, when the target was done twice in a build
+    self.assertEqual(0, runTasks(["t0", "t0"]))
+
+  def test_DependencyLoopDetection(self) -> None:
+    @task
+    def ding() -> Target[str]:
+      return target("ding", dong(), state="value")
+
+    @task
+    def dong() -> Target[str]:
+      return target("dong", ding(), state="value")
+
+    with self.assertRaisesRegex(BuildException, "dependency loop.*ding.*dong"):
+      dong()

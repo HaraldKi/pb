@@ -13,11 +13,45 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Final, Iterable, Iterator, Literal
+from typing import Any, Callable, Generic, Iterable, Iterator, TypeVar
 
 from . import pythonbuilder as pb
+from ._public import public
+
+T = TypeVar("T")
 
 
+@public
+class Value(pb.StateProvider, Generic[T]):
+  """An in-memory storage cell with a name, a value and a state provider.
+
+  Target items are nearly never a value to be created in itself, but rather the
+  name of an item to be updated, with the `Path` being the canonical example. The
+  `Value` class provides the same for in memory values."""
+
+  def __init__(self, name: str, value: T, state: Callable[[T], str] = repr) -> None:
+    self.name = name
+    self.value = value
+    self.state = repr
+
+  def __str__(self) -> str:
+    return self.name
+
+  def provideState(self) -> str:
+    return self.state(self.value)
+
+
+@public
+class Environ(pb.StateProvider):
+  def __init__(self, name: str) -> None:
+    self.name = name
+
+  def provideState(self) -> str:
+    value = os.environ.get(self.name, None)
+    return "None" if value is None else "!" + value
+
+
+@public
 class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
   """An iterable on files, much like ``Path().glob()`` but keeps the path from
   which the iteration starts.
@@ -392,113 +426,3 @@ def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(p, dest / tail)
   pb.logcmd(["copyFiles", str(dest), "<-", str(source)])
-
-
-_loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
-"""FIMXE: when we have python 3.11 or newer, switch to logging.getLevelNamesMapping()
-"""
-
-
-def main(*argv: str) -> Literal[0, 1]:
-  """Wrapper around `pythonbuilder.updateTargets` to set the log level and/or
-  force targets to be re-created.
-
-  In your build script, after setting up all targets and defining all commands to build
-  them, use it in your 'main' block like:
-  ```python
-  sys.exit(pbutil.main(*(sys.argv[1:])))
-  ```
-
-
-  ### Parameters
-  The parameters are the same as for `pythonbuilder.tasks.main`, except what denotes
-  a task name there is a target name here.
-
-  ### Return
-  The return value of `updateTargets` or `0` if no targets are given.
-
-  """
-  (targets, forced, ll) = parseArgv(list(argv))
-  if ll is not None:
-    if not _setLogLevel(ll):
-      return 1
-  if not _forceTargets(forced):
-    return 1
-  targets.extend(forced)
-  if targets:
-    return pb.updateTargets(*targets)
-
-  printTargets(pb.getTargets().values())
-  print("Specify one or more of the above targets to built it.")
-  return 0
-
-
-def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:
-  """Returns target names, forced target names and the last `ll` value on the
-  command line as described for `main`.
-  """
-
-  targets: list[str] = []
-  forced: list[str] = []
-  ll: str | None = None
-
-  for arg in argv:
-    parts = arg.split("=", 1)
-    if len(parts) != 2:
-      targets.append(arg)
-      continue
-
-    if parts[0] == "ll":
-      ll = parts[1]
-      continue
-
-    if parts[0] == "force":
-      forced.append(parts[1])
-      continue
-    targets.append(arg)
-  return (targets, forced, ll)
-
-
-def printTargets(targets: Iterable[pb.Target[Any]], seen: set[str] = set()) -> None:
-  depths = [(_targetDepth(t), t) for t in targets]
-  for pair in sorted(depths, key=lambda pair: (pair[0], pair[1].name)):
-    t = pair[1]
-    if t.name in seen:
-      continue
-    printTargets(t.dependencies, seen)
-    deps = "<- " + ", ".join([d.name for d in t.dependencies])
-    print(f"{'.' * pair[0]}•", t.name, "" if len(deps) == 3 else deps)
-    # if t.__doc__ is not None:
-    #  print(f"{' ' * pair[0]}  ", t.__doc__)
-    seen.add(t.name)
-
-
-## Note: Could benefit from memoization, but for builds with
-## a typical number of targets, that would be overkill
-def _targetDepth(target: pb.Target) -> int:
-  if not target.dependencies:
-    return 0
-  return 1 + max([_targetDepth(dep) for dep in target.dependencies])
-
-
-def _setLogLevel(shortcut: str) -> bool:
-  """Helper for `main`."""
-  LOG = pb.getLogger()
-  matches = [level for level in _loglevels if level.startswith(shortcut)]
-  if len(matches) != 1:
-    LOG.error("no log level starts with " + shortcut)
-    return False
-  LOG.setLevel(matches[0].upper())
-  return True
-
-
-def _forceTargets(targets: list[str]) -> bool:
-  """Helper for `main`."""
-  LOG = pb.getLogger()
-  for t in targets:
-    target = pb.findTarget(t)
-    if target is None:
-      LOG.error("no target named '%s' defined" % t)
-      return False
-    target.force = True
-  return True

@@ -1,20 +1,20 @@
 """A library for writing build scripts.
 
-Where *build script* denotes any odd python script which uses the functionality provided
-here.
+Where a **build script** is really just a python script making use of the API provided
+by this library.
 
+See `pythonbuilder.pythonbuilder` to get started and see the main API provided.
 
-### Task based build script
+**NOTE**: All exported names of `.pythonbuilder` are re-exported here to allow imports
+like
 
-The **modern** approach has a more readable structure and you should go right into
-`pythonbuilder.tasks` to learn how to write a **build task**.
-
-### Target based build script
-
-The **older** approach works slightly different with
-`pythonbuilder.pythonbuilder.Target`. It defines a target item, dependencies and a
-command to update the target item.
+```python
+from pythonbuilder import task, target, ...
+```
 
 """
 
 from .pythonbuilder import *  # noqa: F403
+
+
+

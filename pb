@@ -2,44 +2,37 @@
 
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 import pythonbuilder.pbutil as pbutil
 
 # from typing import reveal_type
-from pythonbuilder import BuildException, Target, logcmd, pbexec
+from pythonbuilder import (
+  BuildException,
+  Target,
+  inputTask,
+  internalTask,
+  logcmd,
+  main,
+  pbexec,
+  registerDependencyGraphTask,
+  target,
+  task,
+)
 from pythonbuilder.pbpython import doMypy
-from pythonbuilder.tasks import internalTask, main, target, task, toGraphviz
 
 OURNAME = "pythonbuilder"
 BUILD = Path("build")
 
 
-@internalTask
-def testSources() -> Target[Path]:
-  return target(Path("tests"))
-
-
-@internalTask
-def pySources() -> Target[Path]:
-  return target(Path("pythonbuilder"))
-
-
-@internalTask
-def pbFile() -> Target[Path]:
-  return target(Path("pb"))
-
-
-@internalTask
-def exampleFile() -> Target[Path]:
-  return target(Path("example"))
-
-
-@internalTask
-def mypyConfig() -> Target[Path]:
-  return target(Path("config", "mypy.ini"))
+testSources = inputTask(Path("tests"))
+pySources = inputTask(Path("pythonbuilder"))
+pbFile = inputTask(Path("pb"))
+exampleFile = inputTask(Path("example"))
+mypyConfig = inputTask(Path("config", "mypy.ini"))
+docTemplates = inputTask(Path("doc-templates"))
+logo = inputTask(Path("config", "pythonbuilder-logo.png"), name="logo")
 
 
 @task
@@ -87,16 +80,6 @@ def coverage() -> Target[Path]:
       tests.item.glob("*.py"),
     )
   return t
-
-
-@internalTask
-def docTemplates() -> Target[Path]:
-  return target(Path("doc-templates"))
-
-
-@internalTask
-def logo() -> Target[Path]:
-  return target(Path("config", "pythonbuilder-logo.png"))
 
 
 def doApidoc(serve: bool) -> Target[Path]:
@@ -165,22 +148,7 @@ def readme() -> Target[Path]:
   return t
 
 
-@internalTask
-def buildscript() -> Target[Path]:
-  return target(Path("pb"))
-
-
-@task
-def graph() -> Target[Path]:
-  outName = "dependencies.svg"
-  t = target(Path(outName), buildscript(), state="file")
-  if not t.outdated:
-    return t
-  dot = toGraphviz()
-  cmd = ["dot", "-Tsvg", "-Grankdir=LR", "-o" + outName]
-  logcmd(cmd)
-  subprocess.run(cmd, input=dot, encoding="utf8").check_returncode()
-  return t
+graph = registerDependencyGraphTask(Path("dependencies.svg"), pbFile)
 
 
 @task
