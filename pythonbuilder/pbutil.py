@@ -399,47 +399,23 @@ _loglevels: Final = ["debug", "verbose", "info", "warning", "error", "critical"]
 """
 
 
-# FIXME: move this to pythonbuilder.py and some of the lesser ones to here, like graphviz
 def main(*argv: str) -> Literal[0, 1]:
-  """Simple wrapper around `pythonbuilder.updateTargets` to set the log level and/or
+  """Wrapper around `pythonbuilder.updateTargets` to set the log level and/or
   force targets to be re-created.
 
   In your build script, after setting up all targets and defining all commands to build
-  them, use it in your ``main`` block like:
+  them, use it in your 'main' block like:
+  ```python
+  sys.exit(pbutil.main(*(sys.argv[1:])))
+  ```
 
-  .. code-block:: python
 
-    if not pbmain.main(*(sys.argv[1:])):
-      sys.exit(1)
+  ### Parameters
+  The parameters are the same as for `pythonbuilder.tasks.main`, except what denotes
+  a task name there is a target name here.
 
-  The arguments on the command line are used as follows:
-
-  ``ll=`` sets the log level, where level can be any string abbreviating one of
-  the lowercase loglevel keyswords, ``debug``, ``verbose``, ``info``, ``warning``,
-  ``error``, ``critical``. An example is ``ll=v`` to switch to ``VERBOSE`` logging.
-
-  ``force=...`` forces all targets in the comma separated list (no
-  whitespace) to be handled as if out-of-date. This is useful for debugging a build
-  step, for example ``doc``, which produces its output files but with wrong content. By
-  using ``force=doc`` the build step for ``doc`` can be re-run without other more
-  cumbersome ways of invalidating its state hash, like deleting an output file. More
-  than one target name can be provided like ``force=doc,coverage``. All ``force``
-  targets are also added to the list of targets to consider for building. So when
-  providing the command line arguments ``doc force=doc,apidoc``, the ``doc`` argument is
-  redundant and ``apidoc`` will be build even if ``doc`` does not depend on it.
-
-  Further command line arguments are assumed to be names of targets to be build, even
-  if they contain an equal sign. Put another way, only the prefixes ``ll=`` and
-  ``force=`` are interpreted as options. If, in the end, there is no target specified,
-  all target names are listed on the console.
-
-  **NOTE:** There is no ``--`` in front of the option names, following the only UNIX
-  command which does this right, namely `dd
-  <https://www.man7.org/linux/man-pages/man1/dd.1.html>`_ :-)
-
-  :param argv: should typically be just ``sys.argv`` or a trimmed version of it if you
-    have your own command line parsing
-  :return: the return value of `updateTargets` or ``True`` if no targets are given
+  ### Return
+  The return value of `updateTargets` or `0` if no targets are given.
 
   """
   (targets, forced, ll) = parseArgv(list(argv))
@@ -452,13 +428,13 @@ def main(*argv: str) -> Literal[0, 1]:
   if targets:
     return pb.updateTargets(*targets)
 
-  printTargets()
+  printTargets(pb.getTargets().values())
   print("Specify one or more of the above targets to built it.")
   return 0
 
 
 def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:
-  """Returns target names, forced target names and the last ``ll`` value on the
+  """Returns target names, forced target names and the last `ll` value on the
   command line as described for `main`.
   """
 
@@ -483,11 +459,8 @@ def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:
   return (targets, forced, ll)
 
 
-def printTargets(
-  targets: Iterable[pb.Target[Any]] = pb.getTargets().values(), seen: set[str] = set()
-) -> None:
+def printTargets(targets: Iterable[pb.Target[Any]], seen: set[str] = set()) -> None:
   depths = [(_targetDepth(t), t) for t in targets]
-
   for pair in sorted(depths, key=lambda pair: (pair[0], pair[1].name)):
     t = pair[1]
     if t.name in seen:

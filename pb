@@ -78,7 +78,7 @@ def doApidoc(serve: bool) -> Target[Path]:
   docOut = Path(outDir, OURNAME) if outDir is not None else BUILD / "apidoc"
   t = target(docOut, templates, src, tLogo, state="new" if serve else "dir")
   if t.outdated:
-    pbutil.copyFile(docOut, tLogo.item)
+    pbutil.copyFile(docOut / tLogo.item.name, tLogo.item)
     outParam = ["--no-browser"] if serve else ["-o", docOut, "--logo", tLogo.item.name]
     try:
       pbexec("pdoc", *outParam, "--docformat", "markdown", src.item)
@@ -156,6 +156,5 @@ def graph() -> Target[Path]:
 @task
 def full() -> Target[str]:
   return target("full", graph(), coverage(), apidoc(), readme(), state="new")
-
 
 sys.exit(main(sys.argv[1:]))

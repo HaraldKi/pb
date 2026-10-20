@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""An alternative and simpler approach to define targets, dependencies and how to build
-them.
+"""Decorate functions returning `Target` with @`task` to create a build task.
 
-The canonical use to define a task which creates a target looks like:
+The canonical way to define a task to update a target looks like:
 ```python
 @task
 def stuff() -> Target[Path]:
@@ -16,6 +15,7 @@ def stuff() -> Target[Path]:
 where the `@task` converts the function `stuff` into a build task. Lets go through
 the details:
 
+- `-> Target[...]` is the required return type of a function to be used as a @`task`.
 - `dependency1()` and `dependency2()` must also be `@task` decorated functions returning
   a `Target[X]` for some type `X`. They are aptly named to show them as the dependencies
   of the target we are about to construct here.
@@ -48,7 +48,7 @@ from typing import Any, Callable, Literal, ParamSpec
 # REMINDER: an import copies a value, not a reference, so to access
 # _TARGETS, we must use pb._TARGETS
 import pythonbuilder.pythonbuilder as pb
-from pythonbuilder.pbutil import _setLogLevel, parseArgv
+from pythonbuilder.pbutil import _setLogLevel, parseArgv, printTargets
 from pythonbuilder.pythonbuilder import (
   _LOG,
   _VERBOSE,
@@ -255,6 +255,14 @@ def _finish(build: _Build, target: Target, currentTask: str) -> None:
   build.states.setHashes(target, stateAfter, info.stateCurrent[1])
 
 
+def getTaskNames() -> list[str]:
+  return list(_DEFINED_TASKS.keys())
+
+
+def getTask(name: str) -> Callable[[], Target[Any]] | None:
+  return _DEFINED_TASKS.get(name, None)
+
+
 def toGraphviz() -> str:
   """Creates a dependency graph of the define targets in
   [graphviz](https://graphviz.org/) format.
@@ -268,7 +276,10 @@ def toGraphviz() -> str:
   A string which can be passed through one of the the graphviz renderers to create
   a dependency graph.
   """
+  return _onTaskGraph(lambda: pbToGraphviz(set(_DEFINED_TASKS.keys())))
 
+
+def _onTaskGraph(action: Callable[[], T]) -> T:
   global _CURRENTBUILD, _TARGETS
   keptBuild = _getBuild()
   keptTargets = pb._TARGETS
@@ -278,36 +289,80 @@ def toGraphviz() -> str:
   try:
     for f in _DEFINED_TASKS.values():
       f()
-    return pbToGraphviz(set(_DEFINED_TASKS.keys()))
+    return action()
   finally:
     pb._TARGETS = keptTargets
     _CURRENTBUILD = keptBuild
 
 
 def main(argv: list[str]) -> Literal[0, 1]:
-  """Provides minimal command line parsing and calling of tasks named on the
-  command line.
+  """Provides command line parsing and calling of tasks named on the command line.
+
+  Use it like
+  ```python
+  sys.exit(pbutil.main(*(sys.argv[1:])))
+  ```
+
+  The arguments on the command line are used as follows:
+
+  - `ll=` sets the log level, where level can be any string abbreviating one of
+  the lowercase loglevel keywords, `debug`, `verbose`, `info`, `warning`,
+  `error`, `critical`. An example is `ll=v` to switch to `VERBOSE` logging.
+
+  - `force=...` forces all tasks in the comma separated list (no whitespace) to be handled
+  as if out-of-date. This is useful for debugging a build step, for example `doc`, which
+  produces its output files but with wrong content. By using `force=doc` the build step
+  for `doc` can be re-run without other more cumbersome ways of invalidating its state
+  hash, like deleting an output file. More than one task name can be provided like
+  `force=doc,coverage`. All `force` tasks are also added to the list of tasks to
+  consider for building. So when providing the command line arguments `doc
+  force=doc,apidoc`, the `doc` argument is redundant and `apidoc` will be build even if
+  `doc` does not depend on it.
+
+  - **Other arguments** are assumed to be names of functions decorated with @`task` (not
+  @`internalTask`), even if they contain an equal sign. Put another way, only the
+  prefixes `ll=` and `force=` are interpreted as options. All task functions are then
+  called in the order in which they appeared, `force` tasks first.
+
+  If, in the end, there is no task specified, all tasks names are listed on the console.
+
+  **NOTE 1:** There is no `--` in front of the option names, following the only UNIX
+  command which does this right, namely
+  [dd](https://man.archlinux.org/man/dd.1.en).☺
+
+
+  **NOTE 2**: there is nothing wrong with having your own main() to call tasks. The
+  defined tasks are available as `getTaskNames()` and `getTask()`. To configure the
+  logger, get it via `pythonbuilder.pythonbuilder.getLogger()`.
 
   ### Parameters
-  see `pythonbuilder.pbutil.parseArgv`
+
+  - argv should typically be `sys.argv` stripped of `argv[0]`, or a trimmed version of
+  it if you have your own command line parsing.
 
   ### Return
   0 or 1 ready to be used with `sys.exit()`, i.e. 1 means we had a problem.
+
   """
   build = _getBuild()
-  (tasks, forced, ll) = parseArgv(argv)
+  (taskNames, forced, ll) = parseArgv(argv)
   if ll is not None:
     if not _setLogLevel(ll):
       return 1
   for t in forced:
     build.force(t)
-  tasks = forced + tasks
+  taskNames = forced + taskNames
+
+  if not taskNames:
+    ## FIXME: filter out or mark the internalTasks
+    _onTaskGraph(lambda: printTargets(pb._TARGETS.values()))
+    return 0
 
   functions = []
-  for task in tasks:
-    updater = _DEFINED_TASKS.get(task, None)
+  for taskName in taskNames:
+    updater = getTask(taskName)
     if updater is None:
-      _LOG.error(f"{task}: no task with this name defined")
+      _LOG.error(f"{taskName}: no task with this name defined")
       return 1
     functions.append(updater)
 

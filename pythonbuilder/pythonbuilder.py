@@ -2,6 +2,16 @@
 Define build targets with `Target` and run the build with `updateTargets()`.
 The functions starting with "state" can be used for the ``state`` parameter
 of `Target()`. Some have a string shortcut. See there.
+
+The identifiers of module ``pythonbuilder`` are directly available as part of
+the package itself, so you may write
+
+```python
+from pythonbuilder import Target
+```
+
+instead of `from pythonbuilder.pythonbuilder`.
+<hr>
 """
 
 ## See https://stackoverflow.com/a/33533514/2954288

@@ -19,31 +19,38 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 
 ## Getting Started
 
-From `./pythonbuilder` copy `__init__.py` and `pythonbuilder.py` plus other
-`*.py` files to some place you like. The suggested place is the sub-directory
-`./pythonbuilder` in your project directory. Absolutely necessary are only the
-first two files, the others are supplements that may be nice to have.
+Copy `./pythonbuilder` to some place you like. The suggested place is the
+sub-directory `./pythonbuilder` in your project directory.
 
 Write a build script in Python, called `pb` (for example), which has the following
 structure:
 ```python
 #!/usr/bin/env python3
 import sys
-import pythonbuilder.pbutil as pbutil
-from pythonbuilder import Target, pbexec, toGraphviz, ...
+from pythonbuilder import Target
+from pythonbuilder.tasks import main, target, task
 
-def defineTargets() -> None:
-  ... multiple calls to the Target constructor ...
+# Define @task decorated functions like
+@task
+def compile() -> Target[Path]:
+   # call other @task decorated functions as dependencies
+   d1 = dep1()
+   d2 = dep2()
+   # register the dependencies for the target
+   t = target(Path("build/compileOut"), d1, d2, state="dir")
+   # if the target needs to be updated, run your build step
+   if t.outdated:
+     # run the compilation
+   # don't forget to return the target to be used as a dependency elsewhere
+   return t
 
-... definition of functions to create your targets ...
+# define more tasks
 
-defineTargets()
-if not pbutil.main(*sys.argv[1:]):
-  sys.exit(1)
+sys.exit(main(sys.argv[1:]))
 ```
-
-Run `./pb target` to build the given target according to the recipe described in
-your build script, where target is a name of one of the `Target` objects you created.
+ 
+Run `./pb compile` to build the given task according to the recipe described in
+your build script.
 
 A more extensive example, is the [our build script](./pb) or see
 [below](#example).
@@ -81,11 +88,12 @@ based on their last write time stamp. That's what I call "guarded execution": if
 there is no point executing the command which create that output from the input.
 
 And it is exactly that last genuine task of a build system that `pythonbuilder`
-implements. In particular the `Target`
+implements. In particular the `@task`
 
-- encodes the list if inputs and its output,
-- how to get from the inputs to the outputs and
-- how to check whether either of them changed since we last looked.
+- calls dependency tasks, executing their build step only if needed,
+- calls `target()` to check whether, given the dependencies and the current
+  state of the target item itself, it  needs to be updated,
+- runs the build step as needed, conditional on `Target.outdated`.
 
 Agreed, we have `java.py` and `pbpython.py` which provide a bit of the "task
 library" bit, but more as an example than as a full blown feature set.
@@ -232,3 +240,30 @@ build script without lots of ceremony.
 
 ## Dependency Graph of pythonbuilder's build
 <img src="dependencies.svg" width="95%">
+
+## Historic Use
+
+The version prior to October 2026 had an older scheme to define tasks,
+namely by calling `Target` directly and using `updateTargets` to run the
+build. The following is from the old README.md.
+
+Write a build script in Python, called `pb` (for example), which has the following
+structure:
+```python
+#!/usr/bin/env python3
+import sys
+import pythonbuilder.pbutil as pbutil
+from pythonbuilder import Target, pbexec, toGraphviz, ...
+
+def defineTargets() -> None:
+  ... multiple calls to the Target constructor ...
+
+... definition of functions to create your targets ...
+
+defineTargets()
+if not pbutil.main(*sys.argv[1:]):
+  sys.exit(1)
+```
+
+Run `./pb target` to build the given target according to the recipe described in
+your build script, where target is a name of one of the `Target` objects you created.
