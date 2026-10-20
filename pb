@@ -10,6 +10,7 @@ import pythonbuilder.pbutil as pbutil
 
 # from typing import reveal_type
 from pythonbuilder import BuildException, Target, logcmd, pbexec
+from pythonbuilder.pbpython import doMypy
 from pythonbuilder.tasks import internalTask, main, target, task, toGraphviz
 
 OURNAME = "pythonbuilder"
@@ -24,6 +25,35 @@ def testSources() -> Target[Path]:
 @internalTask
 def pySources() -> Target[Path]:
   return target(Path("pythonbuilder"))
+
+
+@internalTask
+def pbFile() -> Target[Path]:
+  return target(Path("pb"))
+
+
+@internalTask
+def exampleFile() -> Target[Path]:
+  return target(Path("example"))
+
+
+@internalTask
+def mypyConfig() -> Target[Path]:
+  return target(Path("config", "mypy.ini"))
+
+
+@task
+def mypy() -> Target[Path]:
+  config = mypyConfig()
+  src = pySources()
+  testSrc = testSources()
+  pb = pbFile()
+  example = exampleFile()
+
+  t = target(BUILD / "mypy.done", config, src, testSrc, pb, example, state="file")
+  if t.outdated:
+    doMypy(t.item, config.item, src.item, testSrc.item, pb.item, example.item)
+  return t
 
 
 @task
@@ -156,5 +186,6 @@ def graph() -> Target[Path]:
 @task
 def full() -> Target[str]:
   return target("full", graph(), coverage(), apidoc(), readme(), state="new")
+
 
 sys.exit(main(sys.argv[1:]))
