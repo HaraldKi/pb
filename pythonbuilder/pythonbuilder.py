@@ -102,12 +102,6 @@ class Build:
   def depth(self) -> int:
     return len(self._taskStack)
 
-  def currentTasks(self) -> list[str]:
-    return list(self._taskStack)
-
-  def currentTarget(self) -> Target[Any] | None:
-    return self._targets.get(self.current(), None)
-
   def getTarget(self, name: str) -> Target[Any] | None:
     return self._targets.get(name, None)
 
@@ -698,7 +692,8 @@ class Target(Generic[T]):
     state: str | Callable[[T], str] | None,
     name: str | None,
     forced: bool,
-  ):  # {
+  ) -> None:
+
     self.item: Final[T] = item
     """The item of the target, often a file or directory path."""
 
@@ -745,7 +740,7 @@ class Target(Generic[T]):
     developer's local setup, like environment variables. If the representation
     ends up committed, like the dependency graph, targets which change
     frequently, like file names containing a version, may also opt to use
-    `showNameOnly()``.
+    `showNameOnly()`.
 
     """
     self._nameOnly = True
@@ -956,9 +951,11 @@ def flatten(result: list[str], nested: Any) -> None:
   `Iterable` and not `str` is added to the result as `str(element)`, except
   `None`.
 
-  :param result: to which elements are appended
-  :param nested: either an `Iterable` to flatten or a string or other object to add to
-    the result
+  ### Parameters
+  - result: to which elements are appended
+  - nested: either an `Iterable` to flatten or a string or other object to add
+    to the result
+
   """
   if isinstance(nested, str):
     result.append(nested)
@@ -1089,7 +1086,7 @@ def toGraphviz(cliCallable: set[str] | None = None) -> str:
 ## FIXME: reintroduce name so that it is not always called graph
 @public
 def registerDependencyGraphTask(
-  graphFile: Path, buildscript: Callable[[], Target[Path]] | None = None
+  graphFile: Path, buildscriptTask: Callable[[], Target[Path]] | None = None
 ) -> Callable[[], Target[Path]]:
   """Creates a task to create the dependency graph.
 
@@ -1099,22 +1096,25 @@ def registerDependencyGraphTask(
   from the `dot` program. If the `buildscript` is already a task it is
   used as the dependency.
 
-  :param graphFile: the dependency graph after converting the
+  ### Parameters
+  - graphFile: the dependency graph after converting the
     output of `toGraphviz`.
-  :param name: of the `Target` for the graph file
-  :param buildscript: to depend on such that the graph is re-created if the
-    script changes
-  :return: the `Target` for the dependency graph
+  - buildscriptTask: to depend on such that the graph is re-created if the
+    script changes. If None, a task named `_pb` is created assuming the build
+    script is the file `./pb`.
+
+  ### Return
+  An `@task` called `graph`.
 
   """
 
-  if buildscript is None:
+  if buildscriptTask is None:
 
     @internalTask
     def _pb() -> Target[Path]:
       return target(Path("pb"))
   else:
-    _pb = buildscript
+    _pb = buildscriptTask
 
   @task
   def graph() -> Target[Path]:
@@ -1125,16 +1125,16 @@ def registerDependencyGraphTask(
 
   return graph
 
-
+@public
 def graphToDot(targetPath: Path) -> None:
-  """Convenience function to create a dependency graph of all targets.
+  """Convenience function to create a dependency graph of all tasks.
 
   The function calls `toGraphviz()` and pipes the output through
   the `dot` program, writing the image file to the `targetPath`.
 
-  :param targetPath: to write the graph to. Its suffix is used as the image
+  ### Parameters
+  - targetPath: to write the graph to. Its suffix is used as the image
     type requested from `dot`, like `svg` or `pdf`.
-  :param _unused: not used, facilitates used as a `cmd` parameter of `Target`
   """
   result = toGraphviz()
   filetype = targetPath.suffix[1:]

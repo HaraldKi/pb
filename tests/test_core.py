@@ -71,6 +71,9 @@ class TestTaskCreation(support.CommonFixture):
     self.assertEqual(v, t5._stateGenerator)
     self.assertEqual("Xulu", t5._stateGenerator.provideState())
 
+    t6 = inputTask("text", state=lambda s: f"({s})")()
+    self.assertEqual("(text)", t6._stateGenerator.provideState())
+
   def test_deps(self) -> None:
     d0 = inputTask("d0", state="value")
     d1 = inputTask("d1", state="value")
@@ -108,12 +111,15 @@ class TestTaskCreation(support.CommonFixture):
 
   def testStrOfTarget(self) -> None:
     t0 = inputTask("zero", state="value")()
+
     @task
     def t1() -> Target[Any]:
       return target(DummySelfState("xx"), t0)
 
     self.assertEqual("Target(zero, [], name=zero, state=stateValue)", str(t0))
-    self.assertEqual("Target(t1, [zero], name=t1, state=(itemstate))", str(t1()))
+    self.assertEqual(
+      "Target(t1, [zero], name=t1, state=(itemstate))", str(t1())
+    )
 
 
 class TestStateComputation(support.CommonFixture):
@@ -175,7 +181,9 @@ class TestUpdateTargets(support.CommonFixture):
       t()
 
     t = inputTask(Path("pythonbuilder"), state="file")
-    with self.assertRaisesRegex(BuildException, "'pythonbuilder'.*directory.*file"):
+    with self.assertRaisesRegex(
+      BuildException, "'pythonbuilder'.*directory.*file"
+    ):
       t()
 
   def testTargetCalledNotFromTask(self) -> None:

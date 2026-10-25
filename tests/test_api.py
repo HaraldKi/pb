@@ -54,3 +54,8 @@ class TestPythonBuilderApi(support.CommonFixture):
     flatten(result, ["x", ["a", 1]])
     self.assertEqual(["x", "a", "1"], result)
     result = []
+
+    # verify that None is dropped
+    flatten(result, [[1, 2], None, "x"])
+    self.assertEqual(["1", "2", "x"], result)
+    result = []

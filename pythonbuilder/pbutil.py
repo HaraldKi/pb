@@ -26,13 +26,20 @@ class Value(pb.StateProvider, Generic[T]):
   """An in-memory storage cell with a name, a value and a state provider.
 
   Target items are nearly never a value to be created in itself, but rather the
-  name of an item to be updated, with the `Path` being the canonical example. The
-  `Value` class provides the same for in memory values."""
+  name of an item to be updated, with the `Path` being the typical example. The
+  `Value` class provides the same for in memory values.
 
-  def __init__(self, name: str, value: T, state: Callable[[T], str] = repr) -> None:
+  """
+
+  def __init__(
+    self, name: str, value: T, state: Callable[[T], str] = repr
+  ) -> None:
     self.name = name
+    """The name of the Value."""
     self.value = value
+    """The value stored"""
     self.state = repr
+    """The state provider to crate a fingerprint string for the value."""
 
   def __str__(self) -> str:
     return self.name
@@ -51,46 +58,50 @@ class Environ(pb.StateProvider):
     return "None" if value is None else "!" + value
 
 
+## FIXME: pdoc has an issue documenting the __init__
+## see https://github.com/mitmproxy/pdoc/issues/903
 @public
-class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
-  """An iterable on files, much like ``Path().glob()`` but keeps the path from
+class Paths(os.PathLike, pb.StateProvider, Iterable[Path]):
+  """An iterable on files, much like `Path().glob()` but keeps the path from
   which the iteration starts.
 
-  **NOTE**: Objects of this class can be conveniently used as the item of a `Target`
-  when combined with `pythonbuilder.stateFileIteratorContent` as the ``state=``
-  parameter.
+  **NOTE**: Objects of this class can be conveniently used as the item of a
+  `pythonbuilder.pythonbuilder.target()` call.
 
-  Many targets have a ``Path`` as their item and use ``state="dir"`` to obtain its
-  state hash, which includes *all* contained files. If only a subset of files shall
-  covered, use this class as a target's item.  You could use the iterator
-  ``Path("src/python").rglob("*.py")`` directly as the item, but then you loose the
-  information where the glob started, i.e. ``"src/python"``. This
-  class also provides the directory from which the glob starts, as it will often be
-  needed in the target's ``cmd``.
+  Many targets have a `Path` as their item and use `state="dir"` to obtain its
+  state hash, which includes *all* contained files. If only a subset of files
+  shall covered, use this class as a target's item.  You could use the iterator
+  `Path("src/python").rglob("*.py")` directly as the item, but then you loose
+  the information where the glob started, i.e. `"src/python"`. This class also
+  provides the directory from which the glob starts, as it will often be needed
+  in the target's command to update the item.
 
   **Hint:** to create a 1:1 file copy target look in particular at `mappedTo`.
 
-  Objects of this class implement the ``Iterator[Path]`` protocol. The iterator
+  Objects of this class implement the `Iterator[Path]` protocol. The iterator
   basically replays the iterator provided to the constructor, except that it
   throws a `BuildException`, if an iterated path is not a sub-path of the root
   parameter. Further, this is a restartable iterator, i.e. it is possibly to
   iterate more than once over the same instance.
 
-  When used as a ``os.PathLike``, the `root` is returned.
+  When used as a `os.PathLike`, the `root` is returned.
+
   """
 
   @staticmethod
   def glob(path: Path | str, pattern: str) -> "Paths":
-    """Creates a ``Paths`` object from a root path and an iterator derived straight from
-    the ``glob`` pattern.
+    """Creates a `Paths` object from a root path and an iterator derived
+    straight from the `glob` pattern.
+
     """
     path = Path(path)
     return Paths(path, lambda p: p.glob(pattern), pattern)
 
   @staticmethod
   def rglob(path: Path | str, pattern: str) -> "Paths":
-    """Creates a ``Paths`` object from a root path and an iterator derived straight from
-    the ``rglob`` pattern.
+    """Creates a `Paths` object from a root path and an iterator derived
+    straight from the `rglob` pattern.
+
     """
     path = Path(path)
     return Paths(path, lambda p: p.rglob(pattern), "r(" + pattern + ")")
@@ -103,7 +114,8 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
     dirs: bool = False,
     itName: str = "filtered",
   ) -> "Paths":
-    """Creates a ``Paths`` object with an iterable created by calling `filterPath`."""
+    """Creates a `Paths` object with an iterable created by calling
+    `filterPath`."""
     return Paths(path, lambda p: filterPath(p, fileOK, dirOK, dirs), itName)
 
   @staticmethod
@@ -116,12 +128,12 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
     dirX: str | None = None,
     dirs: bool = False,
   ) -> "Paths":
-    """Creates a ``Paths`` object with an iterable created by calling `filterPathRe`."""
+    """Creates a `Paths` object with an iterable created by calling `filterPathRe`."""
     itName = "✔(" + fileI + ")" if fileI != "." else ""
     itName += "✘(" + fileX + ")" if fileX is not None else ""
     itName += "👍(" + dirI + ")" if dirI != "." else ""
     itName += "👎(" + dirX + ")" if dirX is not None else ""
-    """Creates a ``Paths`` object with an iterable created by calling `filterPathRe`."""
+    """Creates a `Paths` object with an iterable created by calling `filterPathRe`."""
     return Paths(
       path, lambda p: filterPathRe(p, fileI, fileX, dirI, dirX, dirs), itName
     )
@@ -131,14 +143,16 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
     root: Path | str,
     itSupplier: Callable[[Path], Iterable[Path]],
     itName: str | None = None,
-  ):
-    """Creates the ``Paths`` object with a root and an iterable which must
-    deliver sub-paths of ``root``. Iterating over the ``Paths`` object will replay the
-    iterable, but will fail if a path is not a sub-path of ``root``.
+  ) -> None:
+    """Creates the `Paths` object with a root and an iterable which must deliver
+    sub-paths of `root`. Iterating over the `Paths` object will replay the
+    iterable, but will fail if a path is not a sub-path of `root`.
 
-    :param root: a common ancestor of paths of the iterable
-    :param itSupplier: sub-paths of ``root``
-    :param itName: a nice name of the generated iterator to be used by ``__str__``
+    ### Parameters
+    - root: a common ancestor of paths of the iterable
+    - itSupplier: a factory for an iterator over sub-paths of `root`
+    - itName: a nice name of the generated iterator to be used by `__str__`
+
     """
     self.root: Path = Path(root)  # note: Path(path) works just fine
     """A common ancestor of the paths returned by iterating this object.
@@ -158,27 +172,31 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
       yield p
 
   def __fspath__(self) -> str:
-    """Calls  ``os.fspath`` on `root`."""
+    """Calls  `os.fspath` on `root`."""
     return os.fspath(self.root)
 
   def __str__(self) -> str:
-    """Readable short form for a ``Paths``"""
+    """Readable short form for a `Paths`"""
     return f"Paths[{self.root},{self._itName}]"
 
   # FIXME: with Python 3.12 start using @override
   def provideState(self) -> str:
-    """Provides the state of the files such that a ``Paths`` object may be used with no
-    ``state`` provided when used as a `Target`'s item. The function
-    `stateFileIteratorContent` is used to compute the state.
-    """
+    """Implements `pythonbuilder.pythonbuilder.StateProvider`."""
     return pb.stateFileIteratorContent(self)
 
   def mappedTo(self, otherRoot: Path) -> "Paths":
-    """Maps this object to a different common ancestor. All paths returned when
-    iterating the new object will have the `root` replaced by ``otherRoot``.
+    """Maps this object to a different common ancestor. All paths returned are
+    created by iterating the old object, but will have the `root` replaced by
+    `otherRoot`. This is ideal to have all files in one directories also in
+    another directory.
 
-    :param otherRoot: the new common ancestor of all paths
-    :return: a ``Paths`` object with ``otherRoot`` as the `root`.
+    ### Parameters
+    - otherRoot: the new common ancestor of all paths
+
+    ### Return
+    A `Paths` object with `otherRoot` as the `root` of the files generated by
+    this object.
+
     """
     return Paths(
       otherRoot,
@@ -195,17 +213,18 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
 
     Example:
 
-    .. code-block:: python
+    ```python
+    allSrc = Paths.rglob(Path("src", "app"), "*")
+    nohtml = allSrc.withFilter(lambda p: None if p.suffix == ".html" else p, "nohtml")
+    ```
 
-      allSrc = Paths.rglob(Path("src", "app"), "*")
-      nohtml = allSrc.withFilter(lambda p: None if p.suffix == ".html" else p, "nohtml")
-
-    :param relativePathFilter: a function to map paths relative to our root to a changed
-      path, the same path or ``None``. A returned path must be a relative path,
-      otherwise a `BuildException` is raised. If ``None`` is returned, the input
+    ### Parameters
+    - relativePathFilter: a function to map paths relative to our root to a changed
+      path, the same path or `None`. A returned path must be a relative path,
+      otherwise a `BuildException` is raised. If `None` is returned, the input
       path is filtered out.
 
-    :param filterName: for a better ``str()`` output of the filter
+    - filterName: for a better `str()` output of the filter
 
     """
     name = filterName if filterName is not None else str(relativePathFilter)
@@ -231,37 +250,42 @@ class Paths(Iterable[Path], os.PathLike, pb.StateProvider):
       yield root / other
 
 
+@public
 def filterPath(
   root: Path,
   fileOK: Callable[[Path], bool] = lambda p: True,
   dirOK: Callable[[Path], bool] = lambda p: True,
   dirs: bool = False,
 ) -> Iterable[Path]:
-  """An iterable producing file and, possibly, directory paths recursively contained in
-  the ``root`` path. Symlinks are never followed but are handled as regular
-  files.
+  """An iterable producing file and, possibly, directory paths recursively
+  contained in the `root` path. Symlinks are never followed but are handled as
+  regular files.
 
-  ``fileOK`` decides which files to include in the output.
+  `fileOK` decides which files to include in the output.
 
-  ``dirOK`` decides which directories to traverse. This can avoid unnecessary traversal
-  of subdirectories and may keep file tests simpler. For example if ``dirOK`` is only
-  true for a subdirectory "src/module1", getting python files from this subdirectory
-  only can just check if a path ends with ``".py"``. Without a ``dirOK``, the prefix
-  ``"src/module1/"`` would also have to be checked for each file and, in addition, other
-  subdirectories would be traversed unneccesarily.
+  `dirOK` decides which directories to traverse. This can avoid unnecessary
+  traversal of subdirectories and may keep file tests simpler. For example if
+  `dirOK` is only true for a subdirectory "src/module1", getting python files
+  from this subdirectory only can just check if a path ends with
+  `".py"`. Without a `dirOK`, the prefix `"src/module1/"` would also have to be
+  checked for each file and, in addition, other subdirectories would be
+  traversed unneccesarily.
 
-  The path parameter to both, ``fileOK`` and ``dirOK``, is relative to the ``root``, so
-  to include a directory ``a`` below any root, it suffices to use ``dirOK=lambda p:
-  p.parts[0]=="a"``.
+  The path parameter to both, `fileOK` and `dirOK`, is relative to the `root`, so
+  to include a directory `a` below any root, it suffices to use `dirOK=lambda p:
+  p.parts[0]=="a"`.
 
-  Directory paths will only show up in the result if ``dirs=True`` **and** if they
+  Directory paths will only show up in the result if `dirs=True` **and** if they
   are traversed.
 
-  :param root: directory to traverse
-  :param fileOK: function to test if a file shall be in the output
-  :param dirOK: function to test if a directory shall be traversed at all
-  :param dirs: if ``True``, provides traversed directory paths in the output
-  :return: paths of files and directories
+  ### Parameters
+  - root: directory to traverse
+  - fileOK: function to test if a file shall be in the output
+  - dirOK: function to test if a directory shall be traversed at all
+  - dirs: if `True`, provides traversed directory paths in the output
+
+  ### Return
+  Iterator over paths of files and possibly directories
 
   """
   work: list[Path] = [root]
@@ -278,6 +302,7 @@ def filterPath(
           yield p
 
 
+@public
 def filterPathRe(
   root: Path,
   fileI: str = ".",
@@ -286,28 +311,34 @@ def filterPathRe(
   dirX: str | None = None,
   dirs: bool = False,
 ) -> Iterable[Path]:
-  """An iterable producing file and, possibly, directory paths recursively contained in
-  the ``root`` path. This is a wrapper around `filterPath` which creates its ``fileOK``
-  and ``dirOK`` from the provided regular expressions as follows:
+  """An iterable producing file and, possibly, directory paths recursively
+  contained in the `root` path. This is a wrapper around `filterPath` which
+  creates its `fileOK` and `dirOK` from the provided regular expressions as
+  follows:
 
-  Both parameters for `filterPath` are constructed such that the exclude pattern beats
-  the include pattern. All patterns are **searched** in paths relative to ``root`` after
-  conversion with ``Path.as_posix()``, so paths directly in root will have no ``'/'``
-  inside while deeper nested paths will look like ``"a/b/c.d"``
+  The include and exclude parameters are constructed such that the exclude
+  pattern beats the include pattern. All patterns are **searched** in paths
+  relative to `root` after conversion with `Path.as_posix()`, so paths directly
+  in root will have no `'/'` inside while deeper nested paths will look like
+  `"a/b/c.d"`
 
-  For example to only include files in subdirectories of ``root`` use ``fileI="/"`` as
-  it requires that the path contains at least one ``'/'``, like ``module/some.py``.
+  **Example:** To include only files in subdirectories of `root` use `fileI="/"`
+  as it requires that the path contains at least one `'/'`, like
+  `module/some.py`.
 
-  Use ``dirI`` and ``dirX`` to prevent traversal of subdirectories which have not files
-  to include as described for `filterPath`.
+  Use `dirI` and `dirX` to prevent traversal of subdirectories which have no
+  files to include as described for `filterPath`.
 
-  :param root: directory to traverse
-  :param fileI: regex to match against file paths for inclusion
-  :param fileX: regex to match against file paths for exclusion, overrules ``fileI``
-  :param dirI: regex to match against directory paths for traversal
-  :param dirX: regex to match against directory paths to skip, overrules ``dirI``
-  :param dirs: if ``True``, provides traversed directory paths in the output
-  :return: paths of files and directories
+  ### Parameters
+  - root: directory to traverse
+  - fileI: regex to match against file paths for inclusion
+  - fileX: regex to match against file paths for exclusion, overrules `fileI`
+  - dirI: regex to match against directory paths for traversal
+  - dirX: regex to match against directory paths to skip, overrules `dirI`
+  - dirs: if `True`, provides traversed directory paths in the output
+
+  ### Retrun
+  Iterable over paths of files and directories
 
   """
   dirDescent = re.compile(dirI)
@@ -315,9 +346,13 @@ def filterPathRe(
   fileInc = re.compile(fileI)
   fileExc = None if fileX is None else re.compile(fileX)
 
-  def include(inc: re.Pattern[str], exc: re.Pattern[str] | None, p: Path) -> bool:
+  def include(
+    inc: re.Pattern[str], exc: re.Pattern[str] | None, p: Path
+  ) -> bool:
     pstr = p.as_posix()
-    return inc.search(pstr) is not None and (exc is None or not exc.search(pstr))
+    return inc.search(pstr) is not None and (
+      exc is None or not exc.search(pstr)
+    )
 
   return filterPath(
     root,
@@ -327,25 +362,27 @@ def filterPathRe(
   )
 
 
-def touch(targetPath: Path, *deps: Any) -> None:
-  """A function intended to be used as the ``cmd`` parameter of a `Target` to
-  write the current iso datetime into the ``targetPath``.
+@public
+def touch(targetPath: Path) -> None:
+  """A function intended to be used as the command in a task to write the
+  current iso datetime into the `targetPath`.
 
   Use this function for
 
-  * a shortcut/alias target, for example ``allLibs``, which
-    has no command to execute itself, but merely combines a list of targets into
-    one to be conveniently invoked by the alias.
+  * a shortcut/alias target, for example `allLibs`, which has no command to
+    execute itself, but merely combines a list of targets into one to be
+    conveniently invoked by the alias.
   * a target with no natural output, like a linter which is only run for its
     error output.
 
-  The ``targetPath`` is merely a bookkeeping file which is freshly written
+  The `targetPath` is merely a bookkeeping file which is freshly written
   if and only if any of the dependencies was re-created (or the file itself
   does not exist, of course), so it should be a file in the build output, say
-  ``BUILD / "allLibs.done"`` where ``BUILD`` is your build output directory.
+  `BUILD / "allLibs.done"` where `BUILD` is your build output directory.
 
-  :param targetPath: to write the current iso date/time into
-  :param deps: the dependencies are ignored
+  ### Parameters
+  - targetPath: to write the current iso date/time into
+
   """
   frame = inspect.currentframe()
   me = "touch" if frame is None else frame.f_code.co_name
@@ -355,31 +392,34 @@ def touch(targetPath: Path, *deps: Any) -> None:
 
 
 class RootPathMapper:
-  """A ``Callable[[Path], Iterator[Path]]`` which maps paths provided by another
-  iterator to a new prefix, think ``["src/a.py", "src/b.py"]`` mapped to
-  ``["dest/a.py", "dest/b.py"]``.
+  """A `Callable[[Path], Iterator[Path]]` which maps paths provided by another
+  iterator to a new prefix, think `["src/a.py", "src/b.py"]` mapped to
+  `["dest/a.py", "dest/b.py"]`.
   """
 
   def __init__(self, oldRoot: Path, itGen: Callable[[Path], Iterable[Path]]):
     """Creates the mapper by its input.
 
-    The second parameter, ``itGen`` is not just an iterator but a function to provide
+    The second parameter, `itGen` is not just an iterator but a function to provide
     one so that our result can be iterated over more than once.
 
-    :param oldRoot: a path prefix of all paths provided by ``itGen``
-    :param itGen: given ``oldRoot``, must return an ``Iterator[Path]`` which
-      may on only have paths prefixed with ``oldRoot``, the canonical example being
-      ``lambda p: p.glob(...)``
+    - oldRoot: a path prefix of all paths provided by `itGen`
+    - itGen: given `oldRoot`, must return an `Iterator[Path]` which
+      may on only have paths prefixed with `oldRoot`, the canonical example being
+      `lambda p: p.glob(...)`
     """
     self._oldRoot = oldRoot
     self._itGen = itGen
 
   def __call__(self, newRoot: Path) -> Iterator[Path]:
     """Maps the paths defined in the constructor to have a the new prefix path
-    ``newRoot`` by replacing the ``oldRoot`` defined in the constructor.
+    `newRoot` by replacing the `oldRoot` defined in the constructor.
 
-    :param newRoot: new path prefix of the paths defined in the constructor
-    :return: an iterator over the mapped paths, restartable
+    ### Parameters
+    - newRoot: new path prefix of the paths defined in the constructor
+
+    ### Return
+    An iterator over the mapped paths, restartable.
     """
     for p in self._itGen(self._oldRoot):
       try:
@@ -391,11 +431,12 @@ class RootPathMapper:
       yield newRoot / tail
 
 
+@public
 def copyFile(dest: os.PathLike, source: os.PathLike) -> None:
-  """A wrapper around ``shutil.copy`` to be used as a command in a target.
+  """A wrapper around `shutil.copy` with logging.
 
   It creates the destination directory, if necessary, swaps the arguments to fit
-  ``shutil.copy``, logs the command."""
+  `shutil.copy`, logs the command."""
 
   destPath = Path(dest)
   destPath.parent.mkdir(0o754, parents=True, exist_ok=True)
@@ -403,19 +444,23 @@ def copyFile(dest: os.PathLike, source: os.PathLike) -> None:
   pb.logcmd(["copyFile", str(dest), "<-", str(source)])
 
 
+@public
 def copyFiles(dest: Paths | Path, source: Paths | Path) -> None:
-  """Copies files from ``source`` to dest preserving the path segments below
-  ``source.root``. If the source contains directory paths, these are ignored. If
-  the source is a ``Path``, then ``Paths.rglob(source, "*")`` is used.
+  """Copies files from `source` to dest preserving the path segments below
+  `source.root`. If the source contains directory paths, these are ignored. If
+  the source is a `Path`, then `Paths.rglob(source, "*")` is used.
 
-  :param dest: where to copy files to using ``dest.root`` if it is a ``Paths`` object.
-  :param source: files to copy, if a ``Path`` it must be a directory.
+  ### Parameters
+  - dest: where to copy files to, using `dest.root` if it is a `Paths` object.
+  - source: files to copy, if a `Path` it must be a directory.
   """
   if isinstance(dest, Paths):
     dest = dest.root
   if isinstance(source, Path):
     if not source.is_dir():
-      raise pb.BuildException("source must be a directory but is " + str(source))
+      raise pb.BuildException(
+        "source must be a directory but is " + str(source)
+      )
     source = Paths.rglob(source, "*")
 
   for p in source:
