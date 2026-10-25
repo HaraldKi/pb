@@ -57,6 +57,7 @@ def test() -> Target[Path]:
     pbexec(
       "python3-coverage",
       "run",
+      "--branch",
       "--data-file=" + str(t.item),
       tests.item / "alltests.py",
     )
@@ -94,7 +95,14 @@ def doApidoc(serve: bool) -> Target[Path]:
     pbutil.copyFile(docOut / tLogo.item.name, tLogo.item)
     outParam = ["--no-browser"] if serve else ["-o", docOut, "--logo", tLogo.item.name]
     try:
-      pbexec("pdoc", *outParam, "--docformat", "markdown", src.item)
+      pbexec(
+        "pdoc",
+        "--no-include-undocumented",
+        *outParam,
+        "--docformat",
+        "markdown",
+        src.item,
+      )
     except KeyboardInterrupt:
       if serve:
         print("server stopped")
