@@ -1,7 +1,7 @@
 import hashlib
 import shutil
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, Callable, cast, TypeVar
 
 import support
 
@@ -26,6 +26,7 @@ from pythonbuilder.pythonbuilder import (
 
 _TMPDIR = Path("build", "testtmp")
 
+T = TypeVar("T")
 
 def noop(t: Any) -> None:
   return None
@@ -40,8 +41,8 @@ class DummySelfState(StateProvider):
 
 
 class TestTaskCreation(support.CommonFixture):
-  def getGenerator(self, t: Target[Any]) -> Callable[[Any], str]:
-    return cast(StateProviderImpl, t._stateGenerator).generator
+  def getGenerator(self, t: Target[T]) -> Callable[[T], str]:
+    return cast(StateProviderImpl[T], t._stateGenerator).generator
 
   def test_basic(self) -> None:
     t = inputTask(Path("pb"))()

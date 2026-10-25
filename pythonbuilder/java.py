@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-
+from typing import Any
 from .pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
@@ -24,7 +24,7 @@ def setJunitMainClass(className: str) -> None:
 
 
 def compileJava(
-  targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path
+  targetPath: os.PathLike[Any], srcPath: os.PathLike[Any], *classpath: Path
 ) -> None:
   """A default java compilation command, kept simple.
 
@@ -63,7 +63,7 @@ def compileJava(
 def jacocoRunJunit4(
   targetPath: Path,
   testClassesPath: Path,
-  testClassRe: str | re.Pattern,
+  testClassRe: str | re.Pattern[Any],
   jacocoJar: Path,
   *classpath: Path,
 ) -> None:

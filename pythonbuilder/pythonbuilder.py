@@ -79,7 +79,7 @@ from pythonbuilder._public import public
 ########################################################################
 
 CURRENTBUILD = None
-DEFINED_TASKS: dict[str, Callable[[], Target]] = dict()
+DEFINED_TASKS: dict[str, Callable[[], Target[Any]]] = dict()
 
 
 @public
@@ -89,7 +89,7 @@ def clearTasks() -> None:
 
 class Build:
   def __init__(self) -> None:
-    self._targets: dict[str, Target] = dict()
+    self._targets: dict[str, Target[Any]] = dict()
     self.states = _StateStore(getStatefile())
     self.doGraph = False
     self._forced: set[str] = set()
@@ -186,7 +186,7 @@ def wrapTask(
     raise BuildException(f"{taskName} already defined")
 
   @wraps(updater)
-  def taskWrapper(*args: P.args, **kwargs: P.kwargs) -> Target:
+  def taskWrapper(*args: P.args, **kwargs: P.kwargs) -> Target[T]:
     build = currentBuild()
     target = build.getTarget(taskName)
     if target is not None:
@@ -317,7 +317,7 @@ def target(
   return target
 
 
-def finish(build: Build, target: Target, currentTask: str) -> None:
+def finish(build: Build, target: Target[T], currentTask: str) -> None:
   took = _formatNanoDelta(target._startNanos, time.time_ns())
   stateAfter = target._stateGenerator.provideState()
   if LOG.isEnabledFor(VERBOSE) and target.outdated:
@@ -605,7 +605,7 @@ def getLogger() -> logging.Logger:
 
 ## Note: Could benefit from memoization, but for builds with
 ## a typical number of targets, that would be overkill
-def _targetDepth(target: Target) -> int:
+def _targetDepth(target: Target[T]) -> int:
   if not target.dependencies:
     return 0
   return 1 + max([_targetDepth(dep) for dep in target.dependencies])
@@ -693,7 +693,6 @@ class Target(Generic[T]):
     name: str | None,
     forced: bool,
   ) -> None:
-
     self.item: Final[T] = item
     """The item of the target, often a file or directory path."""
 
@@ -1022,7 +1021,7 @@ def _eschtml(
   return re.sub("[&<>]", lambda m: _eschtmlMap.get(m.group(0), m.group(0)), s)
 
 
-def _targetToGraphviz(target: Target, isCli: bool) -> str:
+def _targetToGraphviz(target: Target[T], isCli: bool) -> str:
   result = ""
   for dep in target.dependencies:
     result += f'  "{_escdq(dep.name)}" -> "{_escdq(target.name)}"\n'
@@ -1125,6 +1124,7 @@ def registerDependencyGraphTask(
 
   return graph
 
+
 @public
 def graphToDot(targetPath: Path) -> None:
   """Convenience function to create a dependency graph of all tasks.
@@ -1186,16 +1186,18 @@ class _StateStore:
   def __repr__(self) -> str:
     return "_StateStore[%s]" % self.hashes
 
-  def setHashes(self, target: Target, targetHash: str, depsHash: str) -> None:
+  def setHashes(
+    self, target: Target[Any], targetHash: str, depsHash: str
+  ) -> None:
     self.hashes[target.name] = (targetHash, depsHash)
 
-  def get(self, target: Target) -> tuple[str, str]:
+  def get(self, target: Target[Any]) -> tuple[str, str]:
     return self.hashes.get(target.name, ("", ""))
 
-  def getOwnHash(self, target: Target) -> str:
+  def getOwnHash(self, target: Target[Any]) -> str:
     return self.hashes[target.name][0]
 
-  def getDepsHash(self, target: Target) -> str:
+  def getDepsHash(self, target: Target[Any]) -> str:
     return self.hashes[target.name][1]
 
   def save(self) -> None:

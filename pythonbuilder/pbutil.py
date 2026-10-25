@@ -61,7 +61,7 @@ class Environ(pb.StateProvider):
 ## FIXME: pdoc has an issue documenting the __init__
 ## see https://github.com/mitmproxy/pdoc/issues/903
 @public
-class Paths(os.PathLike, pb.StateProvider, Iterable[Path]):
+class Paths(os.PathLike[Any], pb.StateProvider, Iterable[Path]):
   """An iterable on files, much like `Path().glob()` but keeps the path from
   which the iteration starts.
 
@@ -432,7 +432,7 @@ class RootPathMapper:
 
 
 @public
-def copyFile(dest: os.PathLike, source: os.PathLike) -> None:
+def copyFile(dest: os.PathLike[Any], source: os.PathLike[Any]) -> None:
   """A wrapper around `shutil.copy` with logging.
 
   It creates the destination directory, if necessary, swaps the arguments to fit
