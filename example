@@ -1,34 +1,40 @@
 #!/usr/bin/env python3
-import subprocess
 import sys
 from pathlib import Path
 
-from pythonbuilder import Target, getLogger, pbutil
-
-getLogger().setLevel("VERBOSE")
-
-
-def defineTargets() -> None:
-  ## Declare an initial target, assume it is an existing file in the project
-  rmd = Target(Path("README.md"))
-
-  ## Declare README.html as file to be created by running runPandoc
-  Target(
-    Path("README.html"),  # target item, often file or directory name
-    rmd,  # one dependency, could be more
-    name="readme",  # nicer name to use on the command line
-    state="file",  # how to compute a condensed state (fingerprint, checksum)
-    cmd=runPandoc,  # how to create the target if it is out-of-date
-  )
+from pythonbuilder import (
+  Target,
+  internalTask,
+  main,
+  pbexec,
+  target,
+  task,
+)
 
 
-def runPandoc(targetPath: Path, readmeMd: Path) -> None:
-  # The dependencies are in the order in which they are provided to Target below
-  input = str(readmeMd)
-  with open(targetPath, "w", encoding="utf-8") as outfile:
-    subprocess.run(["pandoc", input], stdout=outfile)
+## Declare a task for a target without dependencies, the input README.md
+@internalTask
+def readmeMd() -> Target[Path]:
+  return target(Path("README.md"))
 
 
-defineTargets()
-if not pbutil.main(*sys.argv[1:]):
-  sys.exit(1)
+## Declare a task which depends on readmeMd to make sure that if README.md
+## is edited, this task will be run.
+@task
+def readme() -> Target[Path]:
+  ## Get our dependency
+  input = readmeMd()
+
+  ## define the target README.html,
+  ## depending on input (could be more)
+  ## and say that it is a file, not a directory
+  t = target(Path("README.html"), input, state="file")
+
+  ## t.outdated will be true if either README.md was changed or README.html
+  ## was fumbled with or even deleted.
+  if t.outdated:
+    pbexec("pandoc", "-t", "html", "-o", t.item, input.item)
+  return t
+
+
+sys.exit(main(sys.argv[1:]))
