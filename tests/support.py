@@ -9,6 +9,7 @@ class CommonFixture(unittest.TestCase):
     self.statefile = pythonbuilder.getStatefile()
     testStatefile = Path("build", "testtmp", self.__class__.__name__.lower() + ".state")
     pythonbuilder.setStatefile(testStatefile)
+    pythonbuilder.newBuild()
     testStatefile.unlink(missing_ok=True)
     pythonbuilder.getLogger().setLevel("WARNING")
     pythonbuilder.clearTasks()

@@ -248,13 +248,7 @@ def inputTask(
   def f() -> Target[T]:
     return target(item, state=state)
 
-  result = FunctionType(
-    f.__code__.replace(co_name=taskName),
-    f.__globals__,
-    name=taskName,
-    argdefs=f.__defaults__,
-    closure=f.__closure__,
-  )
+  result = renameFunction(f, taskName)
   return internalTask(result)
 
 
@@ -1210,3 +1204,15 @@ class _StateStore:
 
     with open(self.stateFile, "w", encoding="UTF-8") as statefile:
       json.dump(self.hashes, statefile, indent=2)
+
+
+def renameFunction(f: Callable[P, T], name: str) -> Callable[P, T]:
+  """For internal use on locally defined functions to be returned from an
+  outer function under a user defined name."""
+  return FunctionType(
+    f.__code__.replace(co_name=name),
+    f.__globals__,
+    name=name,
+    argdefs=f.__defaults__,
+    closure=f.__closure__,
+  )
