@@ -6,9 +6,9 @@
   - [Getting Started](#getting-started)
   - [Some Theory or "Why?"](#some-theory-or-why)
   - [Functional Overview](#functional-overview)
-  - [Example](#example)
-  - [Why Python](#why-python)
+  - [Why Python?](#why-python)
   - [Dependency Graph of pythonbuilder's build](#dependency-graph-of-pythonbuilders-build)
+  - [Historic Use](#historic-use)
 
 <!-- markdown-toc end -->
 
