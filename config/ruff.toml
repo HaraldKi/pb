@@ -1,4 +1,5 @@
 indent-width = 2
+line-length = 80
 
 cache-dir = "build/ruffcache"
 

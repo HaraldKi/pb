@@ -4,7 +4,7 @@ import unittest
 
 import support
 
-from pythonbuilder import resetTraversalState, updateTargets
+from pythonbuilder import newBuild, getLogger
 from pythonbuilder.mavenrepo import MavenArtifact
 
 TMPDIR = os.path.join("build", "testtmp")
@@ -22,17 +22,20 @@ class TestMavenArtifact(support.CommonFixture):
     os.makedirs(TMPDIR)
 
   def testFullUsecase(self) -> None:
-    lib = MavenArtifact.fromGradleShort("org.hamcrest:hamcrest:2.2", "jar")
-    self.assertEqual("hamcrest-2.2.jar", lib.filename())
-    self.assertEqual("org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar", lib.repoUrl())
+    artifact = MavenArtifact.fromGradleShort("org.hamcrest:hamcrest:2.2", "jar")
+    self.assertEqual("hamcrest-2.2.jar", artifact.filename())
+    self.assertEqual(
+      "org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar", artifact.repoUrl()
+    )
 
     ## first download from remote
-    remoteTarget = lib.asTarget(TMPDIR, "https://repo1.maven.org/maven2/", name="lib")
-    updateTargets("lib")
-    self.assertTrue(remoteTarget.recreated)
-    self.assertTrue(os.path.isfile(os.path.join(TMPDIR, lib.filename())))
+    remoteTarget = artifact.asTask(
+      TMPDIR, "https://repo1.maven.org/maven2/", name="artifact"
+    )
+    remoteTarget()
+    self.assertTrue(remoteTarget().outdated)
+    self.assertTrue(os.path.isfile(os.path.join(TMPDIR, artifact.filename())))
 
-    resetTraversalState()
-    updateTargets("lib")
-    self.assertTrue(remoteTarget.updated)
-    self.assertFalse(remoteTarget.recreated)
+    newBuild()
+    remoteTarget()
+    self.assertFalse(remoteTarget().outdated)

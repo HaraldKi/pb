@@ -3,16 +3,26 @@
 import shutil
 from abc import abstractmethod
 from pathlib import Path
+from typing import Callable
 from urllib import request
 
-from .pythonbuilder import StateProvider, Target, getLogger, pbexec, stateDirContent
+from .pythonbuilder import (
+  StateProvider,
+  Target,
+  getLogger,
+  pbexec,
+  renameFunction,
+  stateDirContent,
+  target,
+  task,
+)
 
 
 class MavenArtifact:
   """Encapsulates group, name, version and type (file extension) of an artifact
   as provided, for example, by a maven repository.
 
-  Basically, the pieces are used to create URLs and file names to access a
+  The pieces are used to create URLs and file names to access a
   repository.
   """
 
@@ -22,11 +32,13 @@ class MavenArtifact:
     """
     Creates the artifact.
 
-    :param group: typically something like ``"org.json"``
-    :param name: of the artifact, like ``"json"``
-    :param version: of the artifact, like "1.2.3"
-    :param classifier: of the artifact, like "runtime", may be ``None``
-    :param type: ends up as the file extension, like ``"jar"``
+    ### Parameters
+
+    - group: typically something like `"org.json"`
+    - name: of the artifact, like `"json"`
+    - version: of the artifact, like "1.2.3"
+    - classifier: of the artifact, like "runtime", may be `None`
+    - type: ends up as the file extension, like `"jar"`
     """
     self.group = group
     """group of the artifact"""
@@ -49,11 +61,17 @@ class MavenArtifact:
     return f"Maven({key})"
 
   @staticmethod
-  def fromGradleShort(groupNameVersionClassifier: str, type: str) -> "MavenArtifact":
+  def fromGradleShort(
+    groupNameVersionClassifier: str, type: str
+  ) -> "MavenArtifact":
     """
-    Create an `MavenArtifact` from a Gradle short form like
-    ``"org.json:json:20250107"`` A forth element, the classifier, may be given
+    Create a `MavenArtifact` from a Gradle short form like
+    `"org.json:json:20250107"`. A forth element, the classifier, may be given
     too.
+
+    ### Parameters
+    - str: a gradle short group:name:version(:classifier)? combo
+    - type: file type, like "jar"
     """
     parts = groupNameVersionClassifier.split(":")
     if len(parts) == 3:
@@ -69,8 +87,9 @@ class MavenArtifact:
   def filename(self) -> str:
     """Provides the filename of the artifact.
 
-    :return: file name of the form "name-version-classifier.type" where
-      -classifier only provided if defined in the constructor..
+    ### Return
+    File name of the form "name-version-classifier.type" where
+      "-classifier" is only provided if defined in the constructor.
     """
     cls = "-" + self.classifier if self.classifier is not None else ""
     return "%s-%s%s.%s" % (self.name, self.version, cls, self.type)
@@ -79,8 +98,9 @@ class MavenArtifact:
     """Creates the relative URL part, including `filename()`, which can be used
     to fetch the target if prefixed by a repository URL.
 
-    :return: URL of the form "g1/g2/.../name/version/filename" where g1,... are
-      the dot-separated parts of the group name
+    ### Return
+    URL of the form "g1/g2/.../name/version/filename" where g1,... are
+      the dot-separated parts of the group name.
     """
     return "%s/%s/%s/%s" % (
       self.group.replace(".", "/"),
@@ -89,21 +109,25 @@ class MavenArtifact:
       self.filename(),
     )
 
-  def asTarget(
+  def asTask(
     self, dir: str, mavenRepoUrl: str | None = None, name: str | None = None
-  ) -> Target[Path]:
-    """
-    Provides a `Target` which can be used to fetch the artifact and place it into
-    the file system.
+  ) -> Callable[[], Target[Path]]:
+    """Provides a task function which can be used to fetch the artifact and
+    place it into the file system.
 
-    :param dir: directory to copy the artifact to, also the name of the
+    ### Parameters
+
+    - dir: directory to copy the artifact to, also the name of the
       `Target` returned.
-    :param  mavenRepoUrl: The URL to fetch the artifact from. If this is not
-      provided we assume we have a local repository in ``~/.m2``. The string
+    -  mavenRepoUrl: The URL to fetch the artifact from. If this is not
+      provided we assume we have a local repository in `~/.m2`. The string
       must end with '/' otherwise the resulting URL is likely wrong.
-    :param name: optional name for the target being created, defaults to the name
+    - name: optional name for the target being created, defaults to the name
       of the artifact
-    :return: the target
+
+    ### Return
+    An `@task` suitable to be called to get a `Target` for `dir`.
+
     """
     fetcher = (
       _MavenArtifactLocal(self)
@@ -112,44 +136,51 @@ class MavenArtifact:
     )
     if name is None:
       name = self.name
-    return Target(
-      Path(dir, self.filename()), state="file", name=name, cmd=fetcher.fetch
-    )
+
+    def f() -> Target[Path]:
+      t = target(Path(dir, self.filename()), state="file")
+      if t.outdated:
+        fetcher.fetch(t.item)
+      return t
+
+    return task(renameFunction(f, name))
 
 
 class MavenRepoArtifact(StateProvider):
-  """Combines a MavenArtifact with a (local) repository URL prefix to represent a
-  (locally) installed artifact.
+  """Combines a MavenArtifact with a (local) repository URL prefix to represent
+  a (locally) installed artifact.
 
-  Maven calls stuff in its local repository, typically ``~/.m2/repository``, "installed"
+  NOTE: Maven calls stuff in its local repository (`~/.m2/repository`), "installed"
   as opposed to "locally published". But see `publishLocal`.
 
   """
 
-  artifact: MavenArtifact
-  """to be installed/published"""
-
-  repo: Path = Path.home() / ".m2" / "repository"
-  """maven repository path"""
-
-  def __init__(
-    self, artifact: MavenArtifact, repo: Path = Path.home() / ".m2" / "repository"
-  ):
+  def __init__(self, artifact: MavenArtifact, repo: Path | None):
     """Creates the artifact/repository combo.
 
-    :param artifact: to be installed/published.
-    :param repo: maven repository path.
+    ### Parameters
+    - artifact: to be installed/published.
+    - repo: maven repository path, defaults to `Path.home() / ".m2" / "repository"`
     """
+
     self.artifact: MavenArtifact = artifact
-    self.repo: Path = repo
+    """to be installed/published"""
+
+    self.repo: Path = (
+      Path.home() / ".m2" / "repository" if repo is None else repo
+    )
+    """maven repository path"""
 
   def fullPath(self) -> Path:
-    """Returns the full path to the artifact where it ends up in the repository."""
+    """Returns the full path to the artifact where it ends up in the
+    repository."""
     return self.repo / self.artifact.repoUrl()
 
   def provideState(self) -> str:
-    """Provides state over the whole directory where the artifact ends up to include
-    source files and pom and whatnot."""
+    """Provides state over the whole directory where the artifact ends up to
+    include source files and pom and whatnot.
+
+    """
     statePath = self.fullPath().parent
     return stateDirContent(statePath)
 
@@ -157,15 +188,23 @@ class MavenRepoArtifact(StateProvider):
 def publishLocal(
   repoArtifact: MavenRepoArtifact, file: Path, srcjar: Path | None = None
 ) -> None:
-  """Publishes the dependency as the target artifact, to be used as the ``cmd``
-  parameter of a `Target`.
+  """Publishes the dependency as the target artifact, to be used in a task
+  function after the `t.outdated`, as in:
+  ```python
+  @task
+  def publishMyLib() -> Target[MavenRepoArtifact]:
+    jarTarget = jar() # task to create the jar
+    t = target(MavenRepoArtifact(...), jarTarget)
+    if t.outdated:
+      publishLocal(t.item, jarTarget.item)
+    return t
+  ```
+  A glorious description for copying the `file` into the local maven repository,
+  optionally accompanied by the `srcjar`.
 
-  A glorious description for copying the ``file`` into the local maven repository,
-  optionally accompanied by the ``srcjar``.
-
-  :param repoArtifact: to create or overwrite
-  :param file: the file representing the artifact
-  :param srcjar: a jar (or other archive) with the source code, optional
+  - repoArtifact: to create or overwrite
+  - file: the file representing the artifact
+  - srcjar: a jar (or other archive) with the source code, optional
 
   """
   src = None if srcjar is None else "-Dsources=" + str(srcjar)
@@ -196,7 +235,7 @@ class _MavenArtifactLocal(_Fetcher):
 
   def fetch(self, targetPath: Path) -> None:
     """Copy the artifact from the local maven repository at
-    ``os.environ(HOME)/.m2`` to the given path.
+    `os.environ(HOME)/.m2` to the given path.
     """
     path = Path.home() / ".m2" / "repository" / self.artifact.repoUrl()
     targetPath.parent.mkdir(parents=True, exist_ok=True)

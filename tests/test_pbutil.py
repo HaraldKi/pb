@@ -12,20 +12,20 @@ from pythonbuilder import (
   BuildException,
   Target,
   getLogger,
-  rawUpdateTargets,
-  resetTraversalState,
-  stateFileIteratorContent,
+  inputTask,
+  main,
+  target,
+  task,
 )
 from pythonbuilder.pbutil import (
   Paths,
   RootPathMapper,
-  _loglevels,
   copyFiles,
   filterPath,
   filterPathRe,
-  main,
   touch,
 )
+from pythonbuilder.pythonbuilder import stateFileIteratorContent
 
 TESTTMP = Path("build", "testtmp")
 SRCPATH = Path("pythonbuilder")  # used as source for some copying tests
@@ -72,7 +72,8 @@ class TestPaths(support.CommonFixture):
 
     ## This needs an adaption whenever we add more source code
     pg = Paths.rglob(str(SRCPATH), "pb*").mappedTo(Path("."))
-    self.assertEqual(sorted([Path("pbpython.py"), Path("pbutil.py")]), sorted([*pg]))
+    expected = [Path("pbpython.py"), Path("pbutil.py")]
+    self.assertEqual(sorted(expected), sorted([*pg]))
 
   def testPathFromStr(self) -> None:
     pg = Paths("dodo", lambda p: [p / "x", p / "y"])
@@ -102,8 +103,8 @@ class TestPaths(support.CommonFixture):
 
   def testWithTarget(self) -> None:
     # assume we're running in the projects root directory
-    pg = Target(Paths.glob(SRCPATH, "*.py"))
-    pgState = pg.stateGenerator.provideState()
+    pg = inputTask(Paths.glob(SRCPATH, "*.py"))()
+    pgState = pg._stateGenerator.provideState()
     expected = stateFileIteratorContent(SRCPATH.glob("*.py"))
     self.assertEqual(expected, pgState)
 
@@ -124,7 +125,9 @@ class TestPaths(support.CommonFixture):
     def okOrRaise(p: Path) -> bool:
       if len(p.parts) == 1:
         return True
-      self.fail("filter function did not clip off root: " + str(SRCPATH) + ", got: " + str(p))
+      self.fail(
+        "filter function did not clip off root: " + str(SRCPATH) + ", got: " + str(p)
+      )
 
     # The main test is to see that this does not fail with th exceptoin
     matched = [p for p in Paths.filtered(SRCPATH, fileOK=okOrRaise)]
@@ -156,84 +159,97 @@ class TestMain(support.CommonFixture):
     self.assertEqual(count, lf)
 
   def testForceTarget(self) -> None:
-    bottom = Target("bottom", state="value")
-    mid = Target("mid", bottom, state="value")
-    top = Target("top", mid, state="value")
+    bottom = inputTask("bottom", state="value")
 
-    rawUpdateTargets(top)
-    self.assertTrue(bottom.recreated)
-    self.assertTrue(mid.recreated)
-    self.assertTrue(top.recreated)
+    @task
+    def mid() -> Target[str]:
+      return target("mid", bottom(), state="value")
 
-    resetTraversalState()
-    self.assertTrue(main("top"))
-    self.assertFalse(bottom.recreated)
-    self.assertFalse(mid.recreated)
-    self.assertFalse(top.recreated)
+    @task
+    def top() -> Target[str]:
+      return target("top", mid(), state="value")
 
-    resetTraversalState()
-    self.assertTrue(main("force=mid"))
-    self.assertFalse(bottom.recreated)
-    self.assertTrue(mid.recreated)
-    # top is false again, because though mid was recreated, its value, so it state
-    # are unchanged
-    self.assertFalse(top.recreated)
+    ## verify bottom line
+    top()
+    self.assertTrue(bottom().outdated)
+    self.assertTrue(mid().outdated)
+    self.assertTrue(top().outdated)
 
-    resetTraversalState()
-    self.assertTrue(main("force=top,bottom"))
-    self.assertTrue(bottom.recreated)
-    self.assertFalse(mid.recreated)
-    self.assertTrue(top.recreated)
+    ## running again, nothing should be outdated
+    self.assertEqual(0, main(["top"]))
+    self.assertFalse(bottom().outdated)
+    self.assertFalse(mid().outdated)
+    self.assertFalse(top().outdated)
+
+    self.assertEqual(0, main(["force=mid"]))
+    self.assertFalse(bottom().outdated)
+    self.assertTrue(mid().outdated)
+    # top is false again, because though mid was recreated, its value,
+    # and therefore its state are unchanged
+    self.assertFalse(top().outdated)
+
+    self.assertEqual(0, main(["force=top", "force=bottom", "ll=d"]))
+    self.assertTrue(bottom().outdated)
+    self.assertFalse(mid().outdated)
+    self.assertTrue(top().outdated)
 
   def testSetLoglevel(self) -> None:
     LOG = getLogger()
     ## Without any target on the command line, main() prints the list of targets plus an
     ## explainer line. To avoid this we provide minimal food.
-    Target("dummy", state="fixed", name="dummy")
+    inputTask("dummy", state="fixed", name="dummy")()
     keptLevel = LOG.level
-    for level in _loglevels:
-      ch = level[0]
-      main("ll=" + ch, "dummy")
-      self.assertEqual(level.upper(), logging.getLevelName(LOG.level))
+    levels = logging.getLevelNamesMapping()
+    for levelName, level in levels.items():
+      ch = levelName[0].lower()
+      main(["ll=" + ch, "dummy"])
+      self.assertEqual(level, LOG.level)
     LOG.setLevel(keptLevel)
 
   def testFailWrongLevel(self) -> None:
-    self.assertFalse(main("ll=x"))
+    self.assertEqual(1, main(["ll=x"]))
     self.assertLogFails(1)
 
   def testForceTargetThenFailLevel(self) -> None:
     # we set force for a target immediately, even if pbmain then fails on ll
-    t0 = Target("some-target", name="some-target", state="value")
-    self.assertFalse(main("force=some-target", "ll=x"))
-    self.assertTrue(t0.force)
+    t0 = inputTask("some-target", state="value")()
+    self.assertEqual(1, main(["force=some-target", "ll=x"]))
+    self.assertFalse(t0.forced)
     self.assertLogFails(1)
 
   def testFailWrongTarget(self) -> None:
-    self.assertFalse(main("force=xxyy"))
+    self.assertEqual(1, main(["force=xxyy"]))
     self.assertLogFails(1)
 
   def testForceTargetThenFailUnknownTarget(self) -> None:
-    t = Target("other-target", name="other-target", state="value")
-    self.assertFalse(main("force=other-target,ddxx"))
-    self.assertTrue(t.force)
+    t = inputTask("other-target", state="value")
+    self.assertEqual(1, main(["force=other-target", "force=ddxx"]))
+    self.assertTrue(t().forced)
     self.assertLogFails(1)
 
   def testTargetNameWithEqual(self) -> None:
     # yes we somehow support this as long as the target does not start with
     # ll= or force= (so far)
-    t = Target("x=y", name="x=y", state="value")
-    self.assertTrue(main("x=y"))
-    self.assertTrue(t.recreated)
+    t = inputTask("x=y", name="x=y", state="value")
+    self.assertEqual(0, main(["x=y"]))
+    self.assertTrue(t().outdated)
 
   def testPrintTargets(self) -> None:
-    one = Target("one", state="fixed")
-    two = Target("two", one, state="fixed")
-    Target("three", two, state="fixed")
+    one = inputTask("one", state="fixed")
+
+    @task
+    def two() -> Target[str]:
+      return target("two", one(), state="fixed")
+
+    @task
+    def three() -> Target[str]:
+      return target("three", two(), state="fixed")
+
     stdout = sys.stdout
     buffered = io.StringIO()
     sys.stdout = buffered
     try:
-      self.assertTrue(main())
+      self.assertEqual(0, main([]))
     except Exception as e:
       raise e
     finally:

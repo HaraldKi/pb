@@ -15,3 +15,4 @@ from pythonbuilder import getLogger
 if __name__ == "__main__":
   getLogger().setLevel("ERROR")
   unittest.main(verbosity=0)
+  #unittest.main(argv=[""], defaultTest="TestUpdateTargets.test_fixedStateStopsUpdate", verbosity=0)

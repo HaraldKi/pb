@@ -1,17 +1,20 @@
-"""A library to help writing build scripts.
+"""A library for writing build scripts.
 
-Where "build script" denotes any odd script which also has functions to run only if they
-can be excpected to produce a different result.
+Where a **build script** is really just a python script making use of the API provided
+by this library.
 
-**NOTE**: All identifiers of module ``pythonbuilder`` are directly available as part of
-the package itself, so you may write
+See `pythonbuilder.pythonbuilder` to get started and see the main API provided.
 
-.. code-block:: python
+**NOTE**: All exported names of `.pythonbuilder` are re-exported here to allow imports
+like
 
-  from pythonbuilder import Target
-
-instead of ``from pythonbuilder.pythonbuilder``.
+```python
+from pythonbuilder import task, target, ...
+```
 
 """
 
 from .pythonbuilder import *  # noqa: F403
+
+
+

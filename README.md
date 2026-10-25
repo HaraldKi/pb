@@ -19,34 +19,94 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 
 ## Getting Started
 
-From `./pythonbuilder` copy `__init__.py` and `pythonbuilder.py` plus other
-`*.py` files to some place you like. The suggested place is the sub-directory
-`./pythonbuilder` in your project directory. Absolutely necessary are only the
-first two files, the others are supplements that may be nice to have.
+Copy `./pythonbuilder` to some place you like. The suggested place is the
+sub-directory `./pythonbuilder` in your project directory.
 
-Write a build script in Python, called `pb` (for example), which has the following
-structure:
+Write a build script in Python, called `pb` (for example), which basically defines
+
+- tasks, which are functions decorated with `@task` and which return a `Target[...]`,
+- each task contains one call like `t = target(Path(...), ...)`,
+- and checks `t.outdated` to know if anything needs to be done to update the target,
+
+This minimal example shows two tasks to define two targets, one depending on the other:
+
+<!-- inlined file: example, update with 'pb readme' -->
 ```python
 #!/usr/bin/env python3
 import sys
-import pythonbuilder.pbutil as pbutil
-from pythonbuilder import Target, pbexec, toGraphviz, ...
+from pathlib import Path
 
-def defineTargets() -> None:
-  ... multiple calls to the Target constructor ...
+from pythonbuilder import (
+  Target,
+  internalTask,
+  main,
+  pbexec,
+  target,
+  task,
+)
 
-... definition of functions to create your targets ...
 
-defineTargets()
-if not pbutil.main(*sys.argv[1:]):
-  sys.exit(1)
+## Declare a task for a target without dependencies, the input README.md
+@internalTask
+def readmeMd() -> Target[Path]:
+  return target(Path("README.md"))
+
+
+## Declare a task which depends on readmeMd to make sure that if README.md
+## is edited, this task will be run.
+@task
+def readme() -> Target[Path]:
+  ## Get our dependency
+  input = readmeMd()
+
+  ## define the target README.html,
+  ## depending on input (could be more)
+  ## and say that it is a file, not a directory
+  t = target(Path("README.html"), input, state="file")
+
+  ## t.outdated will be true if either README.md was changed or README.html
+  ## was fumbled with or even deleted.
+  if t.outdated:
+    pbexec("pandoc", "-t", "html", "-o", t.item, input.item)
+  return t
+
+
+sys.exit(main(sys.argv[1:]))
 ```
+<!-- inlined file end -->
 
-Run `./pb target` to build the given target according to the recipe described in
-your build script, where target is a name of one of the `Target` objects you created.
+Lets assume you stored the file in `./pb`. Then you can now build `README.html`
+from `README.md` by running `python3 ./pb readme`, and the following will happen
+(slightly simplified):
 
-A more extensive example, is the [our build script](./pb) or see
-[below](#example).
+- The builder finds the task `readme` and calls it.
+- This again calls `readmeMd`, the dependency task. Since `README.md` is an
+  input to the build process, its path is just returned wrapped by `target()`
+  for build bookkeeping.
+- Now task `readme` calls `target()` which checks whether `README.html` is
+  out-of-date with regard to the dependency. The returned target's `.outdated`
+  field tells the caller.
+- If it is outdated, we call `pbexec()`, a shallow wrapper around
+  `subprocess.run` to create or update `README.html` with `pandoc`.
+  
+Try also the following:
+- Remove `build/pbstates` to force a full rebuild.
+- Use `python3 pb force=readme ll=verbose` to force the target to be out-of-date
+  and see that `pandoc` is always run.
+- Experiment with
+[registerDependencyGraphTask](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html#registerDependencyGraphTask)
+to create a dependency graph for your build like the one shown for this project.
+
+See the [full
+api](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html)
+for more information.
+
+If you use this in a Java project, then
+[mavenrepo.MavenArtifact](https://harald.codeberg.page/docs/@main/pythonbuilder/mavenrepo.MavenArtifact.html)
+and module
+[java](https://harald.codeberg.page/docs/@main/pythonbuilder/java.html)
+might be interesting too.
+ 
 
 ## Some Theory or "Why?"
 
@@ -81,11 +141,12 @@ based on their last write time stamp. That's what I call "guarded execution": if
 there is no point executing the command which create that output from the input.
 
 And it is exactly that last genuine task of a build system that `pythonbuilder`
-implements. In particular the `Target`
+implements. In particular the `@task`
 
-- encodes the list if inputs and its output,
-- how to get from the inputs to the outputs and
-- how to check whether either of them changed since we last looked.
+- calls dependency tasks, executing their build step only if needed,
+- calls `target()` to check whether, given the dependencies and the current
+  state of the target item itself, it  needs to be updated,
+- runs the build step as needed, conditional on `Target.outdated`.
 
 Agreed, we have `java.py` and `pbpython.py` which provide a bit of the "task
 library" bit, but more as an example than as a full blown feature set.
@@ -137,79 +198,6 @@ definition and must be re-created.
 If a dependency is created but its resulting state is the same as before, like
 after it was accidentally deleted, the target will not be created unnecessarily.
 
-## Example
-
-A minimal example, assumed to be stored in file `pb`:
-<!-- inlined file: example, update with 'pb readme' -->
-```python
-#!/usr/bin/env python3
-import subprocess
-import sys
-from pathlib import Path
-
-from pythonbuilder import Target, getLogger, pbutil
-
-getLogger().setLevel("VERBOSE")
-
-
-def defineTargets() -> None:
-  ## Declare an initial target, assume it is an existing file in the project
-  rmd = Target(Path("README.md"))
-
-  ## Declare README.html as file to be created by running runPandoc
-  Target(
-    Path("README.html"),  # target item, often file or directory name
-    rmd,  # one dependency, could be more
-    name="readme",  # nicer name to use on the command line
-    state="file",  # how to compute a condensed state (fingerprint, checksum)
-    cmd=runPandoc,  # how to create the target if it is out-of-date
-  )
-
-
-def runPandoc(targetPath: Path, readmeMd: Path) -> None:
-  # The dependencies are in the order in which they are provided to Target below
-  input = str(readmeMd)
-  with open(targetPath, "w", encoding="utf-8") as outfile:
-    subprocess.run(["pandoc", input], stdout=outfile)
-
-
-defineTargets()
-if not pbutil.main(*sys.argv[1:]):
-  sys.exit(1)
-```
-<!-- inlined file end -->
-
-The default name of a `Target`, which has to be unique over the whole built, is
-`str(Target.item)`, where `.item` is initialized by first parameter of
-`Target`. In many cases it is convenient, though, to define a nice name with the
-`name=` parameter, as it makes it easier to refer to a on the command line.
-Given the above, you can now build `README.html` from `README.md` by running 
-`python3 ./pb readme`, and the following will happen (slightly
-simplified):
-- The builder finds the target for `"README.html"`.
-- It checks the dependencies, in this case only `"README.md"`.
-- It sees that the latter has no dependencies in itself and no `cmd=` parameter,
-  so there is nothing to do for this target.
-- Back to `"README.html"` which was never created, so it is not up-to-date and
-  its command `runPandoc` is run.
-
-Try also the following:
-- Remove `build/pbstates` to force a full rebuild.
-- Set the environment variable PBLOGLEVEL to `DEBUG`, `VERBOSE`, `INFO`
-(default) or `WARNING` for more or less logging.
-- Experiment with
-[registerDependencyGraphTarget](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html#registerDependencyGraphTarget)
-to create a dependency graph for your build like the one shown for this project.
-
-See the [full
-api](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html)
-for more information.
-
-If you use this in a Java project, then
-[mavenrepo.MavenArtifact](https://harald.codeberg.page/docs/@main/pythonbuilder/mavenrepo.MavenArtifact.html)
-and module
-[java](https://harald.codeberg.page/docs/@main/pythonbuilder/java.html)
-might be interesting too.
 
 ## Why Python?
 
@@ -232,3 +220,32 @@ build script without lots of ceremony.
 
 ## Dependency Graph of pythonbuilder's build
 <img src="dependencies.svg" width="95%">
+
+## Historic Use
+
+The version prior to October 2026 had an older scheme to define tasks,
+namely by calling `Target` directly and using `updateTargets` to run the
+build. It is still available on branch `historic-target-based`.
+
+The following is from the old README.md.
+
+Write a build script in Python, called `pb` (for example), which has the following
+structure:
+```python
+#!/usr/bin/env python3
+import sys
+import pythonbuilder.pbutil as pbutil
+from pythonbuilder import Target, pbexec, toGraphviz, ...
+
+def defineTargets() -> None:
+  ... multiple calls to the Target constructor ...
+
+... definition of functions to create your targets ...
+
+defineTargets()
+if not pbutil.main(*sys.argv[1:]):
+  sys.exit(1)
+```
+
+Run `./pb target` to build the given target according to the recipe described in
+your build script, where target is a name of one of the `Target` objects you created.

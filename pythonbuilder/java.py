@@ -7,7 +7,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-
+from typing import Any
 from .pythonbuilder import pbexec
 
 _PATHSEP = ";" if sys.platform == "windows" else ":"
@@ -15,26 +15,31 @@ _JUNIT4_MAIN_CLASS = "org.junit.runner.JUnitCore"
 
 
 def setJunitMainClass(className: str) -> None:
-  """Set the fully qualified class name of the class to be invoked by jacocoRunJunit4,
-  which defaults to ``org.junit.runner.JUnitCore``."""
+  """Set the fully qualified class name of the class to be invoked by
+  jacocoRunJunit4, which defaults to `org.junit.runner.JUnitCore`.
+
+  """
   global _JUNIT4_MAIN_CLASS
   _JUNIT4_MAIN_CLASS = className
 
 
 def compileJava(
-  targetPath: os.PathLike, srcPath: os.PathLike, *classpath: Path
+  targetPath: os.PathLike[Any], srcPath: os.PathLike[Any], *classpath: Path
 ) -> None:
   """A default java compilation command, kept simple.
 
-  If you need a more elaborate setup, it is easy enough to write your own, rather than
-  this function being extremely configurable and configure it.
+  If you need a more elaborate setup, it is easy enough to write your own,
+  rather than this function being extremely configurable and configure it.
 
-  **NOTE**: This function recursively deletes ``targetPath`` first to make sure no cruft
-  classes are left over after a source file was renamed or deleted.
+  **NOTE**: This function recursively deletes `targetPath` first to make sure
+  no cruft classes are left over after a source file was renamed or deleted.
 
-  :param targetPath: a ``Path`` where to drop the compiled files, will be remove first
-  :param srcPath: the source files directory
-  :param classpath: classpath members
+  ### Parameters
+
+  - targetPath: a `Path` where to drop the compiled files, will be remove first
+  - srcPath: the source files directory
+  - classpath: classpath members
+
   """
   if Path(targetPath).exists():
     shutil.rmtree(targetPath)
@@ -58,29 +63,29 @@ def compileJava(
 def jacocoRunJunit4(
   targetPath: Path,
   testClassesPath: Path,
-  testClassRe: str | re.Pattern,
+  testClassRe: str | re.Pattern[Any],
   jacocoJar: Path,
   *classpath: Path,
 ) -> None:
-  """Runs junit4 tests with the default ``JunitCore`` class.
+  """Runs junit4 tests with the default `JunitCore` class.
 
-  :param targetPath: the path of the coverage data to produce by running with
-    jacoco
+  ### Parameters
 
-  :param testClassesPath: a ``Path`` representing a classpath entry for test
-     classes
+  - targetPath: the path of the coverage data to produce by running with jacoco
 
-  :param testClassRe: a regular expression or compiled pattern which has to be matched
-    by ``*.class`` files on the ``testClassesPath`` to be included as a test
-    class. Classes with a ``$`` in the name are always excluded. If there are no helper
-    classses on the classpath, just use ``.``, otherwise, depending on your convention,
-    ``^Test.*`` or ``.*Test[.]class$`` may be what you need. Only the file name, without
-    any leading path name, will be searched with the pattern.
+  - testClassesPath: a `Path` representing a classpath entry for test classes
 
-  :param jacocoJar: the jar ``org.jacoco.agent...jar``, not going on the class
+  - testClassRe: a regular expression or compiled pattern which has to be
+    matched by `*.class` files on the `testClassesPath` to be included as a test
+    class. Classes with a `$` in the name are always excluded. If there are no
+    helper classses on the classpath, just use `.`, otherwise, depending on your
+    convention, `^Test.*` or `.*Test[.]class$` may be what you need. Only the
+    file name, without any leading path name, will be searched with the pattern.
+
+  - jacocoJar: the jar `org.jacoco.agent...jar`, not going on the class
     path
 
-  :param classpath: further classpath entries, i.e. classes, junit jar, etc.
+  - classpath: further classpath entries, i.e. classes, junit jar, etc.
 
   """
 
@@ -118,12 +123,13 @@ def jacocoReport(
   """
   Creates a coverage report from the output of `jacocoRunJunit4`.
 
+  ### Parameters
 
-  :param targetPath: the directory where to place the coverage html files
-  :param jacocoCli: the jar ``org.jacoco.cli...jar``.
-  :param jacocoData: the output of ``jacocoRunJunit4``
-  :param classFiles: the compiled classes classpath
-  :param sourceFiles: directory with the source files
+  - targetPath: the directory where to place the coverage html files
+  - jacocoCli: the jar `org.jacoco.cli...jar`.
+  - jacocoData: the output of `jacocoRunJunit4`
+  - classFiles: the compiled classes classpath
+  - sourceFiles: directory with the source files
   """
   pbexec(
     "java",
@@ -143,11 +149,12 @@ def jacocoReport(
 def classForPath(classpathEntry: Path, p: Path) -> str:
   """Converts a path relative to root directory to a class name.
 
-  For example if ``classpathEntry`` is ``build/test`` and the
-  ``p`` is ``build/test/my/package/Dodo.class``, the result is
-  ``my.package.Dodo``.
+  For example if `classpathEntry` is `build/test` and the
+  `p` is `build/test/my/package/Dodo.class`, the result is
+  `my.package.Dodo`.
 
-  :param classpathEntry: a directory containing compiled classes
-  :param p: a ``*.class`` file within ``classpathEntry``
+  ### Parameters
+  - classpathEntry: a directory containing compiled classes
+  - p: a `*.class` file within `classpathEntry`
   """
   return ".".join(p.relative_to(classpathEntry).parts).replace(".class", "")
