@@ -1,0 +1,20 @@
+{% extends "default/module.html.jinja2" %}
+{% block head %}
+<style>
+a[target="_blank"]::after {
+	content: "⬈";
+	color: #eecc33;
+  font-weight: bold;
+  position: relative;
+  top: -3px;
+}
+</style>
+{% endblock %}
+{% block nav_footer %}
+<div class="hk_outlinks">
+  <hr>
+  <a target="_blank" href="https://codeberg.org/harald/pythonbuilder">project page</a>
+  <a target="_blank" href="https://harald.codeberg.page/docs/@main/">Harald's docs</a>
+  <hr>
+</div>
+{% endblock %}

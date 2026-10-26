@@ -43,7 +43,9 @@ def mypy() -> Target[Path]:
   pb = pbFile()
   example = exampleFile()
 
-  t = target(BUILD / "mypy.done", config, src, testSrc, pb, example, state="file")
+  t = target(
+    BUILD / "mypy.done", config, src, testSrc, pb, example, state="file"
+  )
   if t.outdated:
     doMypy(t.item, config.item, src.item, testSrc.item, pb.item, example.item)
   return t
@@ -93,7 +95,9 @@ def doApidoc(serve: bool) -> Target[Path]:
   t = target(docOut, templates, src, tLogo, state="new" if serve else "dir")
   if t.outdated:
     pbutil.copyFile(docOut / tLogo.item.name, tLogo.item)
-    outParam = ["--no-browser"] if serve else ["-o", docOut, "--logo", tLogo.item.name]
+    outParam = (
+      ["--no-browser"] if serve else ["-o", docOut, "--logo", tLogo.item.name]
+    )
     try:
       pbexec(
         "pdoc",
@@ -113,12 +117,12 @@ def doApidoc(serve: bool) -> Target[Path]:
 
 @task
 def docshow() -> Target[Path]:
-  return doApidoc(True)
+  return doApidoc(True).showNameOnly()
 
 
 @task
 def apidoc() -> Target[Path]:
-  return doApidoc(False)
+  return doApidoc(False).showNameOnly()
 
 
 @internalTask
@@ -142,14 +146,20 @@ def readme() -> Target[Path]:
   insert = example.item.read_text(encoding="UTF-8")
   tmpl = "<!-- inlined file: example, update with 'pb readme' -->\n```python\n%s```\n<!-- inlined file end -->"
   text = re.sub(
-    "<!-- inlined file:.*inlined file end -->", (tmpl % ""), readme, flags=re.DOTALL
+    "<!-- inlined file:.*inlined file end -->",
+    (tmpl % ""),
+    readme,
+    flags=re.DOTALL,
   )
   if text == readme:
     raise BuildException(
       f"cannot find pattern to insert file '{example}' into '{readmeMd}'"
     )
   text = re.sub(
-    "<!-- inlined file:.*inlined file end -->", (tmpl % insert), readme, flags=re.DOTALL
+    "<!-- inlined file:.*inlined file end -->",
+    (tmpl % insert),
+    readme,
+    flags=re.DOTALL,
   )
   t.item.write_text(text, encoding="UTF-8")
   logcmd(["updated", str(t.item)])
