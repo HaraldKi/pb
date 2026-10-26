@@ -87,10 +87,10 @@ from `README.md` by running `python3 ./pb readme`, and the following will happen
   out-of-date with regard to the dependency. The returned target's `.outdated`
   field tells the caller.
 - If it is outdated, we call `pbexec()`, a shallow wrapper around
-  `subprocess.run` to create or update `README.html` with `pandoc`.
+  `subprocess.run`, to create or update `README.html` with `pandoc`.
   
 Try also the following:
-- Remove `build/pbstates` to force a full rebuild.
+- Remove the state file `build/pbstates` to force a full rebuild.
 - Use `python3 pb force=readme ll=verbose` to force the target to be out-of-date
   and see that `pandoc` is always run.
 - Experiment with
@@ -102,9 +102,9 @@ api](https://harald.codeberg.page/docs/@main/pythonbuilder/pythonbuilder.html)
 for more information.
 
 If you use this in a Java project, then
-[mavenrepo.MavenArtifact](https://harald.codeberg.page/docs/@main/pythonbuilder/mavenrepo.MavenArtifact.html)
+[mavenrepo.MavenArtifact](https://docs.miamao.de/@main/pythonbuilder/pythonbuilder/mavenrepo.html#MavenArtifact)
 and module
-[java](https://harald.codeberg.page/docs/@main/pythonbuilder/java.html)
+[java](https://docs.miamao.de/@main/pythonbuilder/pythonbuilder/java.html)
 might be interesting too.
  
 
@@ -138,18 +138,30 @@ based on their last write time stamp. That's what I call "guarded execution": if
 - the input did not change and
 - the output is still available unchanged
 
-there is no point executing the command which create that output from the input.
+there is no point executing the command which creates that output from the
+input.
 
 And it is exactly that last genuine task of a build system that `pythonbuilder`
-implements. In particular the `@task`
+implements. In particular the function decorated with `@task`
 
 - calls dependency tasks, executing their build step only if needed,
 - calls `target()` to check whether, given the dependencies and the current
   state of the target item itself, it  needs to be updated,
 - runs the build step as needed, conditional on `Target.outdated`.
 
-Agreed, we have `java.py` and `pbpython.py` which provide a bit of the "task
-library" bit, but more as an example than as a full blown feature set.
+Agreed, we have `java.py` and `pbpython.py` which provide a bit of a "task
+library", but more as an example than as a full blown feature set.
+
+And one last ranting note: Several (most?) build systems I know invent their own
+<strike>description</strike> programming language. Yet getting a programming
+language right is extremely difficult and takes years of development of large
+teams. Consquently build systems' languages are, lets be honest, all
+pathetic to the point of swearing.
+
+That's why I think a build system should be a library for a common programming
+language. I tried [`bash` scripting](https://codeberg.org/harald/bashbuilder)
+and [`Java`](https://codeberg.org/harald/BuildMachine) as the base language, but
+in the end, `Python` won, [see below](#why-python).
 
 ## Functional Overview
 A **target** is something you want to build. Usually it is a file or the
@@ -165,28 +177,24 @@ flagged as an error.
 A target is represented by on object of class `Target`. The thing to actually
 built is wrapped as the field `item` of `Target`.
 
-To create or recreate a target, it has an associated **command**. It is a Python
-function with N+1 parameters, the target's `item` as well as the `item` values
-of all dependencies. If `pythonbuilder` determines that it must (re-)create a
-`target1` with its command `cmd1` it will call the command as:
+To create or recreate a target, we define a function decorated with @task. It is
+a Python function typically with no parameters. It does three things:
 
-```python
-  cmd1(target1.item, targetA.item, targetB.item)
-```
+1. Call `@task` functions to obtain dependency `Target` objects.
+2. Call `target` passing in an item and the dependency targets to create its own
+   `Target`.
+3. Check `.outdated` on the returned `Target` and run whatever commands are
+   needed to update the item.
+4. Return the `Target`, as other `@task`s may call to obtain it as a dependency.
 
-If you use `mypy` or a similar type checker for Python, it helps you to match the
-item types of the dependencies to the command.
-
-When pythonbuilder analyzes a target to find out whether its command needs to be
-run, we say the it **updates** the target, independent of whether the command is
-run or if the target is still up-to-date anyway.  To know whether a target needs
-to be updated, a target has a **state** which, internally, often is a checksum
-(`hashlib.sha256()` for now) of the target's content, combined with the
-check-sums of its dependencies. A target's command is run if any of the
+When `target()` is called, it analyzes whether the `Target` to be returned needs
+to be updated. To know, a target has a **state** which, internally, often is a
+checksum (`hashlib.sha256()` for now) of the target's content, combined with the
+check-sums of its dependencies. `Target.outdated` is set to `True, if any of the
 following two conditions hold:
 
-1. After updating all dependencies, their combined state is different from a
-   previously recorded combined state.
+1. At least one of the dependencies has a state which is different from a
+   previously recorded state.
 2. The state of the target is different from a previously recorded state.
 
 The latter makes sure that manual editing or even deletion of the target can be
@@ -203,16 +211,16 @@ after it was accidentally deleted, the target will not be created unnecessarily.
 
 Well, because I tried other solutions:
 
-- [BuildMachine](https://codeberg.org/harald/BuildMachine) is mostly the same
+- [BuildMachine](https://codeberg.org/harald/BuildMachine) is similar,
   but written in Java. While implementing the machinery in Java is great, the
   actual use in writing the "build script" is a bit bumpy despite recent
   improvements whereby source files can be run without compilation
   ... script-like.
-- [bashbuilder](https://codeberg.org/harald/bashbuilder) is again mostly the
-  same but written in `bash`. Though here it is the other way round: writing a
-  build script is as straight forward as writing a bash script. But implementing
-  the machinery was an absolute pita, mostly because of the missing or hard to
-  use data structures like maps and lists.
+- [bashbuilder](https://codeberg.org/harald/bashbuilder) is again similar but
+  written in `bash`. Though here it is the other way round: writing a build
+  script is as straight forward as writing a bash script. But implementing the
+  machinery was an absolute pita, mostly because of the missing or hard to use
+  data structures like maps and lists.
 
 Python provides just the right middle ground for both implementing the
 machinery, these days even mostly type safe with type hints, and writing the
