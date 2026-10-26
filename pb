@@ -105,6 +105,8 @@ def doApidoc(serve: bool) -> Target[Path]:
         *outParam,
         "--docformat",
         "markdown",
+        "--template-directory",
+        templates.item,
         src.item,
       )
     except KeyboardInterrupt:
