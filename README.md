@@ -4,6 +4,8 @@
 **Table of Contents**
 
   - [Getting Started](#getting-started)
+    - [Installation](#installation)
+    - [Overview](#overview)
   - [Some Theory or "Why?"](#some-theory-or-why)
   - [Functional Overview](#functional-overview)
   - [Why Python?](#why-python)
@@ -19,9 +21,18 @@ See also: [BuildMachine](https://codeberg.org/harald/BuildMachine),
 
 ## Getting Started
 
-Copy `./pythonbuilder` to some place you like. The suggested place is the
-sub-directory `./pythonbuilder` in your project directory.
+### Installation
+Copy the directory `./pythonbuilder` to some place you like. The suggested place
+is copy it to your project directory as `./pythonbuilder`. One way to do this
+is:
 
+```shell
+curl --output - https://codeberg.org/harald/pythonbuilder/archive/main:pythonbuilder.tar.gz | tar xzf -
+```
+<small>Note: the `/archive` is an API endpoint of Codeberg/Forgejo, `main`
+denotes the branch, and `pythonbuilder` picks the subdirectory.</small>
+
+### Overview
 Write a build script in Python, called `pb` (for example), which basically defines
 
 - tasks, which are functions decorated with `@task` and which return a `Target[...]`,
