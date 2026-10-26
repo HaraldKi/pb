@@ -422,7 +422,11 @@ def main(argv: list[str]) -> Literal[0, 1]:
     except BuildException as e:
       LOG.error(e)
     else:
-      printTargets(targets.values())
+      cliCallable = set(
+        [k for k, f in DEFINED_TASKS.items() if not getattr(f, "internal", False)]
+      )
+      printTargets(targets.values(), cliCallable)
+      print("tasks in blue can be called from the command line")
     return 0
   return runTasks(taskNames)
 
@@ -544,18 +548,17 @@ def parseArgv(argv: list[str]) -> tuple[list[str], list[str], str | None]:
 
 
 def printTargets(
-  targets: Iterable[Target[Any]], seen: set[str] = set()
+  targets: Iterable[Target[Any]], cliCallable: set[str], seen: set[str] = set()
 ) -> None:
   depths = [(_targetDepth(t), t) for t in targets]
   for pair in sorted(depths, key=lambda pair: (pair[0], pair[1].name)):
     t = pair[1]
     if t.name in seen:
       continue
-    printTargets(t.dependencies, seen)
+    printTargets(t.dependencies, cliCallable, seen)
+    name = ansiBlue(t.name) if t.name in cliCallable else t.name
     deps = "<- " + ", ".join([d.name for d in t.dependencies])
-    print(f"{'.' * pair[0]}•", t.name, "" if len(deps) == 3 else deps)
-    # if t.__doc__ is not None:
-    #  print(f"{' ' * pair[0]}  ", t.__doc__)
+    print(f"{'.' * pair[0]}•", name, "" if len(deps) == 3 else deps)
     seen.add(t.name)
 
 
@@ -635,8 +638,8 @@ def setStatefile(path: Path) -> None:
 
   Defaults to `Path("build", "pbstates")`.
 
-  Set this before calling `updateTargets`. To force all targets to be rebuild,
-  delete this file.
+  Set this before calling running a task or calling `main` or `runTasks`.
+  To force all targets to be rebuild, delete this file.
   """
   global _STATEFILE
   _STATEFILE = path
@@ -644,7 +647,8 @@ def setStatefile(path: Path) -> None:
 
 @public
 def getStatefile() -> Path:
-  """Gets the `Path` of the file where target states are persisted. See `setStatefile`."""
+  """Gets the `Path` of the file where target states are persisted. See
+  `setStatefile`."""
   global _STATEFILE
   return _STATEFILE
 
@@ -1160,6 +1164,14 @@ def ansiGreen(text: str) -> str:
   :return: wrapped text
   """
   return "\x1b[38;2;20;110;20m%s\x1b[0m" % text
+
+def ansiBlue(text: str) -> str:
+  """Wraps text into ansi sequences to render it blue.
+
+  :param text: to wrap
+  :return: wrapped text
+  """
+  return "\x1b[38;2;20;20;230m%s\x1b[0m" % text
 
 
 ########################################################################

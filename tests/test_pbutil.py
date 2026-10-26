@@ -255,7 +255,9 @@ class TestMain(support.CommonFixture):
     finally:
       sys.stdout = stdout
 
-    matches = re.findall("• one|• two|• three", buffered.getvalue())
+    ansi = "\x1b[^m]*m"
+    out = re.sub(ansi, "", buffered.getvalue())
+    matches = re.findall("• one|• two|• three", out)
 
     self.assertEqual("• one", matches[0])
     self.assertEqual("• two", matches[1])
